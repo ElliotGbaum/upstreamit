@@ -300,7 +300,6 @@ CREATE INDEX IF NOT EXISTS idx_jobs_title_norm  ON jobs(title_norm);
 CREATE TABLE IF NOT EXISTS job_content (
   job_id           TEXT PRIMARY KEY,
   description_text TEXT,
-  description_html TEXT,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
 
@@ -428,7 +427,6 @@ export function blankJob() {
     comp_text: null,
     has_equity: null,
     description_text: null,
-    description_html: null,
   };
 }
 

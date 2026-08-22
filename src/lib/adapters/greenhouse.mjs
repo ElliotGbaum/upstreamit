@@ -169,7 +169,6 @@ export function mapJob(row, slug, boardName = null) {
   job.has_equity = null;
 
   const html = decodeEntitiesOnce(row.content ?? '');
-  job.description_html = html || null;
   job.description_text = htmlToText(html) || null;
 
   return job;

@@ -893,7 +893,7 @@ function readDescriptions(db, ids) {
 export function getJob(db, id) {
   const row = db
     .prepare(
-      `SELECT j.*, c.description_text, c.description_html, co.name AS company_display, co.name_source, co.board_url
+      `SELECT j.*, c.description_text, co.name AS company_display, co.name_source, co.board_url
        FROM jobs j
        LEFT JOIN job_content c ON c.job_id = j.id
        LEFT JOIN companies co ON co.id = j.company_id

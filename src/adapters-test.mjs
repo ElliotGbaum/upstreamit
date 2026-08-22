@@ -130,8 +130,16 @@ const row = (overrides = {}) => ({
   check('gh: no workplace enum is published', j.raw_workplace, null);
   check('gh: raw_remote is not synthesized', j.raw_remote, null);
 
-  // Gotcha 1 and 2 together, on a real payload.
-  check('gh: description_html is decoded exactly once', j.description_html, '<p>Build things &amp; ship them.</p>');
+  // Gotcha 1 and 2 together, on a real payload. The adapter no longer keeps the
+  // decoded HTML, so the decode-*once* half is asserted against
+  // `decodeEntitiesOnce` directly. `description_text` cannot stand in for it:
+  // `&amp;amp;` and `&amp;` flatten to the same plain text, so a double decode
+  // would leave the assertion below still passing.
+  check(
+    'gh: entities are decoded exactly once',
+    decodeEntitiesOnce('&lt;p&gt;Build things &amp;amp; ship them.&lt;/p&gt;'),
+    '<p>Build things &amp; ship them.</p>',
+  );
   check('gh: description_text is plain', j.description_text, 'Build things & ship them.');
 }
 {
@@ -423,6 +431,17 @@ const leverRow = (overrides = {}) => ({
   check('lv: prose compensation is kept when that is all there is', mapLeverJob(leverRow({ salaryDescriptionPlain: 'Competitive, plus equity' }), 'x').comp_text, 'Competitive, plus equity');
   // Lever has no equity field.
   check('lv: has_equity is not invented', mapLeverJob(leverRow(), 'x').has_equity, null);
+}
+
+// --- the company name is scraped from markup, so it is entity-escaped -------
+{
+  // `fetchOrganization` reads a <title>, which is markup. 34 of the 2,313 names
+  // Lever resolved contain `&amp;` — every one a company with an ampersand.
+  // Stored raw, "CI&amp;T" is what shows in the company column and what a
+  // company search has to match.
+  check('lv: an escaped ampersand in a title decodes', decodeEntitiesOnce('BoxLunch &amp; Hot Topic'), 'BoxLunch & Hot Topic');
+  check('lv: no double decode on a name', decodeEntitiesOnce('CI&amp;T'), 'CI&T');
+  check('lv: a name with no entities is untouched', decodeEntitiesOnce('Banco BV'), 'Banco BV');
 }
 
 // --- rows that should be dropped -------------------------------------------
