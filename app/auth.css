@@ -1,0 +1,198 @@
+/* Job Finder — the account screens.
+   Sign in, create an account, change a password. Loaded after app.css and
+   sharing its token set, because these are the same tool: the colours, the
+   radius and the dark-mode switch all come from there. What this file adds is
+   the one thing app.css has no rules for — a page that is *read* rather than
+   operated, and therefore gets a real display cut, air around the fields, and
+   type a size up from the instrument.
+
+   These used to be a <dialog> over the search page. A modal is the wrong shape
+   for an account: it has no address, so an OAuth redirect has nowhere to come
+   back to and an error has nowhere to land; it inherits a 400px column, so the
+   fields end up cramped; and it makes signing in feel like an interruption to
+   the page rather than a place you went. */
+
+:root{
+  --panel-2:#fbfbfc;
+  --ring:color-mix(in srgb,var(--accent) 22%,transparent);
+  --display:"IBM Plex Sans Condensed","IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --text:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--panel-2:#121216}
+}
+:root[data-theme="dark"]{--panel-2:#121216}
+
+body.auth-page{font-family:var(--text);font-size:15px;line-height:1.55;background:var(--bg)}
+
+/* The page is two halves: why an account exists, and the account. On a phone
+   the first half collapses to a strip — the form is what you came for. */
+.auth{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr)}
+@media (max-width:940px){.auth{grid-template-columns:1fr;min-height:0}}
+
+/* ------------------------------------------------------------------ pitch */
+.pitch{position:relative;overflow:hidden;background:var(--panel);
+       border-right:1px solid var(--line);display:flex;align-items:center;padding:56px 5vw}
+/* Ruled paper, the same ground the landing page uses. The subject is a
+   measuring instrument; the background says so quietly. */
+.pitch::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,var(--line-soft) 0 1px,transparent 1px 34px);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 82%);
+          mask-image:linear-gradient(to bottom,#000 0%,transparent 82%)}
+.pitch-in{position:relative;width:min(520px,100%);margin-left:auto;
+          display:flex;flex-direction:column;gap:26px}
+@media (max-width:940px){
+  .pitch{padding:26px 24px 24px;border-right:0;border-bottom:1px solid var(--line);align-items:start}
+  .pitch-in{margin-left:0;width:100%;gap:16px}
+  .pitch .perks,.pitch .pitch-foot{display:none}
+}
+
+.mark{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.01em;
+      color:var(--ink);text-decoration:none;display:inline-flex;gap:6px;align-self:start}
+.mark span{color:var(--ink-3)}
+.mark:hover{color:var(--accent)}
+
+.pitch h1{font-family:var(--display);font-weight:700;margin:0;
+          font-size:clamp(30px,3.8vw,46px);line-height:1.03;letter-spacing:-.025em;text-wrap:balance}
+.pitch h1 em{font-style:normal;color:var(--accent)}
+.pitch .lead{margin:0;color:var(--ink-2);font-size:16px;max-width:44ch;text-wrap:pretty}
+@media (max-width:940px){.pitch h1{font-size:26px}.pitch .lead{font-size:14.5px}}
+
+/* Numbered rather than bulleted: three things, in an order, like the funnel. */
+.perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.perks li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;
+          padding:13px 0;border-top:1px solid var(--line)}
+.perks li:last-child{border-bottom:1px solid var(--line)}
+.perks .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em;padding-top:3px}
+.perks b{display:block;font-weight:600;font-size:14.5px;color:var(--ink);letter-spacing:-.005em}
+.perks span.t{display:block;color:var(--ink-3);font-size:13px;line-height:1.5;margin-top:2px}
+
+.stats{display:flex;flex-wrap:wrap;gap:26px}
+.stats .stat b{display:block;font-family:var(--mono);font-size:20px;font-weight:500;
+               letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stats .stat span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+                  color:var(--ink-3);margin-top:3px}
+@media (max-width:940px){.stats{gap:18px}.stats .stat b{font-size:16px}}
+
+.pitch-foot{margin:0;color:var(--ink-3);font-size:12.5px;line-height:1.55;max-width:46ch}
+
+/* ------------------------------------------------------------------- form */
+.panel{display:grid;grid-template-rows:auto minmax(0,1fr);padding:22px 5vw 40px;background:var(--bg)}
+@media (max-width:940px){.panel{padding:20px 24px 40px}}
+
+.panel-top{display:flex;align-items:center;gap:10px}
+.back{color:var(--ink-3);text-decoration:none;font-size:13px;padding:6px 2px;border-radius:7px}
+.back:hover{color:var(--ink)}
+.panel-top .spacer{flex:1}
+.icon-btn{background:none;border:1px solid transparent;border-radius:8px;color:var(--ink-3);
+          cursor:pointer;font-size:14px;line-height:1;padding:7px 9px}
+.icon-btn:hover{color:var(--ink);border-color:var(--line)}
+
+.form-wrap{width:min(392px,100%);justify-self:center;align-self:center;padding:30px 0;
+            display:flex;flex-direction:column;gap:18px}
+@media (max-width:940px){.form-wrap{align-self:start;padding-top:24px}}
+
+/* The segmented switch. Two modes of one form, so it swaps in place rather
+   than navigating — the address still changes, so the screen stays linkable. */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;
+      background:var(--line-soft);border-radius:10px}
+.tabs button{background:none;border:0;border-radius:8px;padding:8px 10px;font-size:13.5px;
+             font-weight:500;color:var(--ink-3);cursor:pointer;transition:color .14s,background .14s}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);font-weight:600;
+                                   box-shadow:0 1px 2px rgb(0 0 0 / .07),0 0 0 1px var(--line)}
+
+.head{display:flex;flex-direction:column;gap:6px}
+.head h2{font-family:var(--display);font-size:29px;font-weight:700;letter-spacing:-.02em;
+         line-height:1.1;margin:0;color:var(--ink)}
+.head p{margin:0;color:var(--ink-2);font-size:14px;line-height:1.5;text-wrap:pretty}
+
+/* ------------------------------------------------------------------ OAuth */
+.oauth{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+       background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:11px 14px;font-size:14.5px;font-weight:500;cursor:pointer;
+       transition:border-color .14s,background .14s}
+.oauth:hover{border-color:var(--ink-3);background:var(--panel-2)}
+.oauth svg{width:17px;height:17px;flex:none}
+.or{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:11px;
+    text-transform:uppercase;letter-spacing:.1em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ----------------------------------------------------------------- fields */
+form{display:flex;flex-direction:column;gap:15px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12.5px;font-weight:500;color:var(--ink-2);letter-spacing:.005em}
+.control{position:relative;display:flex}
+/* The one rule that undoes the browser default. app.css draws a 2px outline on
+   :focus for the dense instrument, which on a 15px field in an empty column
+   reads as a second border stacked on the first — that is the double blue box.
+   Here the border itself carries the focus and a soft ring carries the rest. */
+.field input{flex:1;width:100%;background:var(--panel);color:var(--ink);
+             border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+             font:inherit;font-size:15px;line-height:1.4;
+             transition:border-color .14s,box-shadow .14s,background .14s}
+.field input::placeholder{color:var(--ink-3);opacity:.75}
+.field input:hover{border-color:var(--ink-3)}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.field input:-webkit-autofill{-webkit-text-fill-color:var(--ink);
+                              -webkit-box-shadow:0 0 0 40px var(--panel) inset}
+.field.bad input{border-color:var(--err)}
+.field.bad input:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--err) 20%,transparent)}
+.field:has(.peek) input{padding-right:60px}
+
+.peek{position:absolute;right:5px;top:50%;transform:translateY(-50%);
+      background:none;border:0;border-radius:7px;padding:6px 8px;cursor:pointer;
+      color:var(--ink-3);font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.peek:hover{color:var(--ink);background:var(--line-soft)}
+
+/* One requirement, stated once, that answers itself as you type — rather than
+   a rejection after the round trip. */
+.rule{display:flex;align-items:center;gap:7px;margin:1px 0 0;
+      color:var(--ink-3);font-size:12px;transition:color .14s}
+.rule .dot{width:13px;height:13px;border-radius:50%;border:1px solid var(--line);
+           display:inline-flex;align-items:center;justify-content:center;
+           font-size:9px;line-height:1;color:transparent;transition:all .14s}
+.rule.met{color:var(--ok)}
+.rule.met .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.caps,.fe{margin:1px 0 0;font-size:12px;line-height:1.45}
+.caps{color:var(--warn)}
+.fe{color:var(--err)}
+
+.banner{border-radius:10px;padding:10px 13px;font-size:13px;line-height:1.5}
+.banner.err{background:var(--err-soft);color:var(--err);
+            border:1px solid color-mix(in srgb,var(--err) 28%,transparent)}
+.banner.ok{background:var(--ok-soft);color:var(--ok);
+           border:1px solid color-mix(in srgb,var(--ok) 28%,transparent)}
+
+/* ----------------------------------------------------------------- submit */
+.submit{position:relative;width:100%;background:var(--accent);color:var(--accent-ink);
+        border:1px solid var(--accent);border-radius:10px;padding:12px 16px;
+        font-size:15px;font-weight:600;letter-spacing:-.005em;cursor:pointer;
+        transition:filter .14s,transform .06s}
+.submit:hover{filter:brightness(1.08)}
+.submit:active{transform:translateY(1px)}
+.submit[disabled]{cursor:default;filter:none;opacity:.62}
+.submit .spin{position:absolute;right:14px;top:50%;width:14px;height:14px;margin-top:-7px;
+              border:2px solid color-mix(in srgb,var(--accent-ink) 35%,transparent);
+              border-top-color:var(--accent-ink);border-radius:50%;
+              animation:spin .7s linear infinite;display:none}
+.submit.busy .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  .submit .spin{animation-duration:1.6s}
+  *{transition-duration:.01ms !important}
+}
+
+.foot{display:flex;flex-direction:column;gap:9px;margin:2px 0 0;
+      color:var(--ink-3);font-size:13px;text-align:center}
+.foot a,.foot button.link{color:var(--accent);text-decoration:none;background:none;border:0;
+                          font:inherit;cursor:pointer;padding:0}
+.foot a:hover,.foot button.link:hover{text-decoration:underline;text-underline-offset:3px}
+.foot .skip a{color:var(--ink-3)}
+.foot .skip a:hover{color:var(--ink)}
+
+/* Focus that is visible without being the loudest thing on the screen. */
+.tabs button:focus-visible,.oauth:focus-visible,.submit:focus-visible,
+.peek:focus-visible,.back:focus-visible,.icon-btn:focus-visible,.foot a:focus-visible,
+.mark:focus-visible,.foot button.link:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}

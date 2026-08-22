@@ -1,0 +1,78 @@
+# Daily job sweep + diff.
+#
+# Written by `node src/schedule.mjs`. GitHub's cron is **UTC only** — there is
+# no timezone field — so this fires at 08:15 UTC year-round and drifts
+# relative to local time across daylight saving. Adjust the minute/hour here if
+# that matters.
+#
+# The 1.0 GB database is deliberately not committed. Each run rebuilds it from
+# the sweep (24 seconds for 4,297 boards) and uploads the report; the cost of
+# that is losing the `job_events` history that makes the diff meaningful, so
+# the run restores the previous database from the last successful run's cache
+# before sweeping.
+name: daily
+
+on:
+  schedule:
+    - cron: "15 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # A cold Greenhouse sweep measured 32.1 minutes on its own (8,272 boards,
+    # 2.5 GB), so the old 30 was under the cost of a single stage and every
+    # cache-miss run died partway through. Warm runs finish in minutes because
+    # unchanged boards answer 304; this ceiling is sized for the cold one.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # The event log is the whole reason "what's new" works, and it only exists
+      # inside the database. Restoring it means the diff compares against
+      # yesterday rather than against an empty table.
+      - name: Restore the job database
+        uses: actions/cache/restore@v4
+        with:
+          path: data/jobs.db
+          key: jobs-db-${{ github.run_id }}
+          restore-keys: |
+            jobs-db-
+
+      - name: Run the pipeline
+        run: node src/daily.mjs --quiet
+
+      - name: Save the job database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/jobs.db
+          key: jobs-db-${{ github.run_id }}
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-report
+          path: |
+            data/daily-report.md
+            data/derive-report.md
+            data/sync-report.md
+          retention-days: 30
+
+      # Slug stores are small and worth keeping in git — they are the part that
+      # accumulates, and a diff on them shows which sources moved.
+      - name: Commit the slug store
+        run: |
+          git config user.name  "job-finder-bot"
+          git config user.email "job-finder-bot@users.noreply.github.com"
+          git add data/slugs data/sync-state.json data/sync-report.md data/daily-history.jsonl || true
+          git diff --staged --quiet || git commit -m "daily: slug refresh $(date -u +%F)"
+          git push || true

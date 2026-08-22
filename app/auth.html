@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Job Finder</title>
+<meta name="robots" content="noindex">
+<!-- The theme, before first paint. The app stores the choice in localStorage,
+     and a white flash on the way into a dark app is worse than no toggle. -->
+<script>
+  try { const t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-page">
+
+<main class="auth">
+
+  <!-- --------------------------------------------------- why an account -->
+  <section class="pitch">
+    <div class="pitch-in">
+      <a class="mark" href="/">Job&nbsp;Finder <span>ATS</span></a>
+
+      <h1 id="pitch-h">Your search, <em>kept.</em></h1>
+      <p class="lead" id="pitch-lead">
+        The whole corpus is open to everyone. An account is only memory — it
+        holds the filters you built, the jobs you starred, and what you did
+        about each one.
+      </p>
+
+      <ul class="perks">
+        <li>
+          <span class="n">01</span>
+          <div>
+            <b>Your filters, already there</b>
+            <span class="t">The criteria you left the page with are the ones you come back to.</span>
+          </div>
+        </li>
+        <li>
+          <span class="n">02</span>
+          <div>
+            <b>Star a job, then track it</b>
+            <span class="t">Saved, applied, interviewing, offer, rejected — on the card itself.</span>
+          </div>
+        </li>
+        <li>
+          <span class="n">03</span>
+          <div>
+            <b>Named searches and lists</b>
+            <span class="t">Keep more than one search, and file jobs into lists of your own.</span>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Live numbers, not copy: the same figures the search header prints. -->
+      <div class="stats" id="stats" hidden>
+        <div class="stat"><b id="stat-jobs">—</b><span>open jobs</span></div>
+        <div class="stat"><b id="stat-boards">—</b><span>company boards</span></div>
+        <div class="stat"><b id="stat-swept">—</b><span>last swept</span></div>
+      </div>
+
+      <p class="pitch-foot">
+        Every job, filter and count on this site works signed out, and always will.
+        Nothing here is gated behind an account.
+      </p>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- the account -->
+  <section class="panel">
+    <div class="panel-top">
+      <a class="back" href="/" id="back">← Back to search</a>
+      <span class="spacer"></span>
+      <button type="button" class="icon-btn" id="theme" title="Light / dark" aria-label="Light or dark theme">◐</button>
+    </div>
+
+    <div class="form-wrap">
+
+      <div class="tabs" id="tabs" role="tablist" aria-label="Sign in or create an account">
+        <button type="button" role="tab" id="tab-signin" data-mode="signin" aria-selected="true">Sign in</button>
+        <button type="button" role="tab" id="tab-signup" data-mode="signup" aria-selected="false">Create account</button>
+      </div>
+
+      <div class="head">
+        <h2 id="head">Welcome back</h2>
+        <p id="sub">Sign in to pick up your filters and your saved jobs.</p>
+      </div>
+
+      <button type="button" class="oauth" id="google" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.8-2.1 5.1-4.4 6.7v5.6h7.1c4.2-3.8 6.6-9.5 6.6-16.3z"/>
+          <path fill="#34A853" d="M24 46c6 0 11-2 14.6-5.4l-7.1-5.6c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.7-3.9-12.4-9.1H4.3v5.8C7.9 41.1 15.4 46 24 46z"/>
+          <path fill="#FBBC05" d="M11.6 28c-.4-1.3-.7-2.6-.7-4s.3-2.7.7-4v-5.8H4.3A22 22 0 0 0 2 24c0 3.6.9 6.9 2.3 9.8L11.6 28z"/>
+          <path fill="#EA4335" d="M24 10.8c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C35 4.2 30 2 24 2 15.4 2 7.9 6.9 4.3 14.2l7.3 5.8c1.7-5.2 6.6-9.2 12.4-9.2z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div class="or" id="or" hidden><span>or</span></div>
+
+      <form id="form" novalidate>
+
+        <!-- Only on the change-password screen. -->
+        <div class="field" id="f-current" hidden>
+          <label for="current">Current password</label>
+          <div class="control">
+            <input type="password" id="current" autocomplete="current-password">
+            <button type="button" class="peek" data-for="current" aria-label="Show password">show</button>
+          </div>
+          <p class="fe" id="e-current" hidden></p>
+        </div>
+
+        <div class="field" id="f-email">
+          <label for="email">Email</label>
+          <div class="control">
+            <input type="email" id="email" autocomplete="email" placeholder="you@example.com"
+                   spellcheck="false" autocapitalize="off">
+          </div>
+          <p class="fe" id="e-email" hidden></p>
+        </div>
+
+        <div class="field" id="f-password">
+          <label for="password" id="l-password">Password</label>
+          <div class="control">
+            <input type="password" id="password" autocomplete="current-password">
+            <button type="button" class="peek" data-for="password" aria-label="Show password">show</button>
+          </div>
+          <p class="rule" id="rule" hidden><span class="dot">✓</span>At least 8 characters</p>
+          <p class="caps" id="caps" hidden>Caps Lock is on.</p>
+          <p class="fe" id="e-password" hidden></p>
+        </div>
+
+        <!-- Only on the change-password screen. -->
+        <div class="field" id="f-confirm" hidden>
+          <label for="confirm">Confirm new password</label>
+          <div class="control">
+            <input type="password" id="confirm" autocomplete="new-password">
+          </div>
+          <p class="fe" id="e-confirm" hidden></p>
+        </div>
+
+        <div class="banner err" id="error" hidden></div>
+        <div class="banner ok" id="done" hidden></div>
+
+        <button type="submit" class="submit" id="submit">
+          <span id="submit-label">Sign in</span>
+          <span class="spin" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="foot">
+        <p id="switch"></p>
+        <p class="skip"><a href="/" id="skip">Keep browsing without an account →</a></p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script src="auth.js" type="module"></script>
+</body>
+</html>

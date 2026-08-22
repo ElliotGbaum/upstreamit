@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>            <string>com.jobfinder.daily</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>/Users/elliotgreenbaum/Job Finder ATS/src/daily.mjs</string>
+    <string>--quiet</string>
+  </array>
+  <key>WorkingDirectory</key> <string>/Users/elliotgreenbaum/Job Finder ATS</string>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>   <integer>8</integer>
+    <key>Minute</key> <integer>15</integer>
+  </dict>
+  <!-- Local time, and missed runs are dropped rather than queued: the sweep is
+       a full refresh, so catching up on three skipped mornings at once would do
+       the same work three times for the same answer. -->
+  <key>RunAtLoad</key>        <false/>
+  <key>StandardOutPath</key>  <string>/Users/elliotgreenbaum/Job Finder ATS/data/daily.log</string>
+  <key>StandardErrorPath</key><string>/Users/elliotgreenbaum/Job Finder ATS/data/daily.log</string>
+  <key>ProcessType</key>      <string>Background</string>
+  <key>LowPriorityIO</key>    <true/>
+</dict>
+</plist>

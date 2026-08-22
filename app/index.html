@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Finder</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="loading" id="loading"></div>
+
+<header>
+  <div class="bar">
+    <span class="brand">Job Finder</span>
+    <span class="corpus" id="corpus">loading…</span>
+    <span class="spacer"></span>
+
+    <label class="corpus" for="since">show</label>
+    <select id="since" title="Restrict to jobs that first appeared recently">
+      <option value="">everything open</option>
+      <option value="last-sweep">new in the last sweep</option>
+      <option value="1d">new since yesterday</option>
+      <option value="7d">new in 7 days</option>
+      <option value="30d">new in 30 days</option>
+    </select>
+
+    <select id="profile-select" title="Saved filter profiles"></select>
+    <button class="btn" id="save">Save</button>
+    <button class="btn ghost" id="reset" title="Clear every criterion">Clear</button>
+    <button class="btn ghost" id="theme" title="Light / dark">◐</button>
+
+    <!-- Accounts are optional and the header says so: signed out, there is one
+         button and nothing is gated behind it. -->
+    <span class="acct" id="acct-anon" hidden>
+      <a class="btn" id="signin" href="/signin" title="Optional — keeps your filters and your saved jobs">Sign in</a>
+    </span>
+    <span class="acct" id="acct-user" hidden>
+      <button class="btn" id="saved-toggle" title="Jobs you saved, and what you did about them">
+        ★ <span id="saved-count">0</span>
+      </button>
+      <button class="btn ghost" id="acct-menu-btn" aria-haspopup="true" aria-expanded="false">
+        <span id="acct-name">account</span> ▾
+      </button>
+      <div class="menu" id="acct-menu" hidden>
+        <div class="who" id="acct-email"></div>
+        <button type="button" class="item" id="acct-password">Set a password</button>
+        <button type="button" class="item" id="acct-signout">Sign out</button>
+        <button type="button" class="item quiet" id="acct-signout-all">Sign out everywhere</button>
+      </div>
+    </span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ------------------------------------------------------------ filters -->
+  <aside id="filters">
+
+    <section class="card" data-panel="ats">
+      <h3>Job board <span class="badge" id="n-ats">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="options" id="ats-options"></div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="text">
+      <h3>Search <span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="search" id="text" placeholder="search job title, company, or description">
+      </div>
+    </section>
+
+    <section class="card" data-panel="title">
+      <h3>Title keywords <span class="badge" id="n-title">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="text" id="title-input" placeholder="add a keyword, press Enter">
+        <div class="chips" id="title-chips"></div>
+        <div class="row">
+          <label class="hint"><input type="checkbox" id="title-all"> require <b>all</b> of them</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="description">
+      <h3>Description Keywords <span class="badge" id="n-desc">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="text" id="desc-input" placeholder="add a keyword, press Enter">
+        <div class="chips" id="desc-chips"></div>
+        <div class="row">
+          <label class="hint"><input type="checkbox" id="desc-all"> require <b>all</b> of them</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="exclude">
+      <h3>Title Exclusions <span class="badge" id="n-exclude">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="text" id="extitle-input" placeholder="senior, intern, …">
+        <div class="chips" id="extitle-chips"></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="exclude-description">
+      <h3>Description Exclusions <span class="badge" id="n-exdesc">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="text" id="exdesc-input" placeholder="security clearance, unpaid, …">
+        <div class="chips" id="exdesc-chips"></div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="metro">
+      <h3>Location <span class="badge" id="n-metro">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="search" id="metro-search" placeholder="filter the list…">
+        <div class="options" id="metro-options"></div>
+        <div class="hint">…or match a whole country instead:</div>
+        <div class="options" id="country-options"></div>
+        <label class="hint"><input type="checkbox" id="remote-counts"> a remote role counts as a match here</label>
+        <div class="hint">Built from the metro registry the derive pass discovered — <span id="metro-count">0</span> places, from real location strings.</div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="workplace">
+      <h3>Workplace <span class="badge" id="n-workplace">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="options" id="workplace-options"></div>
+        <div class="hint">From <code>workplaceType</code>, never <code>isRemote</code> — which is <code>true</code> on every hybrid job.</div>
+        <div class="hint">…and how far a remote role reaches:</div>
+        <div class="options" id="remote-scope-options"></div>
+        <div class="hint">Only remote postings carry this, so an onsite job is a real <b>no</b> here rather than a blank — the workplace field already answered.</div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="experience">
+      <h3>Experience <span class="badge" id="n-experience">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="row pair">
+          <label class="hint field">at most <input type="number" id="max-years" min="0" max="30" step="1"> years</label>
+          <label class="hint field">at least <input type="number" id="min-years" min="0" max="30" step="1"> years</label>
+        </div>
+        <div class="options" id="seniority-options"></div>
+        <div class="hint" id="seniority-unknown"></div>
+        <label class="hint"><input type="checkbox" id="include-intern"> include internships</label>
+        <div class="hint">The title band and the years stated in the description must agree — either alone lets the wrong half through.</div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="salary">
+      <h3>Salary <span class="badge" id="n-salary">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="row pair">
+          <label class="hint field wide">min $<input type="number" id="salary-min" min="0" step="5000"></label>
+          <label class="hint field wide">max $<input type="number" id="salary-max" min="0" step="5000"></label>
+        </div>
+        <div class="options" id="salary-options"></div>
+        <div class="hint">Only 37.2% of jobs publish a figure. Compared against the top of the range. The bands
+          above are cut from the figures in <b>your</b> current results, not from a fixed ladder — so they
+          describe an hourly warehouse search and a staff-engineer search differently, because those are
+          different searches.</div>
+
+        <div class="hint">Paid how often:</div>
+        <div class="options" id="pay-period-options"></div>
+        <div class="hint">1,901 open jobs are priced hourly and are invisible as a class without this.</div>
+
+        <div class="hint">Paid in:</div>
+        <div class="options" id="currency-options"></div>
+
+        <label class="opt standalone" id="equity-opt">
+          <input type="checkbox" id="requires-equity">
+          <span class="lbl">offers equity</span>
+          <span class="n" id="equity-count"></span>
+        </label>
+        <label class="opt standalone" id="stated-opt">
+          <input type="checkbox" id="salary-stated">
+          <span class="lbl">pay exactly as published</span>
+          <span class="n" id="stated-count"></span>
+        </label>
+        <div class="hint">Where a board mislabelled its own figure we reinterpret it and record that we did.
+          No job board in the survey lets you exclude an estimate — Glassdoor prints “Employer Est.” on the
+          card and gives you nothing to do about it.</div>
+      </div>
+    </section>
+
+    <section class="card" data-panel="posted">
+      <h3>Date posted <span class="badge" id="n-posted">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="options" id="age-options">
+          <label class="opt" id="age-custom">
+            <input type="radio" name="age-options" id="age-custom-radio">
+            <span class="lbl">within <input type="number" id="age-days" min="0" step="1" placeholder="45"> days</span>
+            <span class="n" id="age-custom-count"></span>
+          </label>
+        </div>
+        <div class="hint">4.8% of live postings are over a year old.</div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="employment-type">
+      <h3>Employment type <span class="badge" id="n-employment-type">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="options" id="employment-options"></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="job-function">
+      <h3>Department <span class="badge" id="n-job-function">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="options" id="function-options"></div>
+        <div class="hint">One tidy list, read off the title first and the board's own department second — that raw department is free text, with 464 distinct spellings across boards, which is why it is not the thing you filter on.</div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="skills">
+      <h3>Skills <span class="badge" id="n-skills">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="search" id="skill-search" placeholder="filter skills…">
+        <div class="options" id="skill-options"></div>
+        <div class="hint">…or rule one out. Stack Overflow Jobs paired “tech you like” with “tech you dislike”
+          and has been dead since 2022; no live board has copied it.</div>
+        <input type="text" id="exskill-input" placeholder="php, sales, …">
+        <div class="chips" id="exskill-chips"></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="company">
+      <h3>Company <span class="badge" id="n-company">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <input type="search" id="company-search" placeholder="filter companies…">
+        <div class="options" id="company-options"></div>
+        <div class="hint">How many roles the company has open here — a proxy for size, and labelled as the
+          thing it actually counts. No ATS publishes headcount, so nobody honest can filter on it.</div>
+        <div class="options" id="company-size-options"></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" data-panel="requirements">
+      <h3>Requirements <span class="badge" id="n-requirements">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="hint">Degree asked for:</div>
+        <div class="options" id="degree-options"></div>
+        <div class="hint">75.6% of postings never mention school. Those stay in your results unless you say
+          otherwise at the bottom of this rail.</div>
+
+        <div class="hint">Visa sponsorship:</div>
+        <div class="options">
+          <label class="opt">
+            <input type="checkbox" id="visa-sponsors">
+            <span class="lbl">only postings that say they sponsor</span>
+            <span class="n" id="visa-sponsors-count"></span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" id="visa-no-refusal">
+            <span class="lbl">drop the ones that say they won’t</span>
+            <span class="n" id="visa-refusal-count"></span>
+          </label>
+        </div>
+        <div class="hint">96.8% of postings never raise the subject. Sponsorship is the sparsest field in the
+          corpus, so the first box is a narrow gate and the second is a wide one.</div>
+
+        <label class="opt standalone" id="clearance-opt">
+          <input type="checkbox" id="exclude-clearance">
+          <span class="lbl">drop roles needing a clearance</span>
+          <span class="n" id="clearance-count"></span>
+        </label>
+        <div class="hint">That count is what this box <b>removes</b>, not what it returns — the only one on the
+          page that reads the other way, because it is the only control that only ever subtracts.</div>
+      </div>
+    </section>
+
+    <!-- The panel this whole project is built around. Every criterion above can
+         come back "the posting didn't say", and this is where you decide what
+         that means. No board in the sixty-board survey has an equivalent: the
+         closest anyone gets is a single "include jobs without salary" checkbox. -->
+    <section class="card collapsed" data-panel="unknowns">
+      <h3>When a posting doesn't say <span class="badge" id="n-unknowns">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="hint">A filter may rule a job out because the posting <b>says</b> something that fails it —
+          never because the posting is silent. Every criterion below defaults to keeping the silent jobs. The
+          percentage is how much of the corpus you would drop by changing that.</div>
+        <div id="unknown-policies"></div>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- ------------------------------------------------------------ results -->
+  <section id="search-view">
+    <div class="funnel" id="funnel"></div>
+    <div id="warnings"></div>
+
+    <div class="sechead">
+      <h2>Results</h2>
+      <span class="sub" id="results-sub"></span>
+      <span class="spacer"></span>
+      <label class="toolbar-opt" title="One row per company + title. 16.6% of the corpus is the same role posted once per city.">
+        <input type="checkbox" id="collapse"> fold duplicates
+      </label>
+      <label class="toolbar-opt" for="sort">sort</label>
+      <select id="sort" title="Every order keeps the jobs that can't answer it — they sink, they don't vanish"></select>
+    </div>
+    <div class="jobs" id="results"></div>
+    <!-- The foot of the list: the count still below it and the button that asks
+         for the next page. Drawn by `drawMore`, empty when the list is whole. -->
+    <div class="more" id="results-more"></div>
+  </section>
+
+  <!-- -------------------------------------------------------------- saved -->
+  <!-- Your own list, and deliberately not a filtered view of the corpus: it
+       shows every job you saved, including ones the board has since pulled,
+       because "did I ever apply to this" has to keep answering after the
+       posting is gone. -->
+  <section id="saved-view" hidden>
+    <div class="sechead">
+      <h2>Saved</h2>
+      <span class="sub" id="saved-sub"></span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="saved-back">← back to search</button>
+    </div>
+    <div class="scopes" id="saved-scopes"></div>
+    <div class="jobs" id="saved-results"></div>
+  </section>
+</div>
+
+<footer id="footer"></footer>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Finder ATS</title>
+<meta name="description" content="Sweeps 4,297 company career APIs directly, normalizes 61,213 open jobs, and filters them against a profile you write once.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Job Finder — landing page.
+   Shares the token names and values with app.css and progress/index.html so all
+   three read as one tool. The type is the one place this page departs: the app
+   uses system-ui at 14px because it is a dense instrument; a page that has to be
+   read rather than operated gets a real display cut. */
+
+:root{
+  --bg:#f6f6f8; --panel:#ffffff; --panel-2:#fbfbfc;
+  --line:#e4e4e9; --line-soft:#eeeef2;
+  --ink:#16161a; --ink-2:#55555f; --ink-3:#8b8b95;
+  --accent:#4338ca; --accent-soft:#eef2ff; --accent-ink:#ffffff;
+  --ok:#0f7a4f; --ok-soft:#e8f6ef;
+  --warn:#a05a00; --warn-soft:#fdf3e3;
+  --err:#b42318; --err-soft:#fdecea;
+  --display:"IBM Plex Sans Condensed","IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d0d10; --panel:#161619; --panel-2:#131316;
+    --line:#26262c; --line-soft:#1e1e23;
+    --ink:#f2f2f4; --ink-2:#a8a8b3; --ink-3:#6e6e7a;
+    --accent:#a5b4fc; --accent-soft:#1e1b4b; --accent-ink:#0d0d10;
+    --ok:#5fd39b; --ok-soft:#0d2a1e;
+    --warn:#f5b455; --warn-soft:#2b1f0a;
+    --err:#f98a80; --err-soft:#2c110e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d0d10; --panel:#161619; --panel-2:#131316;
+  --line:#26262c; --line-soft:#1e1e23;
+  --ink:#f2f2f4; --ink-2:#a8a8b3; --ink-3:#6e6e7a;
+  --accent:#a5b4fc; --accent-soft:#1e1b4b; --accent-ink:#0d0d10;
+  --ok:#5fd39b; --ok-soft:#0d2a1e;
+  --warn:#f5b455; --warn-soft:#2b1f0a;
+  --err:#f98a80; --err-soft:#2c110e;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;
+     font-feature-settings:"kern" 1}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+.wrap{width:min(1120px,calc(100% - 48px));margin-inline:auto}
+@media (max-width:640px){.wrap{width:calc(100% - 32px)}}
+
+.eyebrow{font-family:var(--mono);font-size:11px;font-weight:500;text-transform:uppercase;
+         letter-spacing:.14em;color:var(--ink-3);display:block}
+/* Inline in a sentence, mono runs wide against the body face and tabular
+   figures pad every comma. Both are right in a column and wrong in prose. */
+.num{font-family:var(--mono);font-size:.88em;letter-spacing:-.01em}
+
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.02em;
+         line-height:1.05;text-wrap:balance;margin:0}
+h2{font-size:clamp(27px,3.4vw,38px)}
+h3{font-size:17px;letter-spacing:-.01em;line-height:1.25}
+p{margin:0}
+.lead{font-size:17.5px;color:var(--ink-2);max-width:52ch;text-wrap:pretty}
+.prose{max-width:64ch;color:var(--ink-2);display:flex;flex-direction:column;gap:16px}
+.prose b{color:var(--ink);font-weight:600}
+
+/* ---------------------------------------------------------------- sections */
+section{padding:72px 0;border-top:1px solid var(--line)}
+@media (max-width:640px){section{padding:52px 0}}
+.sec-head{display:flex;flex-direction:column;gap:14px;margin-bottom:38px}
+
+/* -------------------------------------------------------------------- nav */
+nav{border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:10}
+.nav-in{display:flex;align-items:center;gap:16px;padding:13px 0}
+.mark{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.01em;
+      color:var(--ink);text-decoration:none}
+.mark span{color:var(--ink-3);font-weight:600}
+.nav-in .grow{flex:1}
+.nav-link{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-decoration:none}
+.nav-link:hover{color:var(--ink)}
+@media (max-width:560px){.nav-hide{display:none}}
+
+/* ------------------------------------------------------------------- hero */
+.hero{position:relative;overflow:hidden;padding:76px 0 78px;border-top:0}
+/* Ruled paper. The subject is a measuring instrument; the ground says so
+   quietly instead of a gradient saying it loudly. */
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(to bottom,var(--line-soft) 0 1px,transparent 1px 34px);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 76%);
+          mask-image:linear-gradient(to bottom,#000 0%,transparent 76%)}
+.hero .wrap{position:relative;z-index:1}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:60px;align-items:start}
+@media (max-width:940px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+
+.hero-copy{display:flex;flex-direction:column;gap:22px}
+.hero h1{font-size:clamp(40px,6.4vw,62px);line-height:1.0}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.rise{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.rise:nth-child(1){animation-delay:.02s}
+.rise:nth-child(2){animation-delay:.09s}
+.rise:nth-child(3){animation-delay:.16s}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+.ctas{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cta{display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:10px 15px;
+     font-family:var(--mono);font-size:13px;font-weight:500;text-decoration:none;
+     background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent)}
+.cta:hover{filter:brightness(1.08)}
+.cta.ghost{background:transparent;color:var(--ink-2);border-color:var(--line)}
+.cta.ghost:hover{color:var(--ink);border-color:var(--ink-3);filter:none}
+.cta .caret{opacity:.6}
+
+/* ---------------------------------------------------------------- readout */
+.readout{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+         padding:16px 18px 14px}
+.readout-head{display:flex;align-items:baseline;gap:10px;padding-bottom:11px;
+              border-bottom:1px solid var(--line)}
+.readout-head .ms{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ok);
+                  background:var(--ok-soft);border-radius:99px;padding:2px 9px;font-variant-numeric:tabular-nums}
+
+.funnel{list-style:none;margin:0;padding:0}
+.funnel li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+           column-gap:12px;row-gap:7px;align-items:baseline;
+           padding:11px 0 12px;border-bottom:1px solid var(--line-soft)}
+.funnel li:last-child{border-bottom:0;padding-bottom:2px}
+.fl{font-size:13px;color:var(--ink-2);min-width:0}
+.fn{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px;font-weight:500}
+.fp{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
+    color:var(--ink-3);width:42px;text-align:right}
+.fbar{grid-column:1/-1;height:6px;border-radius:99px;background:var(--line-soft);overflow:hidden}
+.fbar i{display:block;height:100%;width:var(--w);min-width:3px;border-radius:99px;
+        background:color-mix(in srgb,var(--accent) 42%,var(--line));
+        transform-origin:left;animation:grow .85s cubic-bezier(.2,.75,.25,1) both}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.funnel li:nth-child(1) .fbar i{animation-delay:.20s}
+.funnel li:nth-child(2) .fbar i{animation-delay:.31s}
+.funnel li:nth-child(3) .fbar i{animation-delay:.42s}
+.funnel li:nth-child(4) .fbar i{animation-delay:.53s}
+.funnel li:nth-child(5) .fbar i{animation-delay:.64s}
+.funnel li:nth-child(6) .fbar i{animation-delay:.75s}
+.funnel li.hit .fl,.funnel li.hit .fn{color:var(--accent)}
+.funnel li.hit .fn{font-weight:600}
+.funnel li.hit .fbar i{background:var(--accent)}
+.funnel li.aside .fl,.funnel li.aside .fn{color:var(--warn)}
+.funnel li.aside .fbar i{background:var(--warn)}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-3)}
+.readout-note{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:12px;
+              padding-top:11px;border-top:1px solid var(--line)}
+
+/* -------------------------------------------------------------- stat band */
+.band{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line)}
+@media (max-width:760px){.band{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Child combinator throughout: `.band div` would also hit the .v and .k
+   inside each cell and pad them a second time. */
+.band>div{padding:22px 22px 24px;border-right:1px solid var(--line);
+          display:flex;flex-direction:column}
+.band>div:last-child{border-right:0}
+@media (max-width:760px){
+  .band>div{border-bottom:1px solid var(--line)}
+  .band>div:nth-child(2n){border-right:0}
+  .band>div:nth-child(n+3){border-bottom:0}
+}
+.band .v{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:-.025em;
+         font-variant-numeric:tabular-nums;line-height:1.1}
+.band .k{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:5px;line-height:1.45}
+
+/* ------------------------------------------------------------- split bar */
+.split{display:flex;gap:3px;margin-top:30px}
+.split .seg{flex-grow:var(--w);flex-basis:0;min-width:0;padding:13px 14px;border-radius:8px}
+.split .live{background:var(--ok-soft);color:var(--ok)}
+.split .dead{background:var(--err-soft);color:var(--err)}
+.split b{display:block;font-family:var(--mono);font-size:19px;font-weight:600;
+         font-variant-numeric:tabular-nums;line-height:1.2}
+.split span{display:block;font-family:var(--mono);font-size:11px;margin-top:3px;opacity:.85;
+            line-height:1.4}
+.split-note{font-size:12px;color:var(--ink-3);margin-top:10px;font-family:var(--mono);line-height:1.65}
+.spec{margin-top:30px;padding-top:22px;border-top:1px solid var(--line);
+      display:flex;flex-direction:column;gap:12px}
+.spec code{font-family:var(--mono);font-size:12.5px;line-height:1.8;color:var(--ink);
+           background:var(--panel);border:1px solid var(--line);border-radius:8px;
+           padding:12px 14px;overflow-x:auto;display:block;word-break:break-word}
+.spec code em{font-style:normal;color:var(--accent)}
+.spec p{font-size:13px;color:var(--ink-3);line-height:1.6}
+.spec p b{font-family:var(--mono);font-size:.9em;color:var(--ink-2);font-weight:500}
+
+/* -------------------------------------------------------------- pipeline */
+.stages{display:flex;flex-direction:column}
+.stage{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,320px);
+       gap:8px 24px;padding:22px 0;border-top:1px solid var(--line)}
+.stage:last-child{border-bottom:1px solid var(--line)}
+@media (max-width:760px){.stage{grid-template-columns:44px minmax(0,1fr)}
+  .stage .metric{grid-column:2}}
+.stage .n{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:3px;
+          font-variant-numeric:tabular-nums}
+.stage .what{display:flex;flex-direction:column;gap:5px}
+.stage .what p{font-size:14.5px;color:var(--ink-2);max-width:52ch}
+.stage .metric{font-family:var(--mono);font-size:12.5px;color:var(--ink-3);
+               font-variant-numeric:tabular-nums;line-height:1.6}
+.stage .metric b{color:var(--ink);font-weight:500}
+
+/* ----------------------------------------------------------------- table */
+.tablewrap{overflow-x:auto;margin-top:34px;border:1px solid var(--line);border-radius:12px;
+           background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+   color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;border-radius:99px;
+      padding:2px 9px;letter-spacing:.02em}
+.pill.include{background:var(--ok-soft);color:var(--ok)}
+.pill.exclude{background:var(--err-soft);color:var(--err)}
+.pill.separate{background:var(--warn-soft);color:var(--warn)}
+.tnote{font-size:12.5px;color:var(--ink-3);margin-top:14px;max-width:64ch}
+
+/* -------------------------------------------------------------- features */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:34px}
+@media (max-width:880px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.cell{padding:24px 0 26px;border-top:1px solid var(--line);display:flex;
+      flex-direction:column;gap:8px}
+.cell p{font-size:14px;color:var(--ink-2)}
+.cell .foot{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-top:2px}
+
+/* ------------------------------------------------------------- terminal */
+.term{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:2}
+.term .c{color:var(--ink-3)}
+.term .p{color:var(--accent);user-select:none}
+.term .cmd{color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:start}
+@media (max-width:880px){.two{grid-template-columns:1fr;gap:30px}}
+
+/* --------------------------------------------------------------- footer */
+footer{border-top:1px solid var(--line);padding:34px 0 56px}
+.foot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:24px 44px;align-items:start}
+footer p{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);max-width:60ch;line-height:1.7}
+footer .grow{flex:1}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="mark" href="#top">Job&nbsp;Finder <span>ATS</span></a>
+    <span class="grow"></span>
+    <a class="nav-link nav-hide" href="#how">How it works</a>
+    <a class="nav-link nav-hide" href="#unknowns">Unknowns</a>
+    <a class="nav-link" href="#start">Quick start</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-grid">
+
+      <div class="hero-copy">
+        <span class="eyebrow rise">Ashby · 4,297 boards · swept daily</span>
+        <h1 class="rise">Don't search job boards. <em>Search the companies.</em></h1>
+        <p class="lead rise">A company's applicant tracking system answers one unauthenticated
+          request with its entire careers page — every open role, full description, salary
+          band included. Job Finder asks 4,297 of them, normalizes the 61,213 answers, and
+          filters them against a profile you write once.</p>
+        <div class="ctas rise">
+          <a class="cta" href="http://localhost:7799/">npm run serve <span class="caret">→</span></a>
+          <a class="cta ghost" href="#how">How it works</a>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="readout-head">
+          <span class="eyebrow">The shipped profile</span>
+          <span class="ms">118 ms</span>
+        </div>
+        <ol class="funnel">
+          <li style="--w:100%">
+            <span class="fl">All open jobs</span>
+            <span class="fn">61,213</span><span class="fp">100%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+          <li style="--w:14.2%">
+            <span class="fl">In New York City</span>
+            <span class="fn">8,702</span><span class="fp">14.2%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+          <li style="--w:12.1%">
+            <span class="fl">…and in person — onsite or hybrid</span>
+            <span class="fn">7,384</span><span class="fp">12.1%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+          <li style="--w:3.9%">
+            <span class="fl">…and the title matches a role keyword</span>
+            <span class="fn">2,398</span><span class="fp">3.9%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+          <li class="hit" style="--w:0.5%">
+            <span class="fl">…and entry level, ≤2 years <span class="tag">← the result set</span></span>
+            <span class="fn">328</span><span class="fp">0.5%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+          <li class="aside" style="--w:0.7%">
+            <span class="fl">Seniority unstated <span class="tag">← surfaced separately</span></span>
+            <span class="fn">419</span><span class="fp">0.7%</span>
+            <span class="fbar"><i></i></span>
+          </li>
+        </ol>
+        <p class="readout-note">Bar length is share of the full corpus, unscaled — the last
+          two really are that thin. Every count is measured against the live 61,213-job
+          database, not estimated.</p>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="band">
+    <div><div class="v">4,297</div><div class="k">career APIs<br>swept</div></div>
+    <div><div class="v">24s</div><div class="k">for a full sweep,<br>zero errors</div></div>
+    <div><div class="v">74–160<span style="font-size:18px"> ms</span></div><div class="k">per filter run,<br>every facet counted</div></div>
+    <div><div class="v">176</div><div class="k">tests — no database,<br>no network</div></div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------------ why -->
+<section id="why">
+  <div class="wrap">
+    <div class="two">
+      <div>
+        <div class="sec-head">
+          <span class="eyebrow">The premise</span>
+          <h2>There is no way to ask an ATS who its customers are.</h2>
+        </div>
+        <div class="prose">
+          <p>Every collection endpoint returns <span class="num">401</span>. There's no
+            sitemap, no public customer directory, no list to download. You can only ask
+            about <b>one company at a time</b> — and when you do, the answer is complete
+            and free.</p>
+          <p>So the work starts by collecting candidate company names from eleven public
+            datasets, then asking the live API about each one. A <span class="num">HEAD</span>
+            request costs nothing and downloads nothing, which makes verifying <span class="num">7,951</span>
+            guesses a two-and-a-half-minute job rather than a bandwidth problem.</p>
+          <p>Merging eleven sources instead of trusting the largest one yields <b>73% more
+            companies</b>. The added boards are smaller on average but their median is
+            identical at 7 jobs each — they're real companies, just less famous ones, which
+            is exactly where the less-contested postings are.</p>
+        </div>
+      </div>
+      <div>
+        <span class="eyebrow">7,951 candidate slugs, verified one by one</span>
+        <div class="split">
+          <div class="seg live" style="--w:54"><b>4,297</b><span>200 OK — real boards, 89% hiring now</span></div>
+          <div class="seg dead" style="--w:46"><b>3,654</b><span>404 — confirmed absent, never probed again</span></div>
+        </div>
+        <p class="split-note">404 and “zero jobs” are different answers. A company between
+          hiring rounds returns 200 with an empty list; conflating the two deletes real
+          companies from the corpus.</p>
+
+        <div class="spec">
+          <span class="eyebrow">One request returns one whole board</span>
+          <code>GET api.ashbyhq.com/posting-api/job-board/<em>&lt;slug&gt;</em><br>&nbsp;&nbsp;&nbsp;&nbsp;?includeCompensation=true</code>
+          <p>No pagination, no key, no scraping — the whole careers page in one response.
+            <b>includeCompensation</b> must be exactly lowercase <b>true</b>:
+            <b>True</b> also returns 200 and silently omits every salary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------- pipeline -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Five stages. Each one re-runnable on its own.</h2>
+      <p class="lead">Normalization is a pure function of what the sweep stored, so improving
+        a city alias or a seniority rule costs a re-derive — never a re-sweep, and never a
+        request to anyone's server.</p>
+    </div>
+
+    <div class="stages">
+      <div class="stage">
+        <div class="n">01</div>
+        <div class="what">
+          <h3>Collect</h3>
+          <p>Eleven public sources, each in a different format. A config file says which
+            column to read; adding a twelfth needs no code.</p>
+        </div>
+        <div class="metric"><b>7,951</b> candidate slugs<br>deduped across sources, provenance kept</div>
+      </div>
+
+      <div class="stage">
+        <div class="n">02</div>
+        <div class="what">
+          <h3>Verify</h3>
+          <p>One HEAD request per slug against the live API — the oracle that turns a list
+            of guesses into a list of facts.</p>
+        </div>
+        <div class="metric"><b>~55 req/s</b>, no rate limiting<br>4,297 live · 3,654 dead</div>
+      </div>
+
+      <div class="stage">
+        <div class="n">03</div>
+        <div class="what">
+          <h3>Sweep</h3>
+          <p>One request returns an entire board, descriptions and compensation included.
+            No pagination, no key, no scraping.</p>
+        </div>
+        <div class="metric"><b>24 seconds</b> · 823 MB JSON<br>61,213 jobs, zero errors</div>
+      </div>
+
+      <div class="stage">
+        <div class="n">04</div>
+        <div class="what">
+          <h3>Derive</h3>
+          <p>Location, workplace, salary, seniority and years of experience parsed out of
+            prose into columns a filter can actually read.</p>
+        </div>
+        <div class="metric">workplace <b>98.9%</b> · metro <b>84.1%</b><br>seniority <b>75.1%</b> · salary <b>37.2%</b></div>
+      </div>
+
+      <div class="stage">
+        <div class="n">05</div>
+        <div class="what">
+          <h3>Filter</h3>
+          <p>Held in memory rather than pushed into SQL, because facet counts have to be
+            leave-one-out: “how many more if I also tick Boston” is the query with the
+            location criterion <em>removed</em>.</p>
+        </div>
+        <div class="metric"><b>74–160 ms</b> over all 61,213<br>nine facets in the same pass</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------- unknowns -->
+<section id="unknowns">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">The load-bearing idea</span>
+      <h2>A blank field is not a no.</h2>
+      <p class="lead">Every criterion returns one of three answers — match, no, or
+        <em>unknown</em> — and your profile decides what happens to the third. Nothing is
+        ever ruled out for failing to mention something.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Criterion</th>
+            <th class="n">Unknown</th>
+            <th>Default</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Salary</td><td class="n">62.8%</td>
+            <td><span class="pill include">include</span></td>
+            <td>A silent floor is the most destructive thing a filter can do — six jobs in ten name no figure.</td>
+          </tr>
+          <tr>
+            <td>Seniority</td><td class="n">24.9%</td>
+            <td><span class="pill separate">separate</span></td>
+            <td>232 jobs against 221 confirmed. Too many to drop, too many to mix in — so they get their own list.</td>
+          </tr>
+          <tr>
+            <td>Location</td><td class="n">15.9%</td>
+            <td><span class="pill exclude">exclude</span></td>
+            <td>The one deliberate exception: a job with no parseable location isn't plausibly in your city.</td>
+          </tr>
+          <tr>
+            <td>Workplace</td><td class="n">1.1%</td>
+            <td><span class="pill include">include</span></td>
+            <td>Small enough not to matter either way.</td>
+          </tr>
+          <tr>
+            <td>Employment type · date posted</td><td class="n">~0%</td>
+            <td><span class="pill include">include</span></td>
+            <td>Effectively always stated.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Every one of these is a toggle in the app, with the affected share
+      printed next to it. You are told what a setting costs you before you choose it.</p>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------- the app -->
+<section id="app">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">The app</span>
+      <h2>A ranked list nobody can interrogate is a ranked list nobody trusts.</h2>
+    </div>
+
+    <div class="grid">
+      <div class="cell">
+        <h3>Counts on every control</h3>
+        <p>Each checkbox carries what it would cost you, computed with that criterion
+          removed. A typo'd value warns instead of silently returning nothing.</p>
+        <div class="foot">leave-one-out, all nine facets</div>
+      </div>
+      <div class="cell">
+        <h3>An audit trail per result</h3>
+        <p>Open any job to see the raw location string, which signal decided its workplace
+          and seniority, and whether the salary was as-stated or reinterpreted.</p>
+        <div class="foot">d_salary_src · name_source · metro</div>
+      </div>
+      <div class="cell">
+        <h3>What's new since yesterday</h3>
+        <p>Built from an event log, not a timestamp — the API has no <span class="num">updatedAt</span>.
+          Appeared, changed, reappeared, disappeared. A pulled-and-reposted role counts as new.</p>
+        <div class="foot">npm run daily → data/daily-report.md</div>
+      </div>
+      <div class="cell">
+        <h3>Nothing hardcoded</h3>
+        <p>The city list is the registry the derive pass built from real location strings.
+          A corpus that grows a new city grows a new option, with no code change.</p>
+        <div class="foot">3,178 metros discovered</div>
+      </div>
+      <div class="cell">
+        <h3>One portable profile</h3>
+        <p>The same JSON document drives the app, the terminal search and the scheduled
+          daily run. Save it, edit it by hand, send it to someone.</p>
+        <div class="foot">profiles/*.json</div>
+      </div>
+      <div class="cell">
+        <h3>Yours, on your disk</h3>
+        <p>Binds to <span class="num">127.0.0.1</span> unless you say otherwise. Accounts
+          are optional and gate nothing — signed out, it's the whole app.</p>
+        <div class="foot">data/jobs.db · 1.0 GB · FTS5</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- quick start -->
+<section id="start">
+  <div class="wrap">
+    <div class="two">
+      <div>
+        <div class="sec-head">
+          <span class="eyebrow">Quick start</span>
+          <h2>Four commands to a searchable corpus.</h2>
+        </div>
+        <div class="prose">
+          <p>Requires Node 22.5 or newer, and nothing else — no API key, no account, no
+            hosted service. The first refresh takes about three minutes, most of it
+            verifying slugs; every one after that is under two.</p>
+          <p><b>Then it's a local page at :7799.</b> The same search runs in the terminal
+            with <span class="num">npm run find</span>, and
+            <span class="num">npm run schedule</span> writes a launchd job or a GitHub
+            Actions workflow — and installs neither until you ask.</p>
+        </div>
+      </div>
+      <div class="term">
+        <div><span class="p">$</span> <span class="cmd">npm install</span></div>
+        <div><span class="p">$</span> <span class="cmd">npm run refresh</span> <span class="c"># sync → verify → sweep → derive</span></div>
+        <div><span class="p">$</span> <span class="cmd">npm test</span> <span class="c"># 176, no db, no network</span></div>
+        <div><span class="p">$</span> <span class="cmd">npm run serve</span> <span class="c"># http://localhost:7799</span></div>
+        <div style="line-height:1.7;margin-top:12px" class="c">&nbsp;<br>&nbsp;&nbsp;61,213 jobs · 4,297 boards · index built in 388 ms<br>&nbsp;&nbsp;221 matches, 232 worth a second look</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <p><b style="color:var(--ink-2)">Ashby and Greenhouse today.</b><br>
+      Lever's adapter is built and its 2,611 live boards verified; its
+      first sweep comes next.</p>
+    <p><b style="color:var(--ink-2)">The diff needs two runs.</b><br>
+      The event log currently holds a single sweep day, so every open job still
+      reads as new. It becomes meaningful from the second morning on.</p>
+    <p>README.md — how to run things<br>PROJECT.md — why it's built this way</p>
+  </div>
+</footer>
+
+</body>
+</html>
