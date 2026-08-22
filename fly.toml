@@ -1,0 +1,44 @@
+# Fly.io deployment for Job Finder ATS.
+#
+# One machine, always on, with one volume at /data holding the three things that
+# have to outlive a deploy: the jobs database, the accounts database, and the
+# profile files.
+#
+# CHANGE `app` BELOW to something unique before the first deploy — app names are
+# global across all of Fly, so "job-finder-ats" is very likely taken.
+
+app = "job-finder-ats"
+primary_region = "ewr"   # Newark. `fly platform regions` lists the rest.
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # Always on. Scale-to-zero would save a few dollars a month, but the filter
+  # engine builds a ~427 MB in-memory index at boot and that takes ~3 seconds,
+  # so a cold start is a visibly slow first page load. Wrong trade for a link
+  # you are putting in front of an employer.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 25
+    hard_limit = 50
+
+# One machine only. Each machine gets its own separate volume, so a second one
+# would have its own accounts database and sessions would break at random.
+[mounts]
+  source = "jobdata"
+  destination = "/data"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "2gb"   # index is ~427 MB retained; this leaves comfortable room.

@@ -56,14 +56,70 @@ function yearsFitFactor(job, profile) {
 }
 
 /**
+ * Where the free-text search term was found, as a 0..1 factor.
+ *
+ * The FTS index has always had three columns — title, company, body — and the
+ * search has always queried all three at once and thrown the answer into an
+ * unordered Set, which discards the only interesting thing about a match: which
+ * column it landed in. Someone typing a company name into a search box means
+ * the company, and the ranking should say so out loud rather than leaving them
+ * to scroll past a hundred other employers who merely name-drop it.
+ *
+ * A body-only hit is deliberately worth a token 0.05 rather than 0. It is still
+ * evidence — "we use Palantir Foundry" is a real reason a posting surfaced for
+ * `palantir` — just the weakest kind, and it should sort above the nothing that
+ * a job matching on no column at all would score. Since every row in a text
+ * search matches *somewhere*, the practical effect is a flat floor: it lifts the
+ * whole result set equally and changes no relative order among body-only hits.
+ */
+const TEXT_FIELD_FACTOR = { company: 1, title: 0.6, body: 0.05 };
+
+function textFactor(hit) {
+  return hit ? (TEXT_FIELD_FACTOR[hit] ?? 0) : 0;
+}
+
+/**
+ * How much the search term narrows the corpus, 0..1 — rare terms near 1, words
+ * half the postings contain near 0.
+ *
+ * Without this the column weighting has a failure mode that is worse than the
+ * problem it fixes. `palantir` matches 1,568 of 337,487 postings and names
+ * exactly one employer, so a company hit should dominate. `design` matches
+ * 121,669 and the company hit is `Design Bridge and Partners` — 63 agency jobs
+ * that would sit above 2,969 postings with Design in the *title*, which is
+ * plainly not what the reader meant. The two cases are indistinguishable by
+ * column alone and obvious by frequency, which is the same observation bm25
+ * makes and the reason this is a log ratio rather than a threshold.
+ *
+ * `RARE` is where the scale tops out: a term matching 100 postings or fewer out
+ * of 337,487 is as specific as this needs to measure, and everything rarer
+ * clamps to 1 rather than running off into precision nobody can perceive.
+ */
+const RARE = 100;
+
+export function textSpecificity(matches, corpus) {
+  if (!matches || !corpus || matches >= corpus) return 0;
+  const span = Math.log(corpus / RARE);
+  if (!(span > 0)) return 1;
+  return Math.max(0, Math.min(1, Math.log(corpus / matches) / span));
+}
+
+/**
  * Score one job. `titleHits` and `descHits` come from the matcher so the terms
  * are counted exactly once, with the same word-boundary rules as the gate.
+ *
+ * `textHit` is the strongest column the free-text term matched on, or null when
+ * the search box is empty — which is why this stays a no-op for every profile
+ * that does not use it: no text, no factor, no contribution. `textSpec` scales
+ * that boost by how rare the term is, so a company-name hit on `palantir` is
+ * decisive and one on `design` is a nudge.
  */
-export function scoreJob(job, profile, { titleHits = [], descHits = [] } = {}) {
+export function scoreJob(job, profile, { titleHits = [], descHits = [], textHit = null, textSpec = 1 } = {}) {
   const w = profile.weights;
   const desc = Math.min(descHits.length, w.description_keyword_cap);
 
   const parts = {
+    text: textFactor(textHit) * textSpec * (w.text_match ?? 0),
     title: titleHits.length * w.title_keyword,
     description: desc * w.description_keyword,
     recency: recencyFactor(job.age_days) * w.recency,

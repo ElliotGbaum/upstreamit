@@ -119,10 +119,20 @@ body.auth-page{font-family:var(--text);font-size:15px;line-height:1.55;backgroun
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* ----------------------------------------------------------------- fields */
-form{display:flex;flex-direction:column;gap:15px}
-.field{display:flex;flex-direction:column;gap:6px}
+form{display:flex;flex-direction:column;gap:16px}
+/* app.css also has a `.field`, and it means something else entirely: one cell of
+   the search page's horizontal filter row. That rule loads first and this one
+   only overrode `display`, `flex-direction` and `gap` — so `flex:1 1 138px`,
+   `align-items:center` and `white-space:nowrap` were still leaking in here. In a
+   column that grow factor stretched every field to fill the panel (the canyon
+   between Email and Password) and the centring shrink-wrapped each input to its
+   own contents, which is why the password box — padded out by its SHOW button —
+   came out wider than the email box. Restate all three, so this rule stands on
+   its own no matter what app.css does to its namesake. */
+.field{flex:none;display:flex;flex-direction:column;align-items:stretch;
+       gap:6px;white-space:normal;min-width:0}
 .field label{font-size:12.5px;font-weight:500;color:var(--ink-2);letter-spacing:.005em}
-.control{position:relative;display:flex}
+.control{position:relative;display:flex;width:100%}
 /* The one rule that undoes the browser default. app.css draws a 2px outline on
    :focus for the dense instrument, which on a 15px field in an empty column
    reads as a second border stacked on the first — that is the double blue box.

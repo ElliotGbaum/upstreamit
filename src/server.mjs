@@ -61,6 +61,7 @@ import {
 import { newSince, changedSince, goneSince, activity } from './lib/filter/diff.mjs';
 import { profilesVisibleTo, ownerOf, ownedBy, PROFILE_DIR } from './find.mjs';
 import { json, readBody, CONTENT_TYPES as TYPES } from './lib/wire.mjs';
+import { interpret, aiMeta, CALLS_PER_HOUR } from './lib/interpret.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
 import { openUsersDb } from './lib/users/store.mjs';
 import { APPLICATION_STATUSES, STATUS_LABELS } from './lib/users/schema.mjs';
@@ -161,6 +162,18 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
         google: Boolean(accounts?.googleEnabled()),
         statuses: APPLICATION_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] })),
       },
+      // And again for "describe it in words". Dormant with no API key, and the
+      // page reads it to decide what to draw — the same shape as `auth` above,
+      // for the same reason: a control that is there but cannot work is worse
+      // than no control.
+      //
+      // Unlike everything else on this page it is answered *per viewer*, not
+      // per corpus: it is the one feature behind an account, so whether it can
+      // be used is a fact about who is asking. See `aiMeta`.
+      ai: {
+        ...aiMeta({ accounts: Boolean(accounts), signedIn: Boolean(viewer) }),
+        calls_per_hour: CALLS_PER_HOUR,
+      },
     });
   }
 
@@ -181,6 +194,62 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
       return json(res, 200, { ...result, since: { from: since.from, latest: since.latest, pool: since.ids.size } });
     }
     return json(res, 200, search(db, body.profile ?? {}, opts));
+  }
+
+  // ----------------------------------------------------------- interpret --
+  // Free text — typed or dictated — into a complete filter profile. Returns the
+  // document and a plain-English account of it; it does not save anything and
+  // does not run the search. The page applies what comes back, shows the diff,
+  // and keeps the old profile so Undo is one click.
+  //
+  // **The one route in this project that requires an account**, and the only
+  // exception to "accounts are optional and subtractive of nothing". Every other
+  // route behaves identically signed out: the corpus, the filters, the counts,
+  // the descriptions and the apply links are the app, and they are anonymous.
+  //
+  // This one spends real money on somebody's API key every time it is pressed,
+  // which makes "who is asking" a question that has to have an answer — an
+  // anonymous caller cannot be capped, cannot be told they have reached their
+  // limit, and cannot be distinguished from a script. It was gated on the bind
+  // address instead, which protected the deployed copy and left the laptop open;
+  // the bind address is a fact about the socket, and the thing worth knowing here
+  // is a fact about the person.
+  //
+  // Note that this refuses *before* reading the body: a request that will not be
+  // served should not first be allowed to send a megabyte.
+  if (path === '/api/interpret' && req.method === 'POST') {
+    if (!accounts) {
+      return json(res, 401, {
+        error: 'accounts are switched off on this server (--no-accounts), and describing a search needs one',
+      });
+    }
+    if (!viewer) {
+      return json(res, 401, {
+        error: 'sign in to describe a search — it uses an API key, so it is the one thing here that needs an account',
+      });
+    }
+    const body = await readBody(req);
+    try {
+      const result = await interpret(db, {
+        text: body.text,
+        current: body.profile ?? {},
+        corpus: corpusMeta(db),
+        // The account, always — the gate above guarantees there is one. That is
+        // what makes the cap a cap: a per-socket limit is one NAT away from
+        // being shared by an office, and one browser restart away from being
+        // reset. The cap itself is applied inside `interpret`, at the line that
+        // spends.
+        who: viewer,
+      });
+      return json(res, 200, result);
+    } catch (err) {
+      // 400, not 500: everything this can throw is about the request or the
+      // configuration — no key, no package, nothing typed, a refusal — and each
+      // one is a sentence the page shows verbatim. The cap is the one that has
+      // its own code, because a client should be able to tell "come back later"
+      // from "this will never work".
+      return json(res, err.rateLimited ? 429 : 400, { error: err.message });
+    }
   }
 
   // ----------------------------------------------------------------- job --
@@ -290,6 +359,22 @@ const PAGES = {
   '/password': 'auth.html',
 };
 
+/**
+ * Files that sit in app/ but are not part of the app.
+ *
+ * landing.html is the marketing page. The code is kept deliberately — it is
+ * worth more than the time it would take to write again — but nothing should
+ * be able to reach it, so the static handler refuses it where it lies rather
+ * than the file being moved or deleted.
+ *
+ * Lowercased on both sides on purpose: macOS filesystems are case-insensitive,
+ * so `/LANDING.HTML` opens exactly the file `/landing.html` does, and a check
+ * that compared verbatim would be one shift key away from useless. Matched on
+ * the resolved path, after normalize(), so `/./landing.html` and friends
+ * collapse to the same string.
+ */
+const PRIVATE = new Set([join(APP_DIR, 'landing.html').toLowerCase()]);
+
 async function serveStatic(res, path) {
   const clean = path.replace(/\/+$/, '') || '/';
   const rel = clean === '/' ? 'index.html' : (PAGES[clean] ?? path.replace(/^\/+/, ''));
@@ -298,6 +383,13 @@ async function serveStatic(res, path) {
   const target = normalize(join(APP_DIR, rel));
   if (!target.startsWith(APP_DIR)) {
     res.writeHead(403).end('forbidden');
+    return;
+  }
+  // 404 rather than 403: a 403 confirms the file is there. This answers the
+  // way any other absent path answers, so the page is simply not on this
+  // server as far as anything asking can tell.
+  if (PRIVATE.has(target.toLowerCase())) {
+    res.writeHead(404).end('not found');
     return;
   }
   try {
@@ -332,7 +424,7 @@ async function main() {
     console.log(`\n  Job Finder → http://${args.host}:${args.port}`);
     console.log(
       `  ${meta.open.toLocaleString('en-US')} open jobs · ${meta.companies.toLocaleString('en-US')} boards · ` +
-        `${meta.metros.length.toLocaleString('en-US')} metros · index warm in ${Date.now() - started} ms`,
+        `${meta.metros_total.toLocaleString('en-US')} metros · index warm in ${Date.now() - started} ms`,
     );
     console.log(
       accounts

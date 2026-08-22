@@ -30,8 +30,9 @@ import { fold } from '../derive/text.mjs';
 import { GUESSED_ONSITE } from '../derive/workplace.mjs';
 import { normalizeProfile } from './profile.mjs';
 import { compileProfile, evaluate, classify, failedKeys, hits, compileTerms } from './match.mjs';
-import { scoreJob, explain, sortRows, salaryLabel } from './rank.mjs';
+import { scoreJob, explain, sortRows, salaryLabel, textSpecificity } from './rank.mjs';
 import { ATS_KEYS, COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, companySizeBand } from '../schema.mjs';
+import { countryName } from '../adapters/iso-countries.mjs';
 
 export {
   normalizeProfile,
@@ -59,6 +60,35 @@ const HOT_COLUMNS = `
 const cache = new Map(); // db path -> index
 
 /**
+ * How long a generation reading is trusted before it is taken again.
+ *
+ * The key is three single-row reads, which sounds free and is not: `search()`
+ * asks for it, then `missingDescriptions()` asks again, then `metroLabels()`
+ * asks a third time, and on a 337k-job corpus that was 264 ms of a 767 ms query
+ * spent re-answering "has anything changed?" three times inside one request.
+ *
+ * Half a second is chosen so that a re-derive in another process is still
+ * picked up without a restart -- the property the generation key exists for --
+ * while a burst of calls inside one query pays for it once. `invalidateIndex()`
+ * and `{ force: true }` both bypass it, so an in-process re-derive is immediate.
+ */
+const GENERATION_TTL_MS = 500;
+const generationCache = new Map(); // db path -> { value, at }
+
+function corpusGeneration(db, key, { fresh = false } = {}) {
+  const hit = generationCache.get(key);
+  if (!fresh && hit && Date.now() - hit.at < GENERATION_TTL_MS) return hit.value;
+
+  const value = [
+    db.prepare("SELECT value FROM meta WHERE key = 'last_derive'").get()?.value ?? '0',
+    db.prepare('SELECT COUNT(*) n FROM jobs WHERE is_open = 1').get().n,
+    db.prepare('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL').get().n,
+  ].join(':');
+  generationCache.set(key, { value, at: Date.now() });
+  return value;
+}
+
+/**
  * Identify a connection for caching. `DatabaseSync#location()` only exists on
  * newer Node builds, and this has to keep working on the 22.5 floor the project
  * declares, so an unnamed connection falls back to a single shared slot — which
@@ -80,13 +110,8 @@ function dbKey(db) {
  * rules both bump it; nothing else can change a `d_*` column.
  */
 export function getIndex(db, { force = false } = {}) {
-  const generation = [
-    db.prepare("SELECT value FROM meta WHERE key = 'last_derive'").get()?.value ?? '0',
-    db.prepare('SELECT COUNT(*) n FROM jobs WHERE is_open = 1').get().n,
-    db.prepare('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL').get().n,
-  ].join(':');
-
   const key = dbKey(db);
+  const generation = force ? corpusGeneration(db, key, { fresh: true }) : corpusGeneration(db, key);
   const hit = cache.get(key);
   if (!force && hit && hit.generation === generation) return hit;
 
@@ -173,6 +198,7 @@ function parseList(json) {
 /** Drop a cached index — used by the daily run after it re-derives in-process. */
 export function invalidateIndex() {
   cache.clear();
+  generationCache.clear();
 }
 
 // ------------------------------------------------------------------ search --
@@ -204,10 +230,16 @@ export function search(db, rawProfile, opts = {}) {
   // lives and FTS5 is already built over it. It produces an id set that the
   // in-memory pass intersects, so the two never disagree about ordering.
   let ftsIds = null;
+  let textField = null;
+  let textSpec = 1;
   if (profile.text) {
     const result = ftsSearch(db, profile.text);
     if (result.error) warnings.push(`text search: ${result.error}`);
-    else ftsIds = result.ids;
+    else {
+      ftsIds = result.ids;
+      textField = textFieldRanker(db, profile.text);
+      textSpec = textSpecificity(ftsIds.size, index.jobs.length);
+    }
   }
 
   // Description exclusions run in FTS too, so that facet counts see them. Doing
@@ -270,7 +302,13 @@ export function search(db, rawProfile, opts = {}) {
   }
 
   for (const row of candidates) {
-    const scored = scoreJob(row.job, profile, { titleHits: row.titleHits, descHits: row.descHits ?? [] });
+    row.textHit = textField ? textField(row.job.id) : null;
+    const scored = scoreJob(row.job, profile, {
+      titleHits: row.titleHits,
+      descHits: row.descHits ?? [],
+      textHit: row.textHit,
+      textSpec,
+    });
     row.score = scored.score;
     row.parts = scored.parts;
     row.why = explain({ descHits: row.descHits ?? [] });
@@ -404,6 +442,9 @@ function present(row) {
     score_parts: row.parts,
     title_hits: row.titleHits,
     description_hits: row.descHits ?? [],
+    // Which FTS column the free-text term hit: company | title | body. Absent
+    // when the search box is empty, which is a different statement from `body`.
+    text_hit: row.textHit ?? undefined,
     why: row.why,
     // Only ever set when the collapse ran. 0 means "this is the only copy",
     // absent means "nothing was collapsed at all" — two different statements.
@@ -442,7 +483,12 @@ const FACET_DIMENSIONS = [
   { key: 'metro', criterion: 'metro', values: (j) => j.metros },
   { key: 'workplace', criterion: 'workplace', values: (j) => [j.workplace ?? 'unknown'] },
   { key: 'seniority', criterion: 'experience', values: (j) => [j.seniority ?? 'unknown'] },
-  { key: 'employment_type', criterion: 'employment_type', values: (j) => [j.employment_type ?? 'unknown'] },
+  // No `unknown` row, for the reason `metro` has none: the list is a list of
+  // types you can ask for, and "unstated" is not one of them. `matchEmploymentType`
+  // answers UNKNOWN for those jobs and the `employment_type` unknown policy —
+  // `include` by default — decides what happens to them. Offering it as a
+  // tick-box asked the profile for a value it rejects, and the panel said so.
+  { key: 'employment_type', criterion: 'employment_type', values: (j) => (j.employment_type ? [j.employment_type] : []) },
   { key: 'job_function', criterion: 'job_function', values: (j) => [j.job_function ?? 'other'] },
   // Not a tally but a sample: the salary ladder is built from the figures in
   // the result set at render time, so `collect` gathers the numbers and
@@ -667,7 +713,25 @@ function finishFacets(facets, db, profile) {
   const labels = metroLabels(db);
   const bandLabels = new Map(COMPANY_SIZE_BANDS.map((b) => [b.value, b.label]));
   const out = {};
-  const caps = { metro: 250, company: 60, skill: 60, country: 60 };
+  // 250 for both place dimensions. The corpus holds 100 distinct countries and
+  // the ISO list tops out at 249, so this cap can no longer cut a country off
+  // the list — which the old 60 did, silently, to the 40 smallest. A country a
+  // profile can be written in has to be one the panel can offer, and a row here
+  // is a code, a name and a number.
+  const caps = { metro: 250, company: 60, skill: 60, country: 250 };
+
+  // What the panel prints. The `value` stays the id the profile is written in —
+  // `nyc`, `de`, `101-500` — so widening a label never changes what a saved
+  // profile means. Each falls back to the id: a row whose label is missing is
+  // still a row you can tick, and a blank one reads as a broken filter.
+  const labelFor = (key, value) =>
+    key === 'metro' ? (labels.get(value) ?? value)
+    : key === 'company_size' ? (bandLabels.get(value) ?? value)
+    // `countryName` refuses anything that is not an alpha-2 code, which is the
+    // right answer where it is used to *store* a country and the wrong one
+    // here, where the code is already the id and only its caption is at stake.
+    : key === 'country' ? (countryName(value) ?? value)
+    : value;
 
   for (const dim of FACET_DIMENSIONS) {
     // The salary ladder is derived from the figures this search actually
@@ -705,12 +769,7 @@ function finishFacets(facets, db, profile) {
 
     out[dim.key] = kept.map(([value, count]) => ({
       value,
-      label:
-        dim.key === 'metro'
-          ? (labels.get(value) ?? value)
-          : dim.key === 'company_size'
-            ? (bandLabels.get(value) ?? value)
-            : value,
+      label: labelFor(dim.key, value),
       count,
       selected: selected.has(value),
     }));
@@ -807,6 +866,37 @@ export function ftsSearch(db, query) {
   } catch (err) {
     return { error: err.message.replace(/^.*?: /, '') };
   }
+}
+
+/**
+ * Decide, per job, which FTS column the reader's search term actually hit.
+ *
+ * The gate above answers "did this match"; the ordering needs "match on what".
+ * Two extra column-scoped queries answer it for the whole corpus at once —
+ * `company` and `title`. `body` is the residual rather than a third query,
+ * because every row that reached the ranker is already known to match
+ * somewhere, so anything absent from both narrow sets matched on prose.
+ *
+ * The term is interpolated into a column filter rather than quoted as a phrase,
+ * so a reader who types FTS syntax keeps it: `company:(devops OR sre)` is a
+ * query someone can reasonably write, and re-quoting it would turn it into a
+ * search for that literal string. The cost is that a malformed term can parse
+ * here even though it parsed in the gate — an unbalanced paren wrapped in
+ * another paren is a different expression. That is why a failed column query
+ * degrades to `null` instead of throwing: every row then reads as `body`, the
+ * boost becomes a flat floor across the whole result set, and the ordering is
+ * exactly what it was before this function existed. A search that ranks no
+ * better is a much smaller failure than a search that returns an error.
+ */
+function textFieldRanker(db, text) {
+  const scoped = (column) => {
+    const result = ftsSearch(db, `${column}:(${text})`);
+    return result.error ? null : result.ids;
+  };
+  const companyIds = scoped('company');
+  const titleIds = scoped('title');
+  if (!companyIds && !titleIds) return null;
+  return (id) => (companyIds?.has(id) ? 'company' : titleIds?.has(id) ? 'title' : 'body');
 }
 
 /**
@@ -938,23 +1028,32 @@ function stalestSweep(meta) {
   return stamps.length ? Math.min(...stamps) : null;
 }
 
+/** How many metro rows `corpusMeta` samples. See the comment on `metros`. */
+const METRO_SAMPLE = 250;
+
 export function corpusMeta(db) {
   const meta = Object.fromEntries(db.prepare('SELECT key, value FROM meta').all().map((r) => [r.key, r.value]));
-  const counts = db
-    .prepare(
-      `SELECT COUNT(*) jobs,
-              SUM(is_open) open,
-              SUM(CASE WHEN d_derived_at IS NOT NULL THEN 1 ELSE 0 END) derived
-       FROM jobs`,
-    )
-    .get();
+  // Three counts, three queries, on purpose. As one `SELECT` with a `CASE` in
+  // it there is no index that answers all three at once, so SQLite scanned the
+  // whole table -- 83 ms on this corpus, on every page load. Split, each one
+  // rides an index it already has and the set costs 7 ms.
+  const count = (sql) => db.prepare(sql).get().n;
   return {
-    jobs: counts.jobs,
-    open: counts.open,
-    derived: counts.derived,
+    jobs: count('SELECT COUNT(*) n FROM jobs'),
+    open: count('SELECT COUNT(*) n FROM jobs WHERE is_open = 1'),
+    derived: count('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL'),
     companies: db.prepare('SELECT COUNT(*) n FROM companies').get().n,
     boards_live: db.prepare("SELECT COUNT(*) n FROM companies WHERE status = 'live'").get().n,
-    metros: db.prepare('SELECT id, label, country, job_count FROM metros ORDER BY job_count DESC').all(),
+    // The *registry* is 24,576 rows and serializing all of them made `/api/meta`
+    // a 1.8 MB payload on every page load. Nothing reads them: the metro control
+    // is drawn from the search facets, which are already capped and already
+    // labelled, and the only caller of this field wanted its length. So the
+    // count is the field, and the rows are the top of the list for anyone who
+    // wants a registry sample without a second query.
+    metros_total: db.prepare('SELECT COUNT(*) n FROM metros').get().n,
+    metros: db
+      .prepare(`SELECT id, label, country, job_count FROM metros ORDER BY job_count DESC LIMIT ${METRO_SAMPLE}`)
+      .all(),
     skills: db
       .prepare('SELECT skill AS value, COUNT(*) AS count FROM job_skills GROUP BY skill ORDER BY count DESC LIMIT 200')
       .all(),
@@ -962,8 +1061,14 @@ export function corpusMeta(db) {
     // list: an ATS with no swept jobs draws no row, and the day a third adapter
     // lands the control grows an option with no code change. Same rule the
     // metro dropdown already follows.
+    //
+    // `SUM(is_open)` rather than `COUNT(*) WHERE is_open = 1`, which is the same
+    // number by a slower road: the `WHERE` makes SQLite reach for
+    // `idx_jobs_open` and then sort 337k rows through a temp B-tree, 124 ms.
+    // Summing lets it walk the covering `(ats, is_open)` index it already has,
+    // 13 ms, and `HAVING` keeps the "no swept jobs draws no row" rule.
     ats: db
-      .prepare('SELECT ats AS value, COUNT(*) AS count FROM jobs WHERE is_open = 1 GROUP BY ats ORDER BY count DESC')
+      .prepare('SELECT ats AS value, SUM(is_open) AS count FROM jobs GROUP BY ats HAVING count > 0 ORDER BY count DESC')
       .all(),
     // Per-ATS. This used to read `last_sweep_ashby` alone, which was correct
     // when Ashby was the corpus and became a quiet lie the moment it wasn't —

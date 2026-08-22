@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22.5"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.0"
+  },
   "scripts": {
     "sync": "node src/sync-slugs.mjs",
     "sync:dry": "node src/sync-slugs.mjs --dry-run",
@@ -21,7 +24,7 @@
     "accounts": "node src/accounts.mjs",
     "daily": "node src/daily.mjs",
     "schedule": "node src/schedule.mjs",
-    "test": "node src/derive-test.mjs && node src/filter-test.mjs && node src/adapters-test.mjs && node src/users-test.mjs",
+    "test": "node src/derive-test.mjs && node src/filter-test.mjs && node src/adapters-test.mjs && node src/users-test.mjs && node src/interpret-test.mjs",
     "stats": "node src/stats.mjs",
     "progress": "node src/progress-server.mjs",
     "refresh": "npm run sync && npm run verify && npm run sweep && npm run derive",

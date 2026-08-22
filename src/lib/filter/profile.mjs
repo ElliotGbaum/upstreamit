@@ -98,44 +98,61 @@ const DEFAULT_UNKNOWN_POLICIES = {
   salary_source: 'include',
 };
 
-// Re-measured 2026-08-22 over the 265,698-job Ashby + Greenhouse corpus. Every
-// one of these moved when Greenhouse landed, and two moved a lot: `job type`
-// went from 0.0% to 77.0% because Greenhouse publishes no employment type at
-// all, and `salary` rose because Greenhouse's pay transparency is a board-level
-// setting that most boards leave off. Re-measure these after any sweep that
-// adds an ATS — a stale share reads as measured and is worse than no number.
+// Re-measured 2026-08-22 over the full 337,487-job Ashby + Greenhouse + Lever
+// corpus, by activating one criterion at a time and counting the jobs the engine
+// itself answers `unknown` for. That is the number this column means: what the
+// `exclude` policy would drop.
+//
+// Measuring it that way corrected one that had been wrong rather than stale.
+// `remote_scope` read **0.831**, which is the share of jobs carrying no
+// `d_remote_scope` value at all — but `matchRemoteScope` answers `no` for a job
+// that is placed and not remote, not `unknown`. Only a remote job that never
+// said how far it reaches, or a job with no workplace signal at all, is unknown
+// here: **0.036**. The old figure overstated the cost of excluding by 23×.
+//
+// `job type` moved for a real reason: Lever publishes an employment type on
+// 72.5% of its jobs where Greenhouse publishes none, so unknown fell 77.0% →
+// 66.4%. Re-measure these after any sweep that adds an ATS, and measure them
+// through the match functions — a stale share reads as measured and is worse
+// than no number, and a share measured a different way than the filter decides
+// is worse still.
 export const UNKNOWNABLE = [
-  { key: 'equity', label: 'equity', detail: 'no equity component published', share: 0.959 },
-  { key: 'visa', label: 'sponsorship', detail: 'nothing said about visa sponsorship', share: 0.941 },
-  { key: 'remote_scope', label: 'remote reach', detail: 'a remote role that never said how far it reaches', share: 0.831 },
+  { key: 'equity', label: 'equity', detail: 'no equity component published', share: 0.967 },
+  { key: 'visa', label: 'sponsorship', detail: 'nothing said about visa sponsorship', share: 0.944 },
+  { key: 'remote_scope', label: 'remote reach', detail: 'a remote role that never said how far it reaches', share: 0.036 },
   // The single biggest change from adding Greenhouse, and the one most likely
   // to be read as a typo: it was genuinely 0.0% when Ashby was the whole corpus,
   // because Ashby publishes `employmentType` on every job. Greenhouse publishes
   // it on none — the key exists in the payload and is populated 0 times out of
-  // 1,140 sampled. `exclude` here now discards three quarters of the market.
-  { key: 'employment_type', label: 'job type', detail: 'no employment type published', share: 0.770 },
-  { key: 'salary', label: 'salary', detail: 'no compensation published', share: 0.756 },
-  { key: 'pay_period', label: 'pay period', detail: 'no compensation published, so no interval either', share: 0.756 },
-  { key: 'currency', label: 'currency', detail: 'no compensation published, so no currency either', share: 0.756 },
-  { key: 'salary_source', label: 'pay as published', detail: 'no figure to have published as-stated', share: 0.756 },
-  { key: 'degree', label: 'degree', detail: 'no degree requirement stated', share: 0.600 },
-  { key: 'skills', label: 'skills', detail: 'description names none of the tracked skills', share: 0.395 },
-  { key: 'experience', label: 'seniority', detail: 'no title band and no years stated', share: 0.253 },
-  { key: 'job_function', label: 'job function', detail: 'title and department match no function rule', share: 0.186 },
-  { key: 'metro', label: 'location', detail: 'no location string we could place', share: 0.120 },
+  // 1,140 sampled. Lever pulled it back from 77.0% to 66.4% by publishing a
+  // usable type on 72.5% of its jobs. `exclude` still discards two thirds of
+  // the market.
+  { key: 'employment_type', label: 'job type', detail: 'no employment type published', share: 0.664 },
+  { key: 'salary', label: 'salary', detail: 'no compensation published', share: 0.742 },
+  { key: 'pay_period', label: 'pay period', detail: 'no compensation published, so no interval either', share: 0.741 },
+  { key: 'currency', label: 'currency', detail: 'no compensation published, so no currency either', share: 0.741 },
+  { key: 'salary_source', label: 'pay as published', detail: 'no figure to have published as-stated', share: 0.742 },
+  { key: 'degree', label: 'degree', detail: 'no degree requirement stated', share: 0.616 },
+  { key: 'skills', label: 'skills', detail: 'description names none of the tracked skills', share: 0.424 },
+  { key: 'experience', label: 'seniority', detail: 'no title band and no years stated', share: 0.279 },
+  { key: 'job_function', label: 'job function', detail: 'title and department match no function rule', share: 0.193 },
+  { key: 'metro', label: 'location', detail: 'no location string we could place', share: 0.127 },
   // The one share here that is a floor rather than a figure, and the comment is
-  // load-bearing for anyone about to "fix" the number. 2.8% is the jobs with no
-  // workplace signal at all. Ask for **hybrid** and 65.2% more join them:
-  // 173,221 jobs are `onsite` by the `default-has-metro` guess rather than by
+  // load-bearing for anyone about to "fix" the number. 2.3% is the jobs with no
+  // workplace signal at all. Ask for **hybrid** and 51.7% more join them:
+  // 174,537 jobs are `onsite` by the `default-has-metro` guess rather than by
   // the employer saying so, and Greenhouse — 165,962 of those — publishes no
   // workplace field on any posting, so it can never say hybrid. `matchWorkplace`
   // answers `unknown` for those on a hybrid search and `match` on an onsite one,
   // which is exactly why no single share fits in this slot.
-  { key: 'workplace', label: 'workplace', detail: 'no onsite / hybrid / remote signal — plus 65.2% more when you ask for hybrid, which only Ashby ever states', share: 0.028 },
-  // 0.01% — 16 jobs of 265,698 whose body never arrived. The roster entry was
+  //
+  // The guessed share fell from 65.2% because Lever states a workplace on 98.0%
+  // of its jobs — only 1,316 of its 71,789 land in the guess.
+  { key: 'workplace', label: 'workplace', detail: 'no onsite / hybrid / remote signal — plus 51.7% more when you ask for hybrid, which Greenhouse never states', share: 0.023 },
+  // 758 jobs of 337,487 whose body never arrived. The roster entry was
   // never optional: a description keyword gate with no text to search must
   // answer `unknown`, not `no`.
-  { key: 'description', label: 'description', detail: 'no description text to search', share: 0.0001 },
+  { key: 'description', label: 'description', detail: 'no description text to search', share: 0.0022 },
   { key: 'posted', label: 'posted date', detail: 'no publication date', share: 0.0 },
   // `default` is served alongside the label so the page's Reset button restores
   // exactly what the engine would apply. It used to hardcode its own copy of
@@ -153,8 +170,20 @@ export const UNKNOWNABLE = [
  * in 5 KB of prose says far less about a job than the same word in its title,
  * and past the third or fourth hit it says nothing new. Both lists gate as well
  * as score, but the gate is a yes/no and this is the ordering.
+ *
+ * `text_match` is the largest weight in the table because free-text search is
+ * the one input where the reader has said, in their own words, what they are
+ * looking for. It was worth nothing at all until now: `profile.text` produced
+ * an id set that gated the corpus and then took no part in the ordering, so a
+ * job *at* Palantir and a job whose description mentions Palantir Foundry once
+ * in paragraph nine scored identically on the thing that was actually typed.
+ * Searching `palantir` put the first real Palantir posting at rank 137 of 1,568
+ * — past the 200 rows the page draws for 306 of its 308 openings. The weight
+ * has to clear the ~17-point spread the other components produce on a corpus
+ * scan, or a company-name hit still loses to a fresher posting elsewhere.
  */
 export const DEFAULT_WEIGHTS = {
+  text_match: 30,
   title_keyword: 10,
   description_keyword: 1.5,
   description_keyword_cap: 6,
@@ -435,7 +464,14 @@ export function normalizeProfile(input = {}) {
   profile.remote_scope = subsetOf(input.remote_scope, REMOTE_SCOPES);
   drop('remote_scope', asStrings(input.remote_scope), profile.remote_scope);
 
-  profile.employment_type = subsetOf(input.employment_type, EMPLOYMENT_TYPES);
+  // `Unknown` is filtered out for the same reason `seniority` filters out its
+  // own: it is the absence of a value, not a value. `matchEmploymentType`
+  // answers UNKNOWN before it ever consults this list, so asking for it could
+  // only ever match nothing.
+  profile.employment_type = subsetOf(
+    input.employment_type,
+    EMPLOYMENT_TYPES.filter((t) => t !== 'Unknown'),
+  );
   drop('employment_type', asStrings(input.employment_type), profile.employment_type);
 
   // `families` is what this field was called before it was renamed to the

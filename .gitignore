@@ -11,6 +11,10 @@ data/users.db-wal
 # The Google OAuth client secret, when Google sign-in is configured.
 config/google-oauth.json
 
+# The Anthropic API key, when "describe your search" is configured. A key in a
+# git object is a key somebody else can spend.
+config/anthropic.json
+
 # The scraped jobs database. 4.5 GB on disk and it changes every sweep, so it
 # is never a git object — GitHub rejects any single file over 100 MB anyway.
 # Rebuild it from scratch with: npm run refresh
@@ -27,3 +31,8 @@ progress/state.json
 node_modules/
 .DS_Store
 npm-debug.log*
+
+# The marketing landing page. Kept on disk on purpose — the code is not being
+# thrown away — but it is not part of what this repo publishes and the server
+# refuses to serve it (see PRIVATE in src/server.mjs).
+app/landing.html

@@ -295,6 +295,11 @@ CREATE INDEX IF NOT EXISTS idx_jobs_salary      ON jobs(d_salary_max);
 CREATE INDEX IF NOT EXISTS idx_jobs_years       ON jobs(d_min_years);
 CREATE INDEX IF NOT EXISTS idx_jobs_first_seen  ON jobs(first_seen DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_title_norm  ON jobs(title_norm);
+-- Not a filter column: this one exists for the *generation key* the in-memory
+-- filter index is cached on, which counts derived rows on every search. Without
+-- it that count is a full table scan -- 1.8 ms indexed against 83 ms not, and it
+-- ran three times per query.
+CREATE INDEX IF NOT EXISTS idx_jobs_derived_at  ON jobs(d_derived_at);
 
 -- Cold storage: descriptions. Split out so facet scans never touch them.
 CREATE TABLE IF NOT EXISTS job_content (

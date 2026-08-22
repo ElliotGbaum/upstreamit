@@ -16,6 +16,8 @@
  */
 
 import { account } from './account.js';
+import { installAiBox } from './ai.js';
+import { companyMark } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n ?? 0).toLocaleString('en-US');
@@ -55,20 +57,47 @@ async function api(path, options) {
 }
 
 /**
+ * Did the request never reach the server at all?
+ *
+ * `fetch` rejects with a TypeError when nothing answered — the server was
+ * stopped, the machine slept, the port moved. Every other failure got a reply
+ * and was refused on its merits, which is a different sentence to write.
+ */
+const unreachable = (err) => err instanceof TypeError;
+
+/**
+ * Grey the results while they answer a question nobody is asking any more.
+ *
+ * A failed search leaves the *previous* one's funnel, counts and rows on
+ * screen, and they are answers to the profile as it was before the change that
+ * failed. Under a single-line warning that page reads as a search that worked:
+ * a server stopped mid-session once showed a full, confident 19,270 next to
+ * criteria it had never seen. Dimming is the difference between "here is your
+ * answer" and "here is the last answer we got". The notice itself stays at full
+ * strength — it is the only thing on screen still true.
+ */
+function markStale(on) {
+  $('search-view').classList.toggle('stale', on);
+}
+
+/**
  * Debounced search. Typing in a keyword box should not fire a query per
  * keystroke, but ticking a checkbox should feel immediate — so the delay is
  * short and the response is discarded if a newer one has been issued.
  */
 let searchTimer = null;
 function runSearch({ delay = 140 } = {}) {
+  // Every change to the filters comes through here, so this is where the header
+  // learns that what is on screen no longer matches the set it was loaded from.
+  // Not inside the timer: the chip is about the click just made, not about the
+  // answer that click is waiting for.
+  syncFilterSetBar();
   clearTimeout(searchTimer);
   searchTimer = setTimeout(async () => {
     const token = ++searchToken;
     $('loading').classList.add('on');
     try {
       const body = { profile, limit: PAGE };
-      const since = $('since').value;
-      if (since) body.since = since;
       const result = await api('/api/search', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -76,13 +105,29 @@ function runSearch({ delay = 140 } = {}) {
       });
       if (token !== searchToken) return; // a newer query already answered
       last = result;
+      markStale(false);
       render();
       // Signed in, the filters on screen are remembered here — one debounced
       // write per settled change, so coming back tomorrow opens on this search
       // rather than on a blank one. A no-op for everyone else.
       account.remember(profile);
     } catch (err) {
-      showWarnings([`search failed: ${err.message}`]);
+      // Same guard as the success path. Without it a slow failure lands after a
+      // newer search has already succeeded and greys out a good page.
+      if (token !== searchToken) return;
+      // Only stale if there is something up there to be stale. On the first
+      // search of the session the results area is empty and dimming it says
+      // nothing.
+      markStale(Boolean(last));
+      const tail = last ? ' Everything below is from your last search.' : '';
+      showWarnings(
+        [
+          unreachable(err)
+            ? `cannot reach the server — check that it is still running (npm run serve).${tail}`
+            : `search failed: ${err.message}.${tail}`,
+        ],
+        { level: 'err' },
+      );
     } finally {
       if (token === searchToken) $('loading').classList.remove('on');
     }
@@ -160,9 +205,14 @@ function chipList(inputId, chipsId, field, { negative = false } = {}) {
  * is selected or when the universe is short — vanishing options make a filter
  * feel broken, and "Boston (0)" is a more useful answer than no Boston at all.
  */
-function optionList(containerId, field, { search: searchId = null, universe = null, cap = 40, ordered = false, selectAll = false } = {}) {
+function optionList(containerId, field, { search: searchId = null, universe = null, cap = 40, ordered = false, selectAll = false, expand = null } = {}) {
   const container = $(containerId);
   const searchInput = searchId ? $(searchId) : null;
+  // Whether the cap is currently lifted. Lists whose tail is worth reading in
+  // full — countries, where yours may well be the 40th by count — trade the
+  // "…N more" note for a button that shows them. It survives a redraw, so a
+  // count changing under an opened list does not fold it back up.
+  let expanded = false;
   // Typing in the search box re-draws from the *last* facet rather than from
   // nothing. Redrawing with an empty facet would blank every count — and, for
   // the lists whose options come only from the facet, blank the list itself.
@@ -206,7 +256,7 @@ function optionList(containerId, field, { search: searchId = null, universe = nu
     const needle = searchInput?.value.trim().toLowerCase();
     if (needle) rows = rows.filter((r) => String(r.label).toLowerCase().includes(needle) || String(r.value).toLowerCase().includes(needle));
 
-    const shown = rows.slice(0, cap);
+    const shown = rows.slice(0, expanded ? rows.length : cap);
     const hidden = rows.length - shown.length;
 
     // Ticking every box by hand is fine for two options and absurd for sixty,
@@ -278,7 +328,17 @@ function optionList(containerId, field, { search: searchId = null, universe = nu
       container.prepend(label);
       refreshAll();
     }
-    if (hidden > 0) {
+    if (expand && (hidden > 0 || expanded)) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'more';
+      more.textContent = hidden > 0 ? `Show all ${fmt(rows.length)} ${expand}` : 'Show fewer';
+      more.onclick = () => {
+        expanded = !expanded;
+        draw(lastFacet);
+      };
+      container.append(more);
+    } else if (hidden > 0) {
       const more = document.createElement('div');
       more.className = 'more';
       more.textContent = searchInput
@@ -313,9 +373,11 @@ const drawMetros = optionList('metro-options', 'metros', { search: 'metro-search
 // Countries sit under the same criterion as metros and share its leave-one-out
 // counts. A profile can ask for either or both, and without this control the UI
 // would express less than a saved profile can — the one thing the design does
-// not allow. No search box of its own: there are ~100 of them and the list is
-// capped by count, so the top 20 is already the useful part.
-const drawCountries = optionList('country-options', 'countries', { cap: 20 });
+// not allow. No search box of its own: there are ~100 of them, the top 20 by
+// count covers most searches, and the button under the list shows the rest —
+// a country ranked 90th is still one somebody lives in, and a bare "…76 more"
+// leaves them with nothing to click.
+const drawCountries = optionList('country-options', 'countries', { cap: 20, expand: 'countries' });
 const drawWorkplace = optionList('workplace-options', 'workplace', {
   universe: () => ['onsite', 'hybrid', 'remote'].map((v) => ({ value: v, label: v })),
 });
@@ -325,8 +387,7 @@ const drawWorkplace = optionList('workplace-options', 'workplace', {
 // blank field — and it never even worked, since `matchExperience` answers
 // UNKNOWN for those jobs before it consults the allow-list, and `readProfile`
 // strips `unknown` out of `seniority` on the way in. What governs them is the
-// `experience` unknown policy, which keeps them. The count still matters, so it
-// is printed under the list as a caption rather than offered as a control.
+// `experience` unknown policy, which keeps them.
 const drawSeniorityOptions = optionList('seniority-options', 'seniority', {
   universe: () =>
     ['intern', 'entry', 'junior', 'mid', 'senior', 'staff', 'principal', 'manager', 'director', 'executive'].map(
@@ -336,12 +397,6 @@ const drawSeniorityOptions = optionList('seniority-options', 'seniority', {
 
 function drawSeniority(facet = []) {
   drawSeniorityOptions(facet);
-  const note = $('seniority-unknown');
-  if (!note) return;
-  const n = facet.find((row) => row.value === 'unknown')?.count ?? 0;
-  note.textContent = n
-    ? `${fmt(n)} state no band and no years. Nothing here can rule them out — see “When a posting doesn't say”.`
-    : '';
 }
 const drawEmployment = optionList('employment-options', 'employment_type');
 const drawJobFunction = optionList('function-options', 'job_functions', { cap: 30 });
@@ -355,13 +410,6 @@ const drawRemoteScope = optionList('remote-scope-options', 'remote_scope', {
   ordered: true,
   universe: () => (meta?.remote_scopes ?? []).map((v) => ({ value: v, label: REMOTE_SCOPE_LABELS[v] ?? v })),
 });
-const drawPayPeriod = optionList('pay-period-options', 'pay_period', {
-  ordered: true,
-  universe: () => (meta?.pay_periods ?? []).map((v) => ({ value: v, label: PAY_PERIOD_LABELS[v] ?? v })),
-});
-// No universe: the corpus carries 40-odd currencies today and grows one every
-// time a board in a new country is swept, so the list is whatever came back.
-const drawCurrency = optionList('currency-options', 'currencies', { cap: 20 });
 // The allow-list, picked by name off the result set rather than typed as a
 // slug. `companies` accepts either, so a profile written by hand still loads.
 const drawCompanies = optionList('company-options', 'companies', { search: 'company-search', cap: 60 });
@@ -374,11 +422,6 @@ const drawDegree = optionList('degree-options', 'degree', {
   universe: () => DEGREE_LEVELS.map((d) => ({ value: d.value, label: d.label })),
 });
 
-/** How the schema spells them, and how a person says them. */
-const PAY_PERIOD_LABELS = {
-  YEAR: 'per year', HALF_YEAR: 'per half-year', MONTH: 'per month', WEEK: 'per week',
-  DAY: 'per day', HOUR: 'per hour', NONE: 'no interval given',
-};
 const REMOTE_SCOPE_LABELS = {
   worldwide: 'anywhere in the world', country: 'within one country',
   region: 'within one region', timezone: 'within a timezone band',
@@ -612,25 +655,20 @@ function drawFacets() {
   drawAges(facets.age_band ?? [], currentAgeBand());
   drawSalaryBands(facets.salary_band ?? []);
   drawRemoteScope(facets.remote_scope ?? []);
-  drawPayPeriod(facets.pay_period ?? []);
-  drawCurrency(facets.currency ?? []);
   drawCompanies(facets.company ?? []);
   drawCompanySize(facets.company_size ?? []);
   drawDegree(facets.degree ?? []);
 
-  drawToggle('requires-equity', 'equity-count', profile.requires_equity, facetCount(facets.equity, 'yes'));
-  drawToggle('salary-stated', 'stated-count', profile.salary_stated_only, facetCount(facets.salary_source, 'as-stated'));
   drawToggle('visa-sponsors', 'visa-sponsors-count', profile.requires_visa_sponsorship, facetCount(facets.visa, 'sponsors'));
   drawToggle('visa-no-refusal', 'visa-refusal-count', profile.exclude_visa_refusal, facetCount(facets.visa, 'will not sponsor'));
   drawToggle('exclude-clearance', 'clearance-count', profile.exclude_clearance, facetCount(facets.clearance, 'requires clearance'));
 
   drawUnknownPolicies();
-  $('metro-count').textContent = fmt(meta?.metros.length ?? 0);
 }
 
 function render() {
   if (!last) return;
-  drawFunnel(last.funnel, last.since);
+  drawFunnel(last.funnel);
   showWarnings(last.warnings);
 
   drawFacets();
@@ -711,8 +749,6 @@ async function loadMore(button) {
   button.textContent = 'Loading…';
   try {
     const body = { profile, limit: PAGE, offset: start, facets: false };
-    const since = $('since').value;
-    if (since) body.since = since;
     const page = await api('/api/search', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -736,7 +772,16 @@ async function loadMore(button) {
       ]);
     }
   } catch (err) {
-    showWarnings([`could not load more: ${err.message}`]);
+    // Not stale: the rows already on screen are still the rows this search
+    // matched. Only the page that failed to arrive is missing.
+    showWarnings(
+      [
+        unreachable(err)
+          ? 'cannot reach the server — the list so far is still good, try the button again in a moment.'
+          : `could not load more: ${err.message}`,
+      ],
+      { level: 'err' },
+    );
     drawMore();
   }
 }
@@ -753,10 +798,9 @@ function customAgeDays() {
   return currentAgeBand() === null ? profile.posted_within_days : null;
 }
 
-function drawFunnel(funnel, since) {
+function drawFunnel(funnel) {
   const steps = [
     ['open jobs', funnel.open_jobs, ''],
-    ...(since ? [[`first seen ${since.from} +`, funnel.considered, '']] : []),
     ['matched', funnel.matched, 'hit'],
   ];
   $('funnel').replaceChildren(
@@ -770,11 +814,17 @@ function drawFunnel(funnel, since) {
   );
 }
 
-function showWarnings(warnings = []) {
+/**
+ * @param {string} [options.level] `warn` for the engine's own notes about the
+ *   match — the ordinary case, amber. `err` for something that went wrong
+ *   between the page and the server, which is red because it means the numbers
+ *   beside it may not be answers at all.
+ */
+function showWarnings(warnings = [], { level = 'warn' } = {}) {
   $('warnings').replaceChildren(
     ...warnings.map((text) => {
       const div = document.createElement('div');
-      div.className = 'notice';
+      div.className = level === 'err' ? 'notice err' : 'notice';
       div.textContent = text;
       return div;
     }),
@@ -883,7 +933,7 @@ function jobCard(row, i) {
     toggleWhy(card, row, i + 1);
   };
 
-  card.append(rank, main, whyBtn);
+  card.append(rank, companyMark(row.company), main, whyBtn);
   // Order matters: the breakdown belongs above the description, not under
   // 5 KB of it.
   if (openWhyId === row.id) card.append(rankPanel(row, i + 1));
@@ -1051,6 +1101,27 @@ function rankBreakdown(row) {
   const cap = w.description_keyword_cap ?? 0;
 
   const out = [];
+
+  // First, because it is the heaviest weight in the table and because it is the
+  // only row here that answers a question the reader asked in their own words.
+  const searchText = (p.text ?? '').trim();
+  const hit = row.text_hit;
+  const TEXT_WHERE = {
+    company: 'in the company name — which is almost always what someone typing a name into a search box meant, so it scores the full weight',
+    title: 'in the job title, but not the company name — worth well over half, because a title match is a real answer even when it is not the employer you named',
+    body: 'only in the description, not the title or company name — worth a token amount, so these sit below the two stronger kinds of match without dropping out of the list',
+  };
+  out.push({
+    label: 'search words',
+    got: parts.text ?? 0,
+    max: w.text_match ?? 0,
+    note: !searchText
+      ? 'Nothing in the search box, so this counts for nothing on any job.'
+      : `Your search for "${searchText}" matched ${TEXT_WHERE[hit] ?? 'somewhere in this posting'}. ` +
+        `The score is also scaled by how rare the word is across all postings: a search for an unusual ` +
+        `name is decisive, and a common word is only a nudge, because a company that happens to have that ` +
+        `word in its name should not outrank every job that has it in the title.`,
+  });
 
   out.push({
     label: 'title words',
@@ -1264,7 +1335,7 @@ const PANELS = {
   },
   salary: {
     badge: 'n-salary',
-    fields: ['salary_min', 'salary_max', 'pay_period', 'currencies', 'requires_equity', 'salary_stated_only'],
+    fields: ['salary_min', 'salary_max'],
   },
   posted: { badge: 'n-posted', fields: ['posted_within_days'] },
   'employment-type': { badge: 'n-employment-type', fields: ['employment_type'] },
@@ -1314,11 +1385,10 @@ function clearPanel(name) {
   runSearch({ delay: 0 });
 }
 
-/** Push the sort and fold controls back from the profile. Both are presentation. */
+/** Push the sort control back from the profile. It is presentation, not a criterion. */
 function fillToolbar() {
   const sort = $('sort');
   if (sort && sort.options.length) sort.value = profile.sort ?? 'relevance';
-  $('collapse').checked = Boolean(profile.collapse_duplicates);
 }
 
 /** The per-panel count badges — how many criteria each collapsed card holds. */
@@ -1358,8 +1428,6 @@ function fillControls() {
   fillToolbar();
   // Drawn from the profile with no counts yet: the search that would supply
   // them has not run. `drawFacets` fills the numbers in when it comes back.
-  drawToggle('requires-equity', 'equity-count', profile.requires_equity, null);
-  drawToggle('salary-stated', 'stated-count', profile.salary_stated_only, null);
   drawToggle('visa-sponsors', 'visa-sponsors-count', profile.requires_visa_sponsorship, null);
   drawToggle('visa-no-refusal', 'visa-refusal-count', profile.exclude_visa_refusal, null);
   drawToggle('exclude-clearance', 'clearance-count', profile.exclude_clearance, null);
@@ -1420,14 +1488,11 @@ function bindControls() {
     profile.include_intern = $('include-intern').checked;
     runSearch({ delay: 0 });
   });
-  $('since').addEventListener('change', () => runSearch({ delay: 0 }));
 
   // The single-boolean criteria. One table rather than five near-identical
   // listeners, so a sixth is a line of data — the same reason `PANELS` is a
   // table and `CRITERIA` is a table.
   for (const [id, field] of [
-    ['requires-equity', 'requires_equity'],
-    ['salary-stated', 'salary_stated_only'],
     ['visa-sponsors', 'requires_visa_sponsorship'],
     ['visa-no-refusal', 'exclude_visa_refusal'],
     ['exclude-clearance', 'exclude_clearance'],
@@ -1443,16 +1508,11 @@ function bindControls() {
     });
   }
 
-  // Sort and fold. Neither is a criterion — they change what the same match set
-  // looks like, not which jobs are in it — but both live in the profile,
-  // because a saved search that forgets it was sorted by pay is a saved search
-  // you have to set up twice.
+  // Sort. Not a criterion — it changes what the same match set looks like, not
+  // which jobs are in it — but it lives in the profile, because a saved search
+  // that forgets it was sorted by pay is a saved search you have to set up twice.
   $('sort').addEventListener('change', () => {
     profile.sort = $('sort').value;
-    runSearch({ delay: 0 });
-  });
-  $('collapse').addEventListener('change', () => {
-    profile.collapse_duplicates = $('collapse').checked;
     runSearch({ delay: 0 });
   });
 
@@ -1505,34 +1565,15 @@ function bindControls() {
       unknowns: Object.fromEntries((meta?.unknowns ?? []).map((u) => [u.key, u.default ?? 'include'])),
     };
     $('profile-select').value = '';
+    // Cleared filters are not "changes to the set that was loaded" — they are
+    // no set at all, so the chip starts quiet and turns on again at the first
+    // criterion typed into an empty page.
+    markProfileSaved();
     fillControls();
     runSearch({ delay: 0 });
   };
 
-  $('save').onclick = async () => {
-    const suggested = profile.name && profile.name !== 'untitled' ? profile.name : 'my-search';
-    const name = prompt('Save this profile as (letters, numbers, - and _):', suggested);
-    if (!name) return;
-    profile.name = name;
-    try {
-      // Signed in, it goes to your account and nobody else sees it. Signed out,
-      // it is written to `profiles/<name>.json` exactly as before — the file the
-      // CLI and the daily run read. Same document either way.
-      if (await account.save(name, profile)) {
-        fillProfileSelect(`mine:${name}`);
-        return;
-      }
-      const result = await api(`/api/profiles/${encodeURIComponent(name)}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(profile),
-      });
-      meta.profiles = result.profiles;
-      fillProfileSelect(`shared:${name}`);
-    } catch (err) {
-      showWarnings([`could not save: ${err.message}`]);
-    }
-  };
+  bindFilterSetBar();
 
   $('profile-select').addEventListener('change', async (event) => {
     const value = event.target.value;
@@ -1541,12 +1582,351 @@ function bindControls() {
     const name = value.slice(value.indexOf(':') + 1);
     try {
       profile = owner === 'mine' ? await account.load(name) : await api(`/api/profiles/${encodeURIComponent(name)}`);
+      markProfileSaved();
       fillControls();
       runSearch({ delay: 0 });
     } catch (err) {
       showWarnings([`could not load ${name}: ${err.message}`]);
     }
   });
+}
+
+// ------------------------------------------------------------ filter sets --
+
+/**
+ * The header's filter-set bar: which saved search is loaded, whether it still
+ * matches what is on screen, and the form that saves it.
+ *
+ * The rule the whole bar is built on: **a saved search should be visible as a
+ * thing you own.** Before this, the page told you none of it. The menu was a
+ * bare `<select>`, so the label of the loaded set looked like a setting rather
+ * than a document of yours; nothing marked the moment your filters stopped
+ * matching it; and "Save" opened `prompt()`, a browser dialog that cannot say
+ * where the thing is going and rejects a bad name by discarding the good one.
+ */
+
+/** The set as it was when it was last loaded or saved. Null before boot. */
+let savedFingerprint = null;
+
+/**
+ * Key order in `profile` follows whatever order the controls happened to write
+ * in, so two identical documents stringify differently — tick a box and untick
+ * it and the field is gone from where it was and back at the end. Sorting the
+ * keys is what makes "has this changed?" a question about the search rather
+ * than about the order somebody clicked.
+ */
+function fingerprint(value) {
+  const canon = (v) => {
+    if (Array.isArray(v)) return v.map(canon);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])]));
+    return v;
+  };
+  return JSON.stringify(canon(value));
+}
+
+/** "What is on screen is what is stored." Call after a load, a save, or a clear. */
+function markProfileSaved() {
+  savedFingerprint = fingerprint(profile);
+  syncFilterSetBar();
+}
+
+/** Push the loaded set's name, and whether it has been edited, into the header. */
+function syncFilterSetBar() {
+  const select = $('profile-select');
+  const chosen = select.value ? select.selectedOptions[0]?.textContent : '';
+  const name = $('profile-name');
+  name.textContent = chosen || 'None chosen';
+  name.classList.toggle('none', !chosen);
+
+  const dirty = savedFingerprint !== null && fingerprint(profile) !== savedFingerprint;
+  $('fs-edited').hidden = !dirty;
+  // The one button that keeps them takes a tint when there is something to
+  // keep — enough to be noticed beside a quiet chip, not a solid accent block
+  // shouting from the header.
+  $('save').classList.toggle('ready', dirty || !chosen);
+}
+
+function closeFilterSetPopovers() {
+  $('profile-menu').hidden = true;
+  $('save-form').hidden = true;
+  $('profile-btn').setAttribute('aria-expanded', 'false');
+}
+
+function bindFilterSetBar() {
+  const menu = $('profile-menu');
+
+  $('profile-btn').onclick = (event) => {
+    event.stopPropagation();
+    const opening = menu.hidden;
+    closeFilterSetPopovers();
+    if (!opening) return;
+    drawProfileMenu();
+    menu.hidden = false;
+    $('profile-btn').setAttribute('aria-expanded', 'true');
+  };
+
+  $('save').onclick = (event) => {
+    event.stopPropagation();
+    openSaveForm();
+  };
+  $('save-cancel').onclick = () => closeFilterSetPopovers();
+  $('save-name').oninput = () => describeSaveTarget();
+  $('save-form').onsubmit = (event) => {
+    event.preventDefault();
+    saveFilterSet($('save-name').value);
+  };
+
+  // Click-away and Escape close both popovers. `.filterset` wraps the menu, the
+  // form and the buttons that open them, so one containment test covers all of
+  // it — including a click on the button that is closing its own popover.
+  document.addEventListener('click', (event) => {
+    if (!$('filterset').contains(event.target)) closeFilterSetPopovers();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeFilterSetPopovers();
+  });
+}
+
+/**
+ * Draw the menu from the hidden `<select>`.
+ *
+ * The select stays the page's record of what is loaded — `boot`, the account
+ * layer and `Clear` all read and write `.value` — and this is a view of it, so
+ * the grouping is decided in exactly one place (`fillProfileSelect`).
+ */
+function drawProfileMenu() {
+  const select = $('profile-select');
+  const menu = $('profile-menu');
+  menu.replaceChildren();
+
+  let lastGroup = null;
+  for (const option of select.options) {
+    if (!option.value) continue; // the blank "no set loaded" row
+    const group = option.parentElement.label ?? '';
+    // "Yours" is built from two stores and arrives as two optgroups. Whose a
+    // set is, is the heading's question; which store it sits in is the row's.
+    if (group && group !== lastGroup) {
+      const head = document.createElement('div');
+      head.className = 'fs-group';
+      head.textContent = group;
+      menu.append(head);
+      lastGroup = group;
+    }
+
+    const on = option.value === select.value;
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = `fs-item${on ? ' on' : ''}`;
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', String(on));
+    item.title = option.title || '';
+
+    const label = document.createElement('span');
+    label.className = 'nm';
+    label.textContent = option.textContent;
+    const sub = document.createElement('span');
+    sub.className = 'sub';
+    // Two sets may carry the same label — a saved copy keeps the label of the
+    // set it was copied from — and in a bare menu they render as the same row
+    // twice. The second line is what tells them apart.
+    sub.textContent = option.dataset.sub ?? '';
+    // The loaded set is marked by tinting its row, the way the option lists in
+    // the left column mark a ticked one. A ✓ in a column of its own was a mark
+    // this page uses nowhere else.
+    item.append(label, sub);
+
+    item.onclick = () => {
+      closeFilterSetPopovers();
+      select.value = option.value;
+      // Re-picking the set already loaded re-fetches it, which is how you throw
+      // away edits you did not mean to make.
+      select.dispatchEvent(new Event('change'));
+    };
+    menu.append(item);
+  }
+
+  if (!menu.childElementCount) {
+    const empty = document.createElement('div');
+    empty.className = 'fs-empty';
+    empty.textContent = 'No saved filter sets yet. Set up a search, then use “Save filters” to keep it.';
+    menu.append(empty);
+  }
+
+  // The way in to saving lives in the menu too: someone looking for their
+  // saved searches is the same person who has not yet noticed they can make one.
+  const foot = document.createElement('div');
+  foot.className = 'fs-foot';
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.className = 'fs-item';
+  save.append(
+    Object.assign(document.createElement('span'), { className: 'nm', textContent: '+  Save the filters on screen…' }),
+    Object.assign(document.createElement('span'), {
+      className: 'sub',
+      textContent: account.signedIn() ? 'as a new set in your account' : 'as a new set on this computer',
+    }),
+  );
+  save.onclick = (event) => {
+    event.stopPropagation();
+    openSaveForm();
+  };
+  foot.append(save);
+  menu.append(foot);
+}
+
+/**
+ * Storage names are `[a-z0-9][a-z0-9._-]{0,63}` on both the account store and
+ * the shared directory, but that is a file-naming rule and not something a
+ * person should have to type. You name the set in words; this derives the name
+ * it is stored under, and the form shows what that will be.
+ */
+function slugify(label) {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^[^a-z0-9]+/, '')
+    .replace(/[-._]+$/, '')
+    .slice(0, 64);
+}
+
+/**
+ * The set the form is updating — the one it opened on, when that set is yours.
+ * Null when the save would start a new set.
+ */
+let updating = null;
+
+function openSaveForm() {
+  $('profile-menu').hidden = true;
+  $('profile-btn').setAttribute('aria-expanded', 'false');
+  // Opened on a set of your own, the form is an update to it and starts with
+  // its name in the box. Opened on somebody's starter set, the box starts
+  // empty: prefilling *its* name is what produced two sets both called "All
+  // recent openings", one of which was actually a Lever-only search.
+  const current = $('profile-select').selectedOptions[0];
+  updating = current?.dataset.mine
+    ? {
+        store: current.value.slice(0, current.value.indexOf(':')),
+        name: current.value.slice(current.value.indexOf(':') + 1),
+        label: current.textContent,
+      }
+    : null;
+
+  const input = $('save-name');
+  input.value = updating ? updating.label : '';
+  $('save-error').hidden = true;
+  $('save-form').hidden = false;
+  describeSaveTarget();
+  input.focus();
+  input.select();
+}
+
+/**
+ * What this save will do: which store, under what name, and over what.
+ *
+ * Two things make this more than `slugify()`. A set's stored name and the words
+ * on its label were written separately — "NYC · entry level · solutions &
+ * operations" is stored as `nyc-entry-level` — so an update has to keep the
+ * name the set already has rather than re-derive one from the label and fork
+ * the set in two. And a set can live in your account or in `profiles/*.json`:
+ * saving always to the account would mean re-saving your own file-backed set —
+ * the one the command line and the daily run read — wrote a second copy to the
+ * account instead of updating the file.
+ */
+function resolveSave(raw) {
+  const label = raw.trim();
+  if (updating && label === updating.label) {
+    return { ...updating, label, mode: 'update', over: updating.label };
+  }
+  const name = slugify(label);
+  const options = [...$('profile-select').options];
+  // A name you typed that is already one of your own file-backed sets writes
+  // back to the file, for the same reason.
+  const own = options.find((o) => o.dataset.mine && o.value === `shared:${name}`);
+  const store = own || !account.signedIn() ? 'shared' : 'mine';
+  const clash = options.find((o) => o.value === `${store}:${name}`);
+  return { store, name, label, mode: clash ? 'replace' : 'new', over: clash?.textContent ?? null };
+}
+
+/** Say where this save is going and what it will be called, as the name is typed. */
+function describeSaveTarget() {
+  const { store, name, mode, over } = resolveSave($('save-name').value);
+
+  $('save-where').textContent = store === 'mine'
+    ? 'Saved to your account — only you can see it, on any computer you sign in from.'
+    : 'Saved on this computer, in profiles/ — the same file the command line and the daily run read.';
+
+  const stored = `${name}${store === 'mine' ? '' : '.json'}`;
+  const note = $('save-note');
+  if (!name) note.textContent = 'Letters, numbers, spaces, - and _';
+  else if (mode === 'update') note.textContent = `Updates the set you are looking at (${stored}).`;
+  else if (mode === 'replace') note.textContent = `Replaces the set already saved as “${over}” (${stored}).`;
+  else note.textContent = `A new set, stored as ${stored}`;
+
+  // Nothing to save with no name in the box, and a button that says so beats a
+  // button that takes the click and answers with an error.
+  $('save-confirm').textContent = { update: 'Update', replace: 'Replace', new: 'Save' }[mode];
+  $('save-confirm').disabled = !name;
+}
+
+/** Save the filters on screen under a name. The whole of the Save button. */
+async function saveFilterSet(raw) {
+  const { store, name, label } = resolveSave(raw);
+  const error = $('save-error');
+  if (!name) {
+    error.textContent = 'Give it a name that starts with a letter or a number.';
+    error.hidden = false;
+    $('save-name').focus();
+    return;
+  }
+
+  // A saved set carries its own name. Saving under a new one used to leave the
+  // `label` and `notes` of the set it was copied from in the document, so the
+  // menu grew a second row reading "All recent openings" that was somebody's
+  // own search, described in the starter set's words.
+  const next = { ...profile, name, label };
+  if (label !== profile.label) delete next.notes;
+
+  try {
+    // Your account, or `profiles/<name>.json` — the file the CLI and the daily
+    // run read. The same document either way; an account changes only where a
+    // set lives, never what one is.
+    if (store === 'mine') {
+      // False means there is no account to save to — the session ended between
+      // opening the form and pressing the button. Saying so beats a form that
+      // closes on a set nobody wrote down.
+      if (!(await account.save(name, next))) throw new Error('you are signed out — sign in again to save to your account');
+    } else {
+      const result = await api(`/api/profiles/${encodeURIComponent(name)}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(next),
+      });
+      meta.profiles = result.profiles;
+    }
+    profile = next;
+    fillProfileSelect(`${store}:${name}`);
+    markProfileSaved();
+    closeFilterSetPopovers();
+    flashSaved();
+  } catch (err) {
+    // Inside the form, beside the name that caused it: a failed save leaves the
+    // form open with the name still in it, so the fix is a word rather than a
+    // retype. `showWarnings` puts it above the results, where it reads as
+    // something wrong with the search.
+    error.textContent = `Could not save: ${err.message}`;
+    error.hidden = false;
+  }
+}
+
+let savedFlash = null;
+function flashSaved() {
+  const button = $('save');
+  clearTimeout(savedFlash);
+  button.textContent = 'Saved ✓';
+  savedFlash = setTimeout(() => {
+    button.textContent = 'Save filters';
+  }, 1800);
 }
 
 /** localStorage is a convenience here, and it throws in some privacy modes. */
@@ -1578,10 +1958,10 @@ function fillProfileSelect(selected) {
   select.replaceChildren();
   const blank = document.createElement('option');
   blank.value = '';
-  blank.textContent = '— profile —';
+  blank.textContent = 'No filter set';
   select.append(blank);
 
-  const group = (label, rows, prefix) => {
+  const group = (label, rows, prefix, where, mine = false) => {
     if (!rows?.length) return;
     const optgroup = document.createElement('optgroup');
     optgroup.label = label;
@@ -1590,6 +1970,14 @@ function fillProfileSelect(selected) {
       option.value = `${prefix}:${p.name}`;
       option.textContent = p.label ?? p.name;
       option.title = p.notes ?? '';
+      // What the menu shows under the name: which document this is and where it
+      // is kept. Two sets can carry the same label, and without this line the
+      // menu renders them as the same row twice.
+      option.dataset.sub = `${p.name} · ${where}`;
+      // Whose it is, kept on the option itself: the save form prefills the name
+      // only for a set you saved, so "Save" over one of your own means update
+      // and "Save" over somebody's starter means a copy you have to name.
+      if (mine) option.dataset.mine = '1';
       optgroup.append(option);
     }
     select.append(optgroup);
@@ -1605,11 +1993,17 @@ function fillProfileSelect(selected) {
 
   // Yours first: on a page showing both, the ones you wrote are the ones you
   // came for.
-  group('Yours', account.profileOptions(), 'mine');
-  group('Yours', mineOnDisk, 'shared');
-  group(account.signedIn() || mineOnDisk.length ? 'Shared with everyone' : 'Profiles', everyones, 'shared');
+  group('Your filter sets', account.profileOptions(), 'mine', 'in your account', true);
+  group('Your filter sets', mineOnDisk, 'shared', 'on this computer, only you', true);
+  group(
+    account.signedIn() || mineOnDisk.length ? 'Shared with everyone here' : 'Starter filter sets',
+    everyones,
+    'shared',
+    'on this computer, everyone',
+  );
 
   if (selected) select.value = selected;
+  syncFilterSetBar();
 }
 
 // -------------------------------------------------------------------- boot --
@@ -1650,6 +2044,7 @@ async function boot() {
       getProfile: () => profile,
       setProfile: (next) => {
         profile = next;
+        markProfileSaved();
         fillControls();
         runSearch({ delay: 0 });
       },
@@ -1661,6 +2056,26 @@ async function boot() {
   }
 
   fillProfileSelect(null);
+
+  // "Describe your search" — the box at the top of the rail. It writes the same
+  // `profile` object every control below it writes, so nothing downstream knows
+  // or cares where a criterion came from; that is the whole reason it can exist
+  // as a hundred lines rather than as a second way to search.
+  installAiBox({
+    meta,
+    getProfile: () => profile,
+    setProfile: (next) => {
+      profile = next;
+      // Not one of the saved sets any more. Clearing the menu and dropping the
+      // fingerprint is how the header says "this is a new search, and it lives
+      // only on this screen until you name it" — the Save button lights up on
+      // the same line of `syncFilterSetBar`.
+      $('profile-select').value = '';
+      savedFingerprint = null;
+      fillControls();
+      runSearch({ delay: 0 });
+    },
+  });
 
   if (remembered && Object.keys(remembered).length) {
     profile = remembered;
@@ -1693,6 +2108,9 @@ async function boot() {
       }
     }
   }
+  // The page opens on a set exactly as it is stored, so it opens with the chip
+  // off. From here on, the first control touched turns it on.
+  markProfileSaved();
   fillControls();
   runSearch({ delay: 0 });
 }

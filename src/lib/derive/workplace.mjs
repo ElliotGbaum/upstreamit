@@ -54,8 +54,10 @@
  * `isRemote` boolean, the word "remote" in the location string. This one fires
  * on an *absence*: a named place, and no remote marker anywhere. It is sound on
  * the axis it can see (the job is attached to an office, so it is not remote)
- * and blind on the one it cannot (five days there, or two?). 173,221 of 265,698
- * jobs land here, 165,962 of them Greenhouse.
+ * and blind on the one it cannot (five days there, or two?). 174,537 of 337,487
+ * jobs land here, 165,962 of them Greenhouse — which is to say the guess is
+ * almost entirely one ATS's missing field. Lever contributes only 1,316 of its
+ * 71,789, because it states a workplace on 98.0% of them.
  *
  * `matchWorkplace` imports this name so the filter can tell a guess from a
  * statement. Nothing else may branch on the string.
