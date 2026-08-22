@@ -1,0 +1,22 @@
+# The build context is uploaded to Fly's builder on every deploy, so anything
+# that is not needed to *run* the server is excluded. The single biggest win is
+# data/ — 3.2 GB of database that belongs on the volume, not in the image.
+data/
+research/
+progress/
+automation/
+.git/
+.github/
+.claude/
+node_modules/
+
+# Documentation and planning notes: ~200 KB of Markdown the server never reads.
+*.MD
+*.md
+
+# Tests and the CLI-only entrypoints. The server imports src/lib/, src/find.mjs
+# and src/server.mjs; the sweep and sync tools run on a laptop, not in here.
+src/*-test.mjs
+
+.DS_Store
+npm-debug.log*

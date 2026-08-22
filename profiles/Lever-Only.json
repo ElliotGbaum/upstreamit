@@ -1,0 +1,18 @@
+{
+  "name": "Lever-Only",
+  "label": "Lever only",
+  "notes": "The starter search, narrowed to one board: full-time roles posted in the last 30 days, from Lever only. Everything else is the same — no keywords, no city, no seniority, no salary floor — so what it shows is what one ATS has, uncoloured by the other two. Every unknown is still included: a posting that did not publish its employment type or its date is not excluded for the blank.",
+  "employment_type": [
+    "FullTime"
+  ],
+  "posted_within_days": 30,
+  "sort": "relevance",
+  "unknowns": {
+    "employment_type": "include",
+    "posted": "include"
+  },
+  "limit": 100,
+  "ats": [
+    "lever"
+  ]
+}

@@ -22,8 +22,8 @@
  *
  * Lever does not honour it — it sends an ETag and then answers a matching
  * `If-None-Match` with 200 and the full body. Nothing here needs a special case
- * for that (a 200 is just a sweep that found jobs), but a Lever run will report
- * 0 unchanged boards every night and move its full ~1.2 GB, and that is the
+ * for that (a 200 is just a sweep that found jobs), but a Lever run reports
+ * 0 unchanged boards every night and moves its full 931 MB, and that is the
  * host's behaviour rather than a bug in the conditional-GET path.
  *
  * The caveat worth knowing: a 304 says the *response body* is unchanged, so a
@@ -58,6 +58,39 @@ function parseArgs(argv) {
     else if (key === 'db') args.db = value;
   }
   return args;
+}
+
+/**
+ * Display names resolved by `probe-boards.mjs --with-names`, keyed by slug.
+ *
+ * Some ATSes hand the company name over with the jobs (Greenhouse puts it on
+ * every posting, Ashby's board payload carries one) and for those this map is
+ * empty and unused. Lever publishes it nowhere in the postings API, so its name
+ * comes from a separate pass whose output lands in `<ats>-verified.json` — and
+ * that file was being written and then read by nothing but `stats.mjs`. Without
+ * this, all 2,025 Lever companies render as their slug: "bofcorp" instead of
+ * "B-O-F Corporation", "ajccanada" instead of "Allison Jones Consulting
+ * Services".
+ *
+ * The adapter still wins when it returns a name — this only fills a gap, never
+ * overwrites a name that came with the jobs.
+ */
+export function loadResolvedNames(ats) {
+  const path = join(ROOT, 'data', 'slugs', `${ats}-verified.json`);
+  if (!existsSync(path)) return new Map();
+  try {
+    const companies = JSON.parse(readFileSync(path, 'utf8'))?.companies ?? {};
+    const names = new Map();
+    for (const [slug, record] of Object.entries(companies)) {
+      const name = typeof record?.name === 'string' ? record.name.trim() : '';
+      if (name) names.set(slug, name);
+    }
+    return names;
+  } catch {
+    // A malformed or half-written verified file is a missing display name, not
+    // a reason to abandon a sweep that is about to fetch thousands of boards.
+    return new Map();
+  }
 }
 
 export function loadSlugs(ats) {
@@ -115,6 +148,10 @@ async function main() {
       etags.set(row.slug, row.last_etag);
     }
   }
+
+  // Display names for the ATSes that publish none with their jobs. Empty for
+  // Ashby and Greenhouse, which carry their own. See `loadResolvedNames`.
+  const resolvedNames = loadResolvedNames(args.ats);
 
   const concurrency = args.concurrency || adapter.concurrency || 10;
   const startedAt = Date.now();
@@ -175,7 +212,15 @@ async function main() {
       else totals.empty++;
       pending.push({
         kind: 'board',
-        board: { ats: args.ats, slug, name: result.name, url: result.url, etag: result.etag, jobs: result.jobs },
+        board: {
+          ats: args.ats,
+          slug,
+          // The adapter's own answer wins; the resolved map only fills a gap.
+          name: result.name ?? resolvedNames.get(slug) ?? null,
+          url: result.url,
+          etag: result.etag,
+          jobs: result.jobs,
+        },
       });
     } else if (result.dead) {
       totals.dead++;
@@ -224,7 +269,12 @@ async function main() {
 
 // NB: the project path contains spaces, so a raw `file://${argv[1]}` comparison
 // fails against the percent-encoded import.meta.url. Always go through pathToFileURL.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+//
+// The argv[1] guard matters because this module has exports (`loadSlugs`,
+// `loadResolvedNames`) that are meant to be imported: under `node -e` and in a
+// worker there is no argv[1], and `pathToFileURL(undefined)` throws before any
+// importer gets to use them.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);

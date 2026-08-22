@@ -3,18 +3,23 @@
  *
  * `GET api.lever.co/v0/postings/<slug>?mode=json` returns an entire board as a
  * bare JSON array, no auth, no pagination needed. Facts that cost a debugging
- * cycle to learn, kept here next to the code that depends on them. Every number
- * below was measured on 2026-08-22 over 8,697 jobs on 160 live boards, sampled
- * evenly across all 8,721 collected slugs.
+ * cycle to learn, kept here next to the code that depends on them.
+ *
+ * Numbers below are from the full sweep on 2026-08-22 — **71,789 open jobs on
+ * 2,025 live boards**, 931 MB — except where they are marked as coming from the
+ * 8,697-job / 160-board sample the adapter was designed against. The two differ
+ * more than they should: the sample put `employment_type` coverage at 45.9%
+ * against a real 72.5%, because one board with 3,462 identically-labelled jobs
+ * was 40% of it. Sampling boards evenly does not sample *jobs* evenly.
  *
  *  - **`description` is only the opening paragraphs.** This is the big one. The
  *    requirements, the responsibilities and the benefits live in `lists[]`, and
  *    the closing — relocation, visa, EEO, clearance — lives in `additional`.
- *    Measured by character count the split is 33.9% / 50.3% / 15.8%, so storing
- *    `descriptionPlain` alone throws away two thirds of every posting, and
- *    specifically the two thirds that `d_skills`, `d_degree`, `d_visa` and
- *    `d_clearance` read. Running the derivation pass both ways over the same
- *    8,697 jobs:
+ *    Measured by character count the split is 33.9% / 50.3% / 15.8% (sample), so
+ *    storing `descriptionPlain` alone throws away two thirds of every posting,
+ *    and specifically the two thirds that `d_skills`, `d_degree`, `d_visa` and
+ *    `d_clearance` read. The stored text averages 4,054 characters across the
+ *    full 71,789 jobs. Running the derivation pass both ways over the sample:
  *
  *                     descriptionPlain    assembled
  *        characters         11,427,868   29,807,727   +161%
@@ -26,28 +31,30 @@
  *    It fails silently, which is the point: the field is populated, the text is
  *    coherent, and four derivations are simply blind to the half of the posting
  *    that answers them. `buildHtml` reassembles all three parts.
- *  - **The markup is real HTML, not escaped.** 8,667 of 8,697 `description`
- *    values contain live tags and 0 contain escaped ones — the exact opposite of
+ *  - **The markup is real HTML, not escaped** (sample). 8,667 of 8,697
+ *    `description` values contain live tags and 0 contain escaped ones — the exact opposite of
  *    Greenhouse. Do **not** run `decodeEntitiesOnce` over it: 9.6% of payloads
  *    carry `&amp;`, correctly escaping a literal `&`, and decoding first would
  *    turn a `&lt;p&gt;` written *in the prose* into a tag for `htmlToText` to
  *    strip. `htmlToText` already decodes entities as its last step, after the
  *    tags are gone, which is the safe order.
  *  - **`lists[].content` is a bare run of `<li>` elements** with no `<ul>`
- *    around it on 14,888 of 20,615 lists, and the heading is a sibling field
+ *    around it on 14,888 of 20,615 lists (sample), and the heading is a sibling field
  *    rather than markup. Concatenating the raw strings glues a heading onto its
  *    first bullet; `buildHtml` supplies the missing structure.
- *  - **`workplaceType` is a real enum on 100% of jobs** — `onsite` / `hybrid` /
- *    `remote` / `unspecified`, already in the spelling `deriveWorkplace` wants.
+ *  - **`workplaceType` is a real enum on 98.0% of jobs** — `onsite` 47.9% /
+ *    `remote` 30.6% / `hybrid` 19.6%, plus `unspecified` on the other 2.0%,
+ *    already in the spelling `deriveWorkplace` wants.
  *    `unspecified` is mapped to NULL on purpose, and that mapping is
  *    load-bearing: passed through, `deriveWorkplace` answers
  *    `ats-enum-unrecognised:unspecified` and stops, which would suppress the
  *    location-text fallback for the one group of jobs that needs it most.
- *  - **Lever is where hybrid comes back.** 26.6% of these jobs are Hybrid,
- *    against 26% of the Ashby corpus and a structurally impossible 0 on
- *    Greenhouse, which publishes no enum at all. See `derive/workplace.mjs`.
+ *  - **Lever is where hybrid comes back.** 14,054 jobs, 19.6% of the board,
+ *    against Ashby's 15,932 and a structurally impossible 0 on Greenhouse,
+ *    which publishes no enum at all. Lever nearly doubled the number of hybrid
+ *    jobs this project can see. See `derive/workplace.mjs`.
  *  - **`categories.commitment` is free text, not an employment type.** 120
- *    distinct values, and only 18 of them are used by more than one board. The
+ *    distinct values in the sample alone, only 18 used by more than one board. The
  *    single commonest, `"Contract Full time"` (3,462 jobs), comes from one
  *    company and is ambiguous between two of our enum values; the list also
  *    holds `"Hybrid"`, `"Remote"`, `"正社員"`, `"Efetivo"` and `"CDI"`. So
@@ -65,23 +72,27 @@
  *    `solidcore` returned HTTP 200 and all 2.9 MB, with the same ETag echoed
  *    back. The header is still sent — it costs nothing and the day Lever honours
  *    it a whole sweep becomes free — but a Lever sweep budgets for full
- *    transfer every night, unlike Ashby and Greenhouse. At ~10.8 KB per job that
- *    is roughly 1.2 GB.
+ *    transfer every night, unlike Ashby and Greenhouse. The full sweep moved
+ *    **931 MB** and reported 0 unchanged boards, which is the header being
+ *    ignored showing up in the totals exactly as predicted.
  *  - **`country` is an ISO alpha-2 code**, which must be expanded before it is
- *    stored. See `iso-countries.mjs`; the short version is that `"DE"` reaching
- *    `parseFragment` becomes Delaware.
+ *    stored. Of the 66,537 jobs carrying one, **10,784 (16.2%) would land in the
+ *    wrong country** if the raw code were stored: every Canadian job (4,669)
+ *    reads as American, every Indian job (3,055) as Indiana, every German job
+ *    (1,517) as Delaware. See `iso-countries.mjs`.
  */
 
 import { getJson, request } from '../http.mjs';
 import { blankJob, jobId, normText } from '../schema.mjs';
-import { htmlToText } from './html.mjs';
+import { decodeEntitiesOnce, htmlToText } from './html.mjs';
 import { countryName } from './iso-countries.mjs';
 
 export const id = 'lever';
 export const label = 'Lever';
-// 16 held with zero 429s across 120 full board fetches (33 MB), and HEAD probes
-// held at 24 across 600. 10 is the conservative starting point for a sweep that
-// runs unattended: the sample is 120 boards and a full sweep is ~2,000.
+// 10 swept all 2,025 live boards — 71,789 jobs, 931 MB — in 106 seconds with
+// zero 429s and zero errors. 16 held clean over 120 boards in testing and HEAD
+// probes held at 24 across 600, so there is headroom; 10 is kept because it is
+// the number the full run is actually measured at.
 export const concurrency = 10;
 
 const API = 'https://api.lever.co/v0/postings';
@@ -224,7 +235,12 @@ export async function fetchOrganization(slug) {
   }
   controller.abort(); // …and abort only once the loop is done with the body
 
-  const name = found?.trim();
+  // The title is markup, so its text is entity-escaped: 34 of 2,313 resolved
+  // names contain `&amp;`, every one of them a company with an ampersand in it —
+  // "BoxLunch &amp; Hot Topic", "CI&amp;T", "Alice &amp; Bob". Stored raw, that
+  // is what shows in the company column and what a company search has to match.
+  // Decoded exactly once, for the reason `decodeEntitiesOnce` exists.
+  const name = decodeEntitiesOnce(found ?? '').trim();
   return name ? { name } : null;
 }
 
@@ -292,7 +308,6 @@ export function mapJob(row, slug) {
   job.has_equity = null;
 
   const html = buildHtml(row);
-  job.description_html = html || null;
   job.description_text = htmlToText(html) || null;
 
   return job;
@@ -393,9 +408,10 @@ const COMMITMENT = [
  *                                              this column does not have
  *   "Remote" / "Hybrid"          → NULL        not an employment type at all
  *
- * Measured: 45.9% of jobs get a value, 49.5% name two or more families, 3.3% are
- * unrecognised, 1.3% publish nothing. Of the ones that resolve — FullTime 3,707,
- * PartTime 171, Contract 61, Intern 27, Temporary 22, Volunteer 1.
+ * Measured over the full 71,789-job sweep: 72.5% resolve — FullTime 38,769,
+ * PartTime 8,564, Contract 2,981, Temporary 1,253, Intern 478, Volunteer 12 —
+ * and 27.5% stay NULL because they name two or more families, name something
+ * outside this vocabulary, or publish nothing at all.
  *
  * Guessing at the other half would be worse than useless here, because NULL is
  * not a hole in this schema — `matchEmploymentType` reads it as `unknown` and a
@@ -411,10 +427,11 @@ export function employmentType(raw) {
  * Lever's own interval spellings → `PAY_PERIODS`.
  *
  * `bi-week-salary` and `semi-month-salary` are why `PER_YEAR` in
- * `derive/salary.mjs` gained BIWEEK and SEMI_MONTH. They are rare — 8 of 8,697 —
- * but without a factor a $3,000 fortnightly figure has no reading that lands in
- * the plausible band except MONTH, and the job would be filed at $36k instead of
- * $78k. Being rare is not the same as being safe to get wrong.
+ * `derive/salary.mjs` gained BIWEEK and SEMI_MONTH. They are rare — 52 and 32
+ * jobs of 71,789 — but without a factor a $3,000 fortnightly figure has no
+ * reading that lands in the plausible band except MONTH, and the job would be
+ * filed at $36k instead of $78k. Being rare is not the same as being safe to
+ * get wrong.
  *
  * `one-time` is Lever saying the figure is not on a recurring interval, which is
  * exactly what Ashby's `NONE` means, so it is spelled the same.
@@ -434,7 +451,8 @@ const INTERVALS = {
  * `salaryRange` → the raw compensation columns.
  *
  * One range per job and it is always base pay — no `pay_input_ranges` array to
- * pick a non-bonus row out of, and no OTE. Present on 18.5% of jobs.
+ * pick a non-bonus row out of, and no OTE. Present on 31.1% of jobs, which is
+ * better than Greenhouse's 20.7% and short of Ashby's 37.2%.
  *
  * The figures are plain units, not cents: `{min: 100000, max: 200000}` is
  * $100k–$200k and `{min: 15, max: 15, interval: 'per-hour-wage'}` is $15/hour.

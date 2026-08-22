@@ -19,6 +19,8 @@
  * to execute.
  */
 
+import { companyMark } from './ui.js';
+
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n ?? 0).toLocaleString('en-US');
 
@@ -729,7 +731,7 @@ function drawSavedRows(rows) {
       status.textContent = labelFor(saved.status);
       side.append(status, saved.applied_at ? `applied ${stamp(saved.applied_at)}` : `saved ${stamp(saved.saved_at)}`);
 
-      card.append(gutter, main, side);
+      card.append(gutter, companyMark(live?.company ?? saved.company), main, side);
       return card;
     }),
   );

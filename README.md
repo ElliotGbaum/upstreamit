@@ -14,13 +14,11 @@ them.
 
 | | |
 | --- | --- |
-| Boards swept | **10,494 live** — 3,764 Ashby + 6,730 Greenhouse |
-| Boards verified, not yet swept | **2,611 Lever** — adapter and tests are done; `npm run sweep:lever` is the next run |
-| Open jobs stored | **265,698** with full descriptions |
-| Jobs normalized | **265,698** — workplace 97.2%, metro 88.0%, salary 24.4%, seniority 74.7% |
+| Boards swept | **12,519 live** — 6,730 Greenhouse + 3,764 Ashby + 2,025 Lever |
+| Open jobs stored | **337,487** with full descriptions |
 | Metros discovered | **20,449**, built from observed location strings |
 | Database | `data/jobs.db`, 4.5 GB, FTS5 index over every description |
-| A full filter run | **~800 ms** warm over all 265,698 jobs, every facet counted (~7 s to build the index on the first query after a sweep) |
+| A full filter run | **1.4–4.3 s** warm over all 337,487 jobs, every facet counted (~10 s to build the index on the first query after a sweep). This was ~800 ms at 265,698 jobs; the re-measurement was taken on a machine also running the app server and DB Browser, so treat the top of that range as contention, not cost — worth re-timing on an idle machine. |
 | Tests | **518** — 105 derivation, 191 filter, 130 adapter, 92 account — no database, no network |
 
 ### The three ATSes are not equivalent, and the filter says so
@@ -31,15 +29,17 @@ The gaps are visible in the UI rather than averaged away:
 
 | | Ashby | Greenhouse | Lever |
 | --- | --- | --- | --- |
-| Open jobs | 61,213 | 204,485 | ~110,000 estimated, not yet swept |
-| `employment_type` (full-time / contract) | 100% | **0% — the API has no such field** | 45.9% — free text, mapped only where it names one type |
-| Workplace enum | 100% | **none** — inferred from the location string | **100%** |
-| Hybrid jobs | 15,932 | **0. Not rare — undetectable.** | **26.6%** of its jobs |
-| Salary published | 37.2% | 20.6% (a board-level setting, so it is lumpy by company) | 18.5% |
+| Open jobs | 61,213 | 204,485 | **71,789** |
+| Live boards | 3,764 | 6,730 | 2,025 (+586 live but not hiring) |
+| `employment_type` (full-time / contract) | 100% | **0% — the API has no such field** | **72.5%** — free text, mapped only where it names exactly one type |
+| Workplace enum | 100% | **none** — inferred from the location string | **98.0%** |
+| Hybrid jobs | 15,932 | **0. Not rare — undetectable.** | **14,054** — nearly doubles what the corpus can see |
+| Salary published | 37.2% | 20.7% (a board-level setting, so it is lumpy by company) | 31.1% |
 | `updated_at` for change detection | none | **100%** | none — content hash, as with Ashby |
-| Company display name | needs a rate-limited GraphQL call | on every job | scraped from the board page `<title>`, 1.5 KB per board |
+| Company display name | needs a rate-limited GraphQL call | on every job | **none in the API** — scraped from the board page `<title>`, 1.5 KB per board |
 | Conditional GET | honoured | honoured | **ETag sent, `If-None-Match` ignored** |
 | Description | one field | one field | **three fields that must be reassembled** — see `lever.mjs` |
+| Full sweep | — | 2.7 GB / 32 min | 931 MB / **106 s** |
 
 Corpus-wide that moved every "unknown" share the filter publishes. The two that
 moved most: **job type went from 0.0% to 77.0% unknown**, and salary from 62.8% to
@@ -54,15 +54,15 @@ npm run daily      # sweep, derive, and report what's new since yesterday
 
 ### Slug coverage
 
-| ATS | slugs collected | verified live |
-| --- | --- | --- |
-| **ashby** | **7,951** | **4,297** |
-| greenhouse | 15,197 | not yet probed |
-| workday | 12,884 | not yet probed |
-| bamboohr | 11,316 | not yet probed |
-| paylocity | 10,252 | not yet probed |
-| icims | 10,106 | not yet probed |
-| lever | 8,721 | not yet probed |
+| ATS | slugs collected | verified live | swept |
+| --- | --- | --- | --- |
+| **ashby** | **7,951** | **4,297** (54.0%) | yes |
+| **greenhouse** | **15,197** | **8,272** (54.4%) | yes |
+| **lever** | **8,721** | **2,611** (29.9%) | yes |
+| workday | 12,884 | not yet probed | — |
+| bamboohr | 11,316 | not yet probed | — |
+| paylocity | 10,252 | not yet probed | — |
+| icims | 10,106 | not yet probed | — |
 
 For Ashby: the single repo you pointed at yields **2,478 live boards** on its own. Merging
 eleven sources and verifying each slug against the live API yields **4,297** — **73% more
@@ -78,7 +78,7 @@ npm run sync       # pull every source, dedupe, write the slug store
 npm run verify     # check each Ashby slug against the live API (~2.5 min)
 npm run sweep      # fetch all 4,297 live boards into data/jobs.db  (~25 s)
 npm run derive     # normalize into the d_* columns filters read     (~50 s)
-npm test           # 176 regression tests, no DB and no network needed
+npm test           # 518 regression tests, no DB and no network needed
 npm run refresh    # all four in order
 
 npm run find       # run a filter profile in the terminal
@@ -114,7 +114,7 @@ node src/sync-slugs.mjs --prune-after=60   # drop slugs no source has vouched fo
 node src/probe-boards.mjs --ats=greenhouse                 # HEAD every slug in the store
 node src/probe-boards.mjs --ats=greenhouse --only-unknown  # only slugs added since last run
 node src/probe-boards.mjs --ats=greenhouse --sample=300    # quick estimate instead of a full pass
-node src/probe-boards.mjs --ats=ashby --with-names         # display names (Ashby only, slow)
+node src/probe-boards.mjs --ats=ashby --with-names         # display names (Ashby + Lever, slow)
 ```
 
 Verifying all 15,197 Greenhouse slugs takes **3.7 minutes** at concurrency 8 and
@@ -122,7 +122,9 @@ found **8,272 live boards (54.4%)** with zero errors. Verifying first is what ke
 the sweep from paying for the 45% of slugs that are dead.
 
 Lever is harsher: all 8,721 slugs took **4.1 minutes** at concurrency 16 and found
-**2,611 live boards (29.9%)**, zero errors. Seven slugs in ten were dead.
+**2,611 live boards (29.9%)**, zero errors. Seven slugs in ten were dead — and of
+the 2,611 that survived, 586 were live boards with no open roles, so the sweep found
+jobs on 2,025.
 
 ### Sweeping
 
@@ -143,7 +145,9 @@ conditional GET the daily run would pay that every morning.
 `If-None-Match` you send back — replaying a freshly-issued ETag returns `200` and the
 whole body, with the same ETag echoed. The header is still sent, since it costs
 nothing and would start working the day Lever implements it, but budget a Lever sweep
-for full transfer every night: roughly **1.2 GB** at ~10.8 KB per job.
+for full transfer every night. The first full sweep moved **931 MB** and reported
+**0 unchanged boards**, which is that header being ignored showing up in the totals.
+It is still the fastest of the three: 2,611 boards in **106 seconds**, zero errors.
 
 Run `--no-conditional` weekly and diff the counts. A 304 means the *response body*
 is unchanged, so a board with a broken ETag would look like a company that stopped
@@ -598,14 +602,94 @@ What it does that the CLI doesn't:
   from observed location strings, so a corpus that grows a new city grows a new option with
   no code change.
 - **The unknown policies are visible controls**, each labelled with the share it affects.
+- **The filter set is a thing you can see you own.** The header names the saved search on
+  screen (`FILTER SET · NYC · entry level · solutions & operations`), marks itself *unsaved
+  filters* the moment your filters stop matching it, and saves under a name you type in
+  a small form on the page — which says where the set is going (your account, or
+  `profiles/<name>.json`), what it will be stored as, and whether it updates the set you are
+  looking at or starts a new one. The menu lists both stores together, each row carrying the
+  document's own name underneath, because two sets can honestly share a label.
 - **Every result opens its full audit trail** — the raw location string, which signal decided
   the workplace (`ats-enum`), which decided the seniority (`title:entry`), whether the salary
   was as-stated or reinterpreted, and the full description. Plus the link to apply.
 
-The API underneath is five routes: `GET /api/meta`, `POST /api/search`, `GET /api/job/:id`,
-`GET|PUT|DELETE /api/profiles/:name`, `GET /api/gone`. `POST /api/search` takes the same
-profile document as the CLI. [Accounts](#accounts) add `/api/auth/*` and `/api/me/*` on top
-of those, and change none of them.
+The API underneath is six routes: `GET /api/meta`, `POST /api/search`, `GET /api/job/:id`,
+`GET|PUT|DELETE /api/profiles/:name`, `GET /api/gone`, `POST /api/interpret`. `POST /api/search`
+takes the same profile document as the CLI. [Accounts](#accounts) add `/api/auth/*` and
+`/api/me/*` on top of those, and change none of them.
+
+### Describe your search, and let it fill the filters in
+
+**Optional, off by default, and nothing is behind it.** The panel at the top of the rail
+takes a sentence — typed or dictated — and sets the forty controls below it:
+
+> *entry-level ops or solutions roles in NYC, I'd take remote too, nothing needing a
+> security clearance*
+
+...becomes five title keywords, four title exclusions, `metros: ["nyc"]`,
+`remote_counts_as_match: true`, a two-year experience cap, `job_functions: ["operations"]`
+and `exclude_clearance: true` — the same profile document you would have built by hand, and
+the same one the CLI and the daily run read. There is no second search path: it writes
+`profile` and the page redraws.
+
+Three things about how it behaves, each of which is a decision rather than an accident:
+
+- **It shows its work and it is one click to undo.** Every criterion it set is listed in the
+  page's own words (`+ metro in nyc`, `− posted within 30 days`), so you are reading what the
+  *engine* now holds, not the model's account of itself. **Undo** puts back exactly the
+  filters that were there a second before.
+- **It cannot exclude a job for staying silent.** The [three-outcome rule](#every-criterion-has-three-outcomes-not-two)
+  is the one a language model is most likely to break, because "at least $150k" reads like an
+  instruction to drop everything that doesn't say $150k — and that would discard 74.2% of the
+  market without a word on screen. So the unknown policies are not a field it can write.
+  It gets one narrow list, `exclude_when_unstated`, and it may only fill that in when you
+  asked for it in so many words.
+- **It says what it could not do.** A place it can't find is named on screen and sets no
+  filter (never a criterion that quietly matches nothing), and anything these filters can't
+  express — culture, team size, "somewhere I can grow" — comes back as
+  *Couldn't filter on that: …* rather than being approximated with keywords that would
+  narrow your search behind your back.
+
+**Turning it on.** It needs an [Anthropic API key](https://console.anthropic.com/settings/keys),
+and until it has one the panel says so and does nothing else:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+npm run serve
+```
+
+...or put it in `config/anthropic.json` (gitignored, same as the Google OAuth secret):
+
+```json
+{ "api_key": "sk-ant-...", "model": "claude-opus-5" }
+```
+
+Each press is one API call — roughly 6k input tokens and 500 output, well under a cent on
+`claude-opus-5`. `ANTHROPIC_MODEL` overrides the model. This is the project's only network
+dependency at *query* time and its only npm dependency at all; with no key set, the server
+never loads the SDK and the app is exactly what it was.
+
+**It is capped at 30 calls per hour per person** — per account where there is one, per
+socket where there isn't (`ANTHROPIC_CALLS_PER_HOUR`, `0` to remove it). This is the only
+route in the project whose worst case is a bill rather than a slow page, and the deployed
+copy is open to anyone who signs up. The cap is taken at the line that spends, so a failure
+that costs nothing — a rejected key, an unreachable API — gives the call back; mistyping
+your key should not lock you out at the moment you are trying to fix it.
+
+**Dictation is your browser's, not ours.** The Speak button is the built-in
+`SpeechRecognition` API — no key, no dependency, and it does not appear in a browser that
+lacks it. In Chrome it sends the audio to Google, which is a surprising thing for a tool
+whose whole pitch is that it runs on your laptop, so the hint under the button says so.
+
+**The vocabulary is generated, never written down twice.** The list of job functions,
+seniority bands, pay periods, skills and ATSes the model chooses from is built from
+`schema.mjs` and the live corpus — the same rule the metro dropdown follows. Places are the
+one exception and get a hybrid: the 200 busiest metros are served as ids to pick from (60.3%
+of every placed job, 4 KB of prompt), and everything else is free text resolved against the
+full 24,576-row registry by exact match only. Fuzzy matching was tried and removed — on a
+registry built from raw location strings it turned "Germany" into a two-job metro *labelled*
+"Germany Berlin" and found *something* for every unrecognised word. Knowing that "the Bay
+Area" is `sf-bay` is the model's job; it does it correctly, and a `LIKE` cannot.
 
 ### Why the filter is in memory, not in SQL
 

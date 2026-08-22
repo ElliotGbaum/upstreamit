@@ -64,6 +64,98 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none;color:inherit}
 .btn.ghost:hover{color:var(--ink);border-color:var(--line)}
 .btn[disabled]{opacity:.45;cursor:default}
 
+/* ------------------------------------------------------------- filter sets */
+/* The header control that says which saved search is on screen.
+
+   It was a bare <select> reading "NYC · entry level · solutions & operations"
+   with a button reading "Save" beside it, and neither said what it was: the
+   menu could have been a sort order, and the button could have been saving a
+   job. So the control carries its own label, the menu says whose each set is
+   and where it lives, and a chip appears the moment the filters stop matching
+   the set they came from — the one thing that makes "you can save this" a fact
+   on screen rather than something you have to already know. */
+.filterset{display:flex;align-items:center;gap:10px;position:relative}
+
+/* One height for everything standing in the header line. Three controls at
+   three heights — a two-line picker, a small pill, a button — read as three
+   unrelated things dropped next to each other, which is what the row looked
+   like before this. */
+.bar .btn{height:34px;display:inline-flex;align-items:center}
+
+.fs-pick{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+         gap:1px;text-align:left;height:34px;
+         background:var(--panel);border:1px solid var(--line);border-radius:9px;
+         padding:0 11px;cursor:pointer;max-width:340px}
+.fs-pick:hover{border-color:var(--ink-3)}
+.fs-pick[aria-expanded="true"]{border-color:var(--ink-3)}
+.fs-cap{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;
+        color:var(--ink-3);font-weight:600;line-height:1.3}
+.fs-line{display:flex;align-items:center;gap:8px;max-width:100%}
+.fs-name{font-size:13px;font-weight:550;line-height:1.3;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fs-name.none{color:var(--ink-3);font-weight:400}
+.fs-caret{color:var(--ink-3);font-size:10px;flex:none}
+
+/* Quiet on purpose. This is a fact about the filters, not a warning about
+   them: an amber pill in the middle of the row read as something being wrong,
+   and it was louder than the button that answers it. A dot the colour of that
+   button, and grey text. */
+.fs-edited{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+           color:var(--ink-3);white-space:nowrap}
+.fs-edited::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+
+/* The save button when there is something to save: tinted, not filled. A solid
+   accent button is the loudest thing the page has, and it belongs to the form's
+   own Save — the click that actually writes — not to the button that opens it. */
+#save.ready{background:var(--accent-soft);color:var(--accent);font-weight:550;
+            border-color:color-mix(in srgb,var(--accent) 32%,var(--line))}
+#save.ready:hover{border-color:var(--accent)}
+
+/* The menu.
+
+   Styled as the app's own list of choices, not as a floating panel: the same
+   hairline-separated rows, the same `--accent-soft` tint on the one that is
+   selected, the same radius as the option lists in the left column. It used to
+   be a rounded card with a deep drop shadow and a bright ✓ down the side, which
+   is a different design language to everything it opens over — the page has no
+   other floating card, and it marks a chosen row by tinting it. */
+.fs-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:40;overflow:auto;
+         min-width:300px;max-width:min(420px,88vw);max-height:min(66vh,430px);
+         background:var(--panel);border:1px solid var(--line);border-radius:9px;
+         box-shadow:0 6px 18px rgb(0 0 0 / .07)}
+.fs-group{padding:8px 10px 5px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+          color:var(--ink-3);font-weight:600}
+.fs-group:not(:first-child){border-top:1px solid var(--line)}
+.fs-item{display:block;width:100%;text-align:left;background:none;border:0;
+         border-bottom:1px solid var(--line-soft);padding:6px 10px;cursor:pointer;font-size:13px}
+.fs-item:last-child{border-bottom:0}
+.fs-item:hover,.fs-item:focus-visible{background:var(--line-soft)}
+.fs-item.on{background:var(--accent-soft)}
+.fs-item .nm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs-item.on .nm{font-weight:600}
+.fs-item .sub{display:block;font-size:11.5px;color:var(--ink-3);
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs-empty{padding:9px 10px 11px;font-size:12px;color:var(--ink-3);line-height:1.45}
+/* The row that acts on the rows above it, marked off the way the left column
+   marks its "all boards" row: a full-strength rule and weight, never a tint —
+   a tint here would read as "selected". */
+.fs-foot{border-top:1px solid var(--line)}
+.fs-foot .fs-item .nm{color:var(--ink-2);font-weight:600}
+
+/* Naming a set. Small enough to sit under the button that opened it, so the
+   filters it is about stay on screen while you name them. */
+.fs-form{position:absolute;top:calc(100% + 6px);left:0;z-index:41;width:min(340px,88vw);
+         display:flex;flex-direction:column;gap:7px;
+         background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px;
+         box-shadow:0 6px 18px rgb(0 0 0 / .07)}
+.fs-form h4{margin:0;font-size:13.5px;font-weight:600}
+.fs-form p{margin:0;font-size:11.5px;color:var(--ink-3);line-height:1.45}
+.fs-form p.err{color:var(--err)}
+.fs-form .fs-field{font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+                   color:var(--ink-3);font-weight:600;margin-top:2px}
+.fs-form input{width:100%}
+.fs-form .row{display:flex;justify-content:flex-end;gap:7px;margin-top:3px}
+
 /* ------------------------------------------------------------------ layout */
 .layout{max-width:1560px;margin:0 auto;padding:18px 20px 100px;
         display:grid;grid-template-columns:320px minmax(0,1fr);gap:22px;align-items:start}
@@ -137,6 +229,15 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
    this row never is. */
 .opt.all{font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--line)}
 .more{padding:6px 9px;color:var(--ink-3);font-size:11.5px}
+/* Scoped, because the results column has its own `.more` further down that
+   would otherwise centre this one and give it that row's padding. */
+.options .more{display:block;padding:6px 9px;text-align:left;color:var(--ink-3);font-size:11.5px}
+/* The same row, when there is something to click. It reads as the last option
+   in the list rather than as a button floating under one, so the rule above it
+   is the same hairline that separates two options. */
+.options button.more{width:100%;background:transparent;border:0;border-top:1px solid var(--line-soft);
+                     color:var(--accent);cursor:pointer;padding:7px 9px}
+.options button.more:hover{background:var(--line-soft);color:var(--ink)}
 
 /* The row you type your own cap into. Its input has to sit inside a 13px row
    without making that row taller than the presets above it, or the last option
@@ -186,6 +287,20 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 
 .notice{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
         border-radius:9px;padding:8px 12px;font-size:12.5px;margin-bottom:10px}
+/* Amber is the engine talking about the match. Red is the page saying it could
+   not reach the server, which is the one warning that also calls the numbers
+   next to it into question. */
+.notice.err{background:var(--err-soft);color:var(--err);
+            border-color:color-mix(in srgb,var(--err) 30%,transparent)}
+
+/* A search that never reached the server leaves the previous one's funnel,
+   counts and rows sitting there, and they answer the profile as it was before
+   the change that failed. Grey them until a search succeeds — an unreachable
+   server must not be able to look like a successful search. `#warnings` is
+   deliberately exempt: it is the only element in here still telling the truth.
+   Dimmed, not disabled — a row you can already see is still a job you may want
+   to open. */
+#search-view.stale > *:not(#warnings){opacity:.34;filter:grayscale(1);transition:opacity .15s ease}
 
 .sechead{display:flex;align-items:baseline;gap:10px;margin:22px 0 9px}
 .sechead h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);
@@ -201,25 +316,66 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .sechead select{padding:3px 7px;font-size:12px}
 
 .jobs{display:flex;flex-direction:column;gap:7px}
+/* Four columns: the rank, the company's mark, the card itself, and the `i`.
+   The mark is the new one, and it is there because it is the one thing every
+   job board — LinkedIn, Indeed, Wellfound, a hosted Greenhouse page — puts in
+   that position. A company you are scanning for is found by its mark several
+   rows before you have read the line of text beside it, and a name with no
+   mark next to it has to win that fight on typography alone, which is the
+   fight it was losing under the title. */
 .job{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-     padding:12px 14px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:12px;
-     cursor:pointer;transition:border-color .12s}
+     padding:12px 14px;display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto;
+     column-gap:11px;row-gap:12px;cursor:pointer;transition:border-color .12s}
 .job:hover{border-color:var(--ink-3)}
 .job.open{border-color:var(--accent)}
-.rank{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums;font-family:var(--mono);padding-top:2px}
-.job h4{margin:0 0 3px;font-size:14.5px;font-weight:600;letter-spacing:-.005em;line-height:1.35}
-/* The link underline used to be the loudest thing on the card; thin it out so
-   the title still reads as a link without swamping the company under it. */
-.job h4 a{text-decoration-thickness:1px;text-underline-offset:2px;
-          text-decoration-color:color-mix(in srgb,currentColor 32%,transparent)}
-.job h4 a:hover{text-decoration-color:currentColor}
-/* The title is the only bold line on a card. The company is lifted out of the
-   grey by ink, not by weight — a second semi-bold line sitting right under the
-   heading competes with it instead of supporting it. The department stays a
-   step further back so the eye still lands on the company first. */
-.job .co{font-size:13px;line-height:1.4;font-weight:400}
-.job .co b{color:var(--ink-2);font-weight:500}
-.job .co .dept{color:var(--ink-3)}
+/* Right-aligned so the ones, tens and hundreds stack against the mark instead
+   of drifting away from it as the list gets longer. */
+.rank{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums;font-family:var(--mono);
+      padding-top:4px;text-align:right}
+
+/* The stand-in for a logo. Nothing populates `companies.logo_url`, so this is
+   the monogram every board falls back to when an employer has no image.
+
+   The hue arrives on the element as `--h`, derived from the company name in
+   ui.js; saturation and lightness live here. That split is the point: the same
+   employer gets the same colour on every row without anything being stored,
+   and the tile is pale on white and deep on black without the script having to
+   know which one is on screen. */
+.logo{--sat:44%;--bg-l:93%;--ink-l:33%;--line-l:87%;
+      width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+      font-size:12.5px;font-weight:650;letter-spacing:.01em;line-height:1;user-select:none;
+      background:hsl(var(--h,222) var(--sat) var(--bg-l));
+      color:hsl(var(--h,222) var(--sat) var(--ink-l));
+      border:1px solid hsl(var(--h,222) var(--sat) var(--line-l))}
+/* Dark flips the tile inside out — a deep ground and a light monogram — and it
+   is three lightnesses, not three colours, because the hue is the row's. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .logo{--sat:38%;--bg-l:18%;--ink-l:75%;--line-l:26%}
+}
+:root[data-theme="dark"] .logo{--sat:38%;--bg-l:18%;--ink-l:75%;--line-l:26%}
+/* A posting with no company still needs the column to be a column — otherwise
+   every card under it steps sideways. Draining the saturation leaves the same
+   tile in plain grey, in whichever theme is on; it has to come after the dark
+   rules above to outrank them. */
+.job .logo.blank{--sat:0%}
+
+/* The title carried a permanent underline, and down 200 rows that underline
+   was the loudest thing on the page: it pulled the eye so hard that the
+   company under it read as a caption on the title rather than as the other
+   half of the answer. It is still a link — the pointer says so, the whole card
+   is clickable, and the underline comes back under the cursor. */
+.job h4{margin:0 0 2px;font-size:15px;font-weight:650;letter-spacing:-.008em;line-height:1.32}
+.job h4 a{text-decoration:none}
+.job h4 a:hover,.job h4 a:focus-visible{text-decoration:underline;text-decoration-thickness:1px;
+                                        text-underline-offset:2px}
+/* The company is full-strength ink now rather than a grey step below the
+   title. Which job it is and who it is at are two halves of one answer, and
+   every board treats them that way; the company gives up size and weight to
+   the title, not colour. The department is the genuinely secondary part and
+   drops back to grey on its own. */
+.job .co{font-size:13px;line-height:1.4;font-weight:400;color:var(--ink-3)}
+.job .co b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:-.004em}
+.job .co .dept{color:var(--ink-3);font-size:12.5px}
 .job .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .job .why{color:var(--ink-3);font-size:11.5px;margin-top:6px;font-family:var(--mono)}
 /* `.score` is the saved view's right-hand column now — status and a date. The
@@ -246,7 +402,10 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 /* The same icon inline in the results line, where it is a picture of the
    control rather than the control — always lit, never clickable. */
 .sub-hint{color:var(--ink-3)}
-.sub-hint .why-i{display:inline-block;vertical-align:-4px;margin:0 1px;opacity:1;
+/* `middle` and not a pixel nudge: it centres the circle on the parent's own
+   x-height, so the badge stays on the line if the results text ever changes
+   size. A hard offset was tuned to one font-size and sat a few pixels low. */
+.sub-hint .why-i{display:inline-block;vertical-align:middle;margin:0 1px;opacity:1;
                  border-color:var(--line);cursor:default}
 
 .rank-why{grid-column:1/-1;border-top:1px solid var(--line-soft);margin-top:10px;padding-top:11px;cursor:auto}
@@ -265,6 +424,13 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .rank-why .part.off{opacity:.5}
 .rank-why .foot{color:var(--ink-3);font-size:11.5px;line-height:1.5;margin-top:11px;
                 border-top:1px solid var(--line-soft);padding-top:9px}
+/* On a phone the row has no width to spare and the mark is the first thing
+   that can go: the company name is right there in words. */
+@media (max-width:560px){
+  .job{grid-template-columns:24px minmax(0,1fr) auto}
+  .logo{display:none}
+}
+
 @media (max-width:760px){
   .rank-why .part{grid-template-columns:minmax(88px,116px) minmax(0,1fr) auto}
   .rank-why .txt{grid-column:1/-1}
@@ -377,3 +543,46 @@ body.viewing-saved .layout{grid-template-columns:minmax(0,1fr)}
 .saved-job:hover{border-color:var(--line)}
 .saved-job .score{text-align:right;white-space:nowrap}
 .saved-job .score b{font-size:12.5px;font-weight:600;text-transform:lowercase}
+
+/* ----------------------------------------------------- describe your search */
+/* The one panel on the rail that is not a criterion. It sits above forty
+   controls and its job is to fill them in, so it reads as the way in rather
+   than as the first of forty: a tinted head, a real text area, and a result
+   block that stays until the next thing you type. */
+.card.ai{border-color:color-mix(in srgb,var(--accent) 26%,var(--line))}
+.card.ai>h3{color:var(--accent);background:color-mix(in srgb,var(--accent-soft) 62%,transparent);
+            border-radius:var(--radius) var(--radius) 0 0}
+.card.ai.collapsed>h3{border-radius:var(--radius)}
+
+#ai-text{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+         padding:8px 9px;font:inherit;font-size:13px;color:var(--ink);resize:vertical;min-height:62px}
+#ai-text:focus{outline:2px solid var(--accent);outline-offset:1px}
+#ai-text:disabled{opacity:.55;cursor:not-allowed}
+
+/* Recording is a state the page has to show plainly: a microphone that is on
+   without saying so is the worst version of this control. */
+#ai-mic.on{background:var(--err);border-color:var(--err);color:#fff;font-weight:550}
+#ai-mic.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+                   background:#fff;margin-right:6px;animation:ai-pulse 1.1s ease-in-out infinite}
+@keyframes ai-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.hint.warn-note{color:var(--warn)}
+
+.ai-result{display:flex;flex-direction:column;gap:7px}
+.ai-line{margin:0;font-size:12.5px;line-height:1.5}
+.ai-line.said{color:var(--ink-2)}
+.ai-line.working{color:var(--ink-3);font-style:italic}
+.ai-line.quiet{color:var(--ink-3)}
+.ai-line.warn{color:var(--warn);background:var(--warn-soft);border-radius:7px;padding:6px 8px}
+.ai-line.bad{color:var(--err);background:var(--err-soft);border-radius:7px;padding:6px 8px}
+
+/* What it actually did, in the engine's own words rather than the model's — a
+   summary is an account of itself, this is the list of criteria now in force. */
+.ai-changes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.ai-changes li{font-size:12px;line-height:1.45;padding-left:16px;position:relative;color:var(--ink-2)}
+.ai-changes li::before{position:absolute;left:0;font-family:var(--mono);font-weight:700}
+.ai-changes li.add::before{content:"+";color:var(--ok)}
+.ai-changes li.del::before{content:"\2212";color:var(--ink-3)}
+.ai-changes li.del{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line)}
+
+.ai-undo{align-self:flex-start;font-size:12px;padding:4px 8px;border-color:var(--line)}

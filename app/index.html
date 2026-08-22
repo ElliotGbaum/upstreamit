@@ -15,18 +15,52 @@
     <span class="corpus" id="corpus">loading…</span>
     <span class="spacer"></span>
 
-    <label class="corpus" for="since">show</label>
-    <select id="since" title="Restrict to jobs that first appeared recently">
-      <option value="">everything open</option>
-      <option value="last-sweep">new in the last sweep</option>
-      <option value="1d">new since yesterday</option>
-      <option value="7d">new in 7 days</option>
-      <option value="30d">new in 30 days</option>
-    </select>
+    <!-- The filter set: which saved search is on screen, whether it has been
+         changed since it was saved, and the one button that saves it. It used
+         to be a bare <select> and a button reading "Save", which said neither
+         what the menu held nor what the button would keep. -->
+    <div class="filterset" id="filterset">
+      <button class="fs-pick" type="button" id="profile-btn"
+              aria-haspopup="listbox" aria-expanded="false"
+              title="Switch between saved filter sets">
+        <span class="fs-cap">Filter set</span>
+        <span class="fs-line">
+          <span class="fs-name" id="profile-name">None chosen</span>
+          <span class="fs-caret" aria-hidden="true">▾</span>
+        </span>
+      </button>
 
-    <select id="profile-select" title="Saved filter profiles"></select>
-    <button class="btn" id="save">Save</button>
-    <button class="btn ghost" id="reset" title="Clear every criterion">Clear</button>
+      <!-- The menu above is drawn from this element, and this element stays the
+           page's record of which set is loaded: one value the rest of the app
+           reads and writes, whatever the menu looks like. -->
+      <select id="profile-select" hidden aria-hidden="true" tabindex="-1"></select>
+
+      <div class="fs-menu" id="profile-menu" hidden role="listbox" aria-label="Saved filter sets"></div>
+
+      <span class="fs-edited" id="fs-edited" hidden
+            title="These filters are not saved — “Save filters” keeps them">unsaved filters</span>
+
+      <button class="btn" id="save" title="Save the filters on screen so you can come back to them">Save filters</button>
+      <button class="btn ghost" id="reset" title="Clear every criterion">Clear</button>
+
+      <!-- Naming a saved set is a small form on the page, not a browser prompt:
+           it can say where the set is going and what a name may contain, and it
+           can refuse a bad one without throwing the whole thing away. -->
+      <form class="fs-form" id="save-form" hidden>
+        <h4 id="save-title">Save these filters</h4>
+        <p id="save-where">Kept on this computer.</p>
+        <label class="fs-field" for="save-name">Name this filter set</label>
+        <input type="text" id="save-name" autocomplete="off" spellcheck="false" maxlength="64"
+               placeholder="e.g. NYC entry level">
+        <p id="save-note">Letters, numbers, spaces, - and _</p>
+        <p class="err" id="save-error" hidden></p>
+        <div class="row">
+          <button type="button" class="btn ghost" id="save-cancel">Cancel</button>
+          <button type="submit" class="btn primary" id="save-confirm">Save</button>
+        </div>
+      </form>
+    </div>
+
     <button class="btn ghost" id="theme" title="Light / dark">◐</button>
 
     <!-- Accounts are optional and the header says so: signed out, there is one
@@ -54,6 +88,26 @@
 <div class="layout">
   <!-- ------------------------------------------------------------ filters -->
   <aside id="filters">
+
+    <!-- Say it in a sentence; the forty controls below fill themselves in.
+         First on the rail because it is the shortest road to a real search:
+         everything under it is the same criteria, one control at a time, for
+         when you want to adjust what this got. Its answer is always shown as
+         a list of what changed, with an Undo — see app/ai.js. -->
+    <section class="card ai" data-panel="ai" id="ai-card">
+      <h3>Describe your search <span class="caret">▾</span></h3>
+      <div class="body">
+        <textarea id="ai-text" rows="3" spellcheck="true"
+                  placeholder="e.g. entry-level ops or solutions roles in NYC, I'd take remote too, nothing needing a security clearance"></textarea>
+        <div class="row">
+          <button class="btn" type="button" id="ai-mic" title="Dictate instead of typing">&#9679; Speak</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" id="ai-go">Set my filters</button>
+        </div>
+        <p class="hint" id="ai-note"></p>
+        <div id="ai-out"></div>
+      </div>
+    </section>
 
     <section class="card" data-panel="ats">
       <h3>Job board <span class="badge" id="n-ats">0</span><span class="caret">▾</span></h3>
@@ -115,7 +169,6 @@
         <div class="hint">…or match a whole country instead:</div>
         <div class="options" id="country-options"></div>
         <label class="hint"><input type="checkbox" id="remote-counts"> a remote role counts as a match here</label>
-        <div class="hint">Built from the metro registry the derive pass discovered — <span id="metro-count">0</span> places, from real location strings.</div>
       </div>
     </section>
 
@@ -123,10 +176,8 @@
       <h3>Workplace <span class="badge" id="n-workplace">0</span><span class="caret">▾</span></h3>
       <div class="body">
         <div class="options" id="workplace-options"></div>
-        <div class="hint">From <code>workplaceType</code>, never <code>isRemote</code> — which is <code>true</code> on every hybrid job.</div>
         <div class="hint">…and how far a remote role reaches:</div>
         <div class="options" id="remote-scope-options"></div>
-        <div class="hint">Only remote postings carry this, so an onsite job is a real <b>no</b> here rather than a blank — the workplace field already answered.</div>
       </div>
     </section>
 
@@ -138,9 +189,7 @@
           <label class="hint field">at least <input type="number" id="min-years" min="0" max="30" step="1"> years</label>
         </div>
         <div class="options" id="seniority-options"></div>
-        <div class="hint" id="seniority-unknown"></div>
         <label class="hint"><input type="checkbox" id="include-intern"> include internships</label>
-        <div class="hint">The title band and the years stated in the description must agree — either alone lets the wrong half through.</div>
       </div>
     </section>
 
@@ -152,31 +201,7 @@
           <label class="hint field wide">max $<input type="number" id="salary-max" min="0" step="5000"></label>
         </div>
         <div class="options" id="salary-options"></div>
-        <div class="hint">Only 37.2% of jobs publish a figure. Compared against the top of the range. The bands
-          above are cut from the figures in <b>your</b> current results, not from a fixed ladder — so they
-          describe an hourly warehouse search and a staff-engineer search differently, because those are
-          different searches.</div>
-
-        <div class="hint">Paid how often:</div>
-        <div class="options" id="pay-period-options"></div>
-        <div class="hint">1,901 open jobs are priced hourly and are invisible as a class without this.</div>
-
-        <div class="hint">Paid in:</div>
-        <div class="options" id="currency-options"></div>
-
-        <label class="opt standalone" id="equity-opt">
-          <input type="checkbox" id="requires-equity">
-          <span class="lbl">offers equity</span>
-          <span class="n" id="equity-count"></span>
-        </label>
-        <label class="opt standalone" id="stated-opt">
-          <input type="checkbox" id="salary-stated">
-          <span class="lbl">pay exactly as published</span>
-          <span class="n" id="stated-count"></span>
-        </label>
-        <div class="hint">Where a board mislabelled its own figure we reinterpret it and record that we did.
-          No job board in the survey lets you exclude an estimate — Glassdoor prints “Employer Est.” on the
-          card and gives you nothing to do about it.</div>
+        <div class="hint">Only 37.2% of jobs publish a figure.</div>
       </div>
     </section>
 
@@ -291,9 +316,6 @@
       <h2>Results</h2>
       <span class="sub" id="results-sub"></span>
       <span class="spacer"></span>
-      <label class="toolbar-opt" title="One row per company + title. 16.6% of the corpus is the same role posted once per city.">
-        <input type="checkbox" id="collapse"> fold duplicates
-      </label>
       <label class="toolbar-opt" for="sort">sort</label>
       <select id="sort" title="Every order keeps the jobs that can't answer it — they sink, they don't vanish"></select>
     </div>

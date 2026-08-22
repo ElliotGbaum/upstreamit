@@ -73,7 +73,7 @@ let candidates = Object.entries(store.slugs)
   .filter(([, record]) => (record.sources?.length ?? 0) > 0)
   .map(([slug]) => slug);
 
-if (options.onlyUnknown) candidates = candidates.filter((slug) => !previous.companies[slug]?.status);
+if (options.onlyUnknown) candidates = candidates.filter((slug) => !record(previous.companies, slug)?.status);
 if (options.sample && options.sample < candidates.length) candidates = sampleEvenly(candidates, options.sample);
 
 if (!candidates.length) {
@@ -132,7 +132,14 @@ if (options.withNames) {
   }
 }
 
-const companies = { ...previous.companies };
+// Null-prototype, so a slug lookup can never reach `Object.prototype`. This is
+// not hypothetical: Ashby has a real board with the slug `constructor`, and on a
+// plain object `companies['constructor']` returns the Object constructor
+// *function*. `pickNameFields` then reads its `.name` — `"Object"` — and stores
+// that as the company's display name. Any of `toString`, `valueOf`,
+// `hasOwnProperty` or `__proto__` as a slug does something equally wrong, and
+// `__proto__` would not even create an own key on a plain object.
+const companies = Object.assign(Object.create(null), previous.companies);
 for (const [slug, result] of results) {
   const existing = companies[slug];
 
@@ -222,6 +229,17 @@ async function validateSlug(slug) {
 function sampleEvenly(items, count) {
   const step = items.length / count;
   return Array.from({ length: count }, (_, i) => items[Math.floor(i * step)]);
+}
+
+/**
+ * Own-property read for a slug-keyed map parsed straight out of JSON.
+ *
+ * `map[slug]` is unsafe for the same reason as above — a slug is arbitrary text
+ * from a third-party list, and some of that text names things on
+ * `Object.prototype`.
+ */
+function record(map, slug) {
+  return map && Object.hasOwn(map, slug) ? map[slug] : undefined;
 }
 
 /** Preserve previously-fetched name fields across a validation-only re-run. */

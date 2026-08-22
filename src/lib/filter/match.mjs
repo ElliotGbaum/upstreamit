@@ -19,7 +19,7 @@
  * are.
  */
 
-import { fold, termPattern } from '../derive/text.mjs';
+import { fold, termPattern, termRegex } from '../derive/text.mjs';
 import { allowedSeniority } from './profile.mjs';
 
 const MATCH = 'match';
@@ -38,6 +38,23 @@ export function compileTerms(terms) {
     term,
     re: new RegExp(termPattern(term)),
   }));
+}
+
+/**
+ * One regex that matches if *any* of `terms` does.
+ *
+ * A cheap gate in front of `hits`. The title pass runs over every open job in
+ * the corpus, so a twelve-keyword profile was twelve regex passes over 337,487
+ * titles to answer a question that is `no` for four titles in five. One
+ * alternation answers it in a single pass, and the per-term loop only runs for
+ * the rows that survived — which is also the only place the *matched terms*
+ * are needed, because ranking is by how many distinct keywords hit.
+ *
+ * Not `g`: a global regex carries `lastIndex` between `.test()` calls and would
+ * skip rows at random.
+ */
+export function anyTerm(terms) {
+  return termRegex(terms ?? [], '');
 }
 
 /** Which compiled terms hit this already-folded text, in list order. */
@@ -64,6 +81,10 @@ export function compileProfile(profile, index = {}) {
     title: compileTerms(profile.title_keywords),
     description: compileTerms(profile.description_keywords),
     excludeTitle: compileTerms(profile.exclude_title_keywords),
+    // The same two lists as one alternation each, for the title gate's
+    // prefilter. Built here so they are compiled once per query, not per job.
+    titleAny: anyTerm(profile.title_keywords),
+    excludeTitleAny: anyTerm(profile.exclude_title_keywords),
     excludeDescription: compileTerms(profile.exclude_description_keywords),
     seniority: allowedSeniority(profile),
     metros: new Set(profile.metros),
@@ -122,13 +143,15 @@ function checkCountry(job, c) {
 
 /**
  * Onsite / hybrid / remote, from `workplaceType` — never from `isRemote`, which
- * is `true` on all 15,932 hybrid jobs and carries no information the enum lacks.
+ * is `true` on every one of Ashby's 15,932 hybrid jobs and carries no
+ * information the enum lacks.
  *
- * ## The guessed two thirds of this column
+ * ## The guessed half of this column
  *
- * 173,221 of 265,698 jobs carry no enum and were called `onsite` by
+ * 174,537 of 337,487 jobs carry no enum and were called `onsite` by
  * `deriveWorkplace`'s last rule — a named office, no remote marker. 165,962 of
- * them are Greenhouse, which publishes no workplace field at all. That guess is
+ * them are Greenhouse, which publishes no workplace field at all; Lever, which
+ * publishes one on 98.0% of its jobs, contributes 1,316. That guess is
  * sound on one axis and blind on the other:
  *
  *   is it remote?      answered. The posting names a place and never says
@@ -509,8 +532,19 @@ export function matchCompanySize(job, profile, c) {
  * `Product Designer`, and the UI shows which ones.
  */
 export function matchTitle(job, profile, c) {
-  if (c.excludeTitle.length && hits(job.tf, c.excludeTitle).length) return null;
+  // Both gates ask the one-regex question first and only fall through to the
+  // per-term loop when the answer is yes -- see `anyTerm`. A caller that
+  // compiled a profile before those fields existed still works: the fallback is
+  // the old per-term pass, which is the same answer, only slower.
+  const excludeAny = c.excludeTitleAny ?? (c.excludeTitle.length ? anyTerm(c.excludeTitle.map((t) => t.term)) : null);
+  if (excludeAny && excludeAny.test(job.tf)) return null;
   if (!c.title.length) return [];
+
+  const includeAny = c.titleAny ?? anyTerm(c.title.map((t) => t.term));
+  // `all` mode needs every keyword, so one hit proves nothing and the loop has
+  // to run anyway -- but `any` mode, the default, is answered outright.
+  if (profile.title_match !== 'all' && includeAny && !includeAny.test(job.tf)) return null;
+
   const matched = hits(job.tf, c.title);
   if (profile.title_match === 'all') return matched.length === c.title.length ? matched : null;
   return matched.length ? matched : null;
@@ -547,6 +581,9 @@ export const CRITERIA = [
   { key: 'degree', test: matchDegree },
 ];
 
+/** The criterion keys, in table order. Hoisted so the hot loops never rebuild it. */
+export const CRITERIA_KEYS = CRITERIA.map((c) => c.key);
+
 /**
  * Evaluate every criterion. Returns the verdict map plus the matched title
  * keywords, or `null` when the title gate ruled the job out — the gate is
@@ -570,8 +607,13 @@ export function evaluate(job, profile, c) {
  */
 export function failedKeys(verdicts, unknowns) {
   const failed = [];
-  for (const [key, verdict] of Object.entries(verdicts)) {
-    if (verdict === MATCH) continue;
+  // Over `CRITERIA_KEYS` rather than `Object.entries(verdicts)`: this runs once
+  // per job that clears the title gate, and entries allocated a twenty-element
+  // array of two-element arrays each time -- 1.2M throwaway arrays per query on
+  // the current corpus, and the GC bill to go with them.
+  for (const key of CRITERIA_KEYS) {
+    const verdict = verdicts[key];
+    if (verdict === undefined || verdict === MATCH) continue;
     if (verdict === NO) failed.push(key);
     else if ((unknowns[key] ?? 'include') === 'exclude') failed.push(key);
   }
@@ -595,8 +637,9 @@ export function failedKeys(verdicts, unknowns) {
 export function classify(verdicts, unknowns) {
   let anySeparateUnknown = false;
 
-  for (const [key, verdict] of Object.entries(verdicts)) {
-    if (verdict === MATCH) continue;
+  for (const key of CRITERIA_KEYS) {
+    const verdict = verdicts[key];
+    if (verdict === undefined || verdict === MATCH) continue;
     const policy = unknowns[key] ?? 'include';
     if (verdict === NO) return 'out';
     // verdict === UNKNOWN

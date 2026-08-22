@@ -21,8 +21,9 @@ free, no key.
 
 So the whole problem is: **get every slug, then filter the resulting jobs hard.**
 
-Starting with Ashby. Greenhouse and Lever come after; both endpoints are already confirmed
-working.
+Ashby came first, then Greenhouse, then Lever — all three are swept. The next
+candidates (Workday, BambooHR, Paylocity, iCIMS) have slugs collected but no adapter
+and no probe yet.
 
 ---
 
@@ -32,12 +33,14 @@ working.
 | --- | --- |
 | 1. Collect slugs from public sources | **Done** |
 | 2. Verify each slug against the live API | **Done** |
-| 3. Sweep the live boards, store the jobs | **Done** — 265,698 jobs across Ashby and Greenhouse; Lever's adapter is built and its 2,611 boards verified, sweep not yet run |
+| 3. Sweep the live boards, store the jobs | **Done** — 337,487 jobs across Ashby, Greenhouse and Lever |
 | 4. Normalize the messy fields (location, salary, seniority) | **Done** — see below |
 | 5. Filter by your criteria | **Done** — ~800 ms warm over the full corpus |
 | 6. UI + daily automation + "what's new since yesterday" | **Done** — app, diff, and both runners written |
 | 7. Accounts | **Done** — see below |
 | 8. Greenhouse as a second ATS, + the ATS filter | **Done 2026-08-22** — see below |
+| 9. Lever as a third ATS | **Done 2026-08-22** — 71,789 jobs on 2,025 boards; see below |
+| 10. Describe the search in words instead of forty controls | **Done 2026-08-22** — optional, off without an API key; see below |
 
 Everything below the sweep line is now measured on the **full corpus** rather than
 the 400-board sample, so where the two disagree the numbers here supersede the
@@ -797,6 +800,11 @@ Shipped per `GreenhousePlan.MD`. The plan's projections and what actually happen
 Corpus went from 61,213 to **265,698 open jobs** and 4,297 to **10,494 live boards**.
 Every board count above is boards that answered, not slugs that were tried.
 
+Lever then added **71,789 jobs on 2,025 boards** for 931 MB in 106 seconds — the
+cheapest of the three per job, and the one that restored hybrid: corpus-wide hybrid
+went from 15,932 to **29,986**, because Lever publishes a `workplaceType` enum on
+98.0% of its jobs and Greenhouse publishes none at all.
+
 **All seven gotchas held.** The two that would have cost the most:
 
 - `content` is entity-escaped on 100% of jobs and must be decoded **exactly once** —
@@ -853,19 +861,120 @@ set exactly, with no job in both and the two counts summing to the unfiltered to
   row. At 2.7 GB per full sweep this is what makes sweeping Ashby and Greenhouse
   daily viable. Lever is the exception and always will be until they implement it:
   it sends an ETag and answers a matching `If-None-Match` with 200 and the full
-  body, so its nightly ~1.2 GB is not avoidable this way.
+  body, so its nightly 931 MB is not avoidable this way.
 - Every `share` in `UNKNOWNABLE` re-measured against the combined corpus. `job type`
   went 0.0% → **77.0%**; salary 62.8% → 75.6%. A stale share reads as measured and
   is worse than no number.
 
 ---
 
+## Phase 9 — Lever, as built (2026-08-22)
+
+| | Measured |
+| --- | --- |
+| Slugs probed | **8,721** in 4.1 min at concurrency 16, zero errors |
+| Live boards | **2,611** (29.9%) — of which 586 exist but have no open roles |
+| Boards with jobs | **2,025** |
+| Open jobs added | **71,789** (~35 per board) |
+| Full sweep | **931 MB**, **106 seconds**, zero errors, zero dead boards |
+
+Corpus went from 265,698 to **337,487 open jobs** across three ATSes. Lever is the
+cheapest of the three per job and by far the fastest to sweep.
+
+### What Lever is good for, and what it costs
+
+It publishes **more per job** than either of the others, and it is the ATS that makes
+hybrid visible again. Corpus-wide hybrid went from 15,932 to **29,986** — Lever
+publishes a `workplaceType` enum on 98.0% of its jobs, where Greenhouse publishes
+none at all and its 204,485 jobs therefore contribute exactly zero hybrid.
+
+The cost is that its payload is the least convenient of the three, in four specific
+ways that are all documented at the top of `src/lib/adapters/lever.mjs`:
+
+1. **The description is three fields.** `description` is only the opening; the
+   requirements are in `lists[]` and the closing in `additional`. Storing the obvious
+   field would have left `d_skills`, `d_degree`, `d_visa` and `d_clearance` reading a
+   third of the posting — and reading it *successfully*, which is why it would never
+   have been noticed. Assembling all three raised degree detection 481%, visa 367%,
+   clearance 245% and skills 167% on the same jobs.
+2. **`country` is an ISO code, and the location parser reads two-letter tokens as US
+   states.** `"DE"` is Delaware to `parseFragment`, because in a location string that
+   is what it is. Of 66,537 Lever jobs carrying a country, **10,784 (16.2%) would
+   have landed in the wrong one** — every Canadian job American, every Indian job
+   Indiana. Expanding the code to a name first (`iso-countries.mjs`) drops that to 2.
+3. **`categories.commitment` is free text, not an employment type.** 120 distinct
+   values; the commonest is one company's `"Contract Full time"`, which names two of
+   our enum values at once. Mapped only where it names exactly one — 72.5% resolve,
+   the rest stay NULL, which every filter reads as `unknown` rather than excluding.
+4. **The ETag is decorative.** Lever sends one and ignores `If-None-Match`. A Lever
+   sweep reports 0 unchanged boards and moves its full 931 MB every night.
+
+### The company-name gap this exposed
+
+Lever publishes no company name anywhere in its postings API — `hostedUrl` carries
+the slug and nothing else. `fetchOrganization` scrapes the board page `<title>`,
+which sounds expensive and is not: the tag lands in the first chunk off the socket,
+so the request is aborted after ~1.5 KB rather than downloading the ~970 KB page, a
+~650× saving. The names are ones no slug could produce — `ajccanada` →
+"Allison Jones Consulting Services", `bofcorp` → "B-O-F Corporation".
+
+Building it surfaced a pre-existing hole: **`probe-boards.mjs --with-names` wrote its
+results to `<ats>-verified.json`, which nothing but `stats.mjs` ever read.** Ashby
+never noticed because its board payload carries a name; Lever has none, so all 2,025
+of its companies rendered as their slug. `sweep.mjs` now loads that file and uses it
+to fill the gap when an adapter returns no name — the adapter still wins whenever it
+has one.
+
+### A latent bug this uncovered: slugs that are `Object.prototype` keys
+
+`probe-boards.mjs` accumulated its results as `const companies = { ...previous.companies }`
+and then read `companies[slug]`. A slug is arbitrary text from a third-party list,
+and Ashby has a real board whose slug is **`constructor`** — so that lookup returned
+the `Object` constructor *function*, and `pickNameFields` dutifully read its `.name`
+and stored **`"Object"`** as the company's display name. `toString`, `valueOf` and
+`hasOwnProperty` would do the same; `__proto__` would not even create an own key.
+
+It had been sitting in `ashby-verified.json` since 2026-08-11 doing nothing visible,
+because Ashby's display names reach the database from the board payload rather than
+from that file. Wiring `<ats>-verified.json` into `sweep.mjs` for Lever's sake is
+exactly what would have made it fire — the next Ashby sweep would have replaced
+Constructor's name with "Object".
+
+Fixed by building the accumulator with `Object.create(null)` and adding an own-property
+`record()` helper for the `--only-unknown` read. The one corrupted record was repaired
+in place. Greenhouse and Lever have no colliding slugs.
+
+The general lesson: **anything keyed by a slug is keyed by untrusted text.** Use a
+`Map`, a null-prototype object, or `Object.hasOwn` — never a bare object literal.
+
+### Two shared files changed
+
+- `derive/salary.mjs` gained `BIWEEK: 26` and `SEMI_MONTH: 24` in `PER_YEAR`, and
+  `schema.mjs` the matching `PAY_PERIODS` entries. Lever is the only ATS that
+  publishes those intervals (52 and 32 jobs). Purely additive: the reinterpretation
+  loop does not try them as fallbacks, so no other ATS changes. Without a factor a
+  $3,000 fortnightly figure has no plausible reading except MONTH, and the job files
+  at $36k instead of $78k.
+- `adapters/iso-countries.mjs` is new and sits beside `html.mjs` for the same reason
+  it does — SmartRecruiters, Workable, Recruitee and Personio all publish ISO codes
+  too, and a second copy of that table is how the two drift.
+
+### A sampling lesson worth keeping
+
+The adapter was designed against 8,697 jobs sampled evenly across 160 boards. Two of
+its numbers were materially wrong against the full sweep: `employment_type` coverage
+read 45.9% against a real **72.5%**, and salary 18.5% against **31.1%**. The cause is
+that one board contributed 3,462 identically-labelled jobs — 40% of the sample.
+**Sampling boards evenly does not sample jobs evenly**, and board size is Pareto.
+Sample boards to design the adapter; re-measure on the corpus before quoting a number.
+
+---
+
 ## Other ATSes, confirmed working
 
 - **Greenhouse**: **done — see Phase 8 above.**
-- **Lever**: `api.lever.co/v0/postings/<slug>?mode=json`. The description is **split across
-  fields** — `description` + each `lists[].content` + `additional` must be concatenated, or
-  you get ~13% of the text. Title is in `text`, not `title`. Slugs churn heavily.
+- **Lever**: **done — see Phase 9 above.** (The old note here estimated the split
+  description cost you ~87% of the text; measured, `description` alone is 33.9%.)
 
 ---
 
@@ -1239,3 +1348,127 @@ Remaining:
    plainly now: `sf-bay` next to `san-francisco-bay`, `madhive-new-york` next to `nyc`. It
    is an alias-table edit plus a re-derive — minutes, not a rebuild — but it is cosmetic
    until a search actually misses a job because of it.
+
+
+---
+
+## Phase 10 — describe it in words
+
+**The problem this solves is the first ten minutes, not the tenth search.**
+
+The rail is forty controls across seventeen panels, six of them collapsed by
+default. That is the right shape once you know the corpus: every one of them
+carries a leave-one-out count, and adjusting a criterion by hand is the whole
+reason the counts exist. It is the wrong shape for someone who has just opened
+the page, because the thing they know is a sentence — *entry-level ops or
+solutions roles in NYC, I'd take remote too, nothing needing a clearance* — and
+turning that sentence into eleven controls spread over six panels is a task
+they have to learn the tool to perform.
+
+So: a text box at the top of the rail, and a microphone beside it. Free text in,
+a filter profile out. `src/lib/interpret.mjs`, `app/ai.js`, one route.
+
+**It is not a second way to search, and that is the constraint that kept it
+small.** It writes the same `profile` object every control below it writes, and
+nothing downstream knows where a criterion came from. That is why the whole
+feature is one module and a hundred lines of page, why it inherits the funnel,
+the facet counts, the audit trail and the saved-set machinery for free, and why
+a search it built can be saved to `profiles/<name>.json` and read by the CLI
+tomorrow. Had it produced its own query object, none of that would be true and
+every one of them would have needed a second implementation.
+
+### The four rules, and what each one is preventing
+
+**1. The vocabulary is generated, not written down twice.** The tool schema the
+model chooses from is built from `schema.mjs`'s enums, `SKILL_TERMS` and the
+live corpus, the same way `/api/meta` builds the page's dropdowns. A second
+hand-kept list of job functions would drift from the first the day somebody adds
+a function, and the failure is silent: the model returns a value the engine has
+never heard of, and the search comes back empty with no error. `interpret-test.mjs`
+asserts each enum against its source for exactly this.
+
+**2. A filter may only rule a job out on evidence.** This is the rule the whole
+project is built on and the one a language model is most likely to break, because
+*at least $150k* reads like an instruction to drop everything that does not say
+$150k — which is 74.2% of the corpus, discarded without a word on screen. So the
+unknown policies are not a field the model can write. It gets one narrow list,
+`exclude_when_unstated`, the prompt tells it that filling that in unasked is an
+error, and `buildProfile` builds the policy object from the defaults plus that
+list and nothing else. The first test in the file is the assertion that a request
+naming a salary floor, a degree, a workplace and a date moves no policy at all.
+
+**3. Places are a hybrid, because the registry is two things.** 200 metros
+anybody would name, and a 24,576-row tail. The first are served to the model as
+ids to pick from — 60.3% of every placed job for 4 KB of prompt — and everything
+else goes through free text resolved by **exact match only**.
+
+The first version resolved free text with `LIKE 'name%'` and then `LIKE '%name%'`,
+which on a registry built from raw location strings is not fuzzy matching, it is
+a random walk. Measured against the real corpus it turned `Germany` into a
+two-job metro *labelled* "Germany Berlin" instead of the country filter with
+eleven thousand, matched a metro called `Narnia` (2 jobs, and it is genuinely in
+there, along with "Field" at 2,985 and one company's own name at 4,985), and
+still could not resolve "the Bay Area" or "Austin, Texas". Both passes were
+deleted. Knowing that the Bay Area is `sf-bay` belongs to the model, which does
+it correctly; a string comparison against 24,576 rows cannot, and its failures
+are confident.
+
+**4. The answer is shown, not just applied.** The route returns the profile *and*
+a diff against what was on screen, rendered in `activeCriteria`'s own words — so
+what you read is the engine's account of what it now holds, not the model's
+account of itself. Undo restores the previous profile exactly. Anything that did
+not resolve is named; anything these filters cannot express comes back as
+*Couldn't filter on that: …* rather than being approximated with keywords that
+would narrow the search invisibly.
+
+### What it costs, and what it does not
+
+One API call per press — about 6k input tokens and 500 out, well under a cent on
+`claude-opus-5`. It is the project's only npm dependency and its only network
+call at query time, and with no key configured the server never loads the SDK:
+`/api/meta` reports `ai.enabled: false`, the panel says which environment
+variable to set, and every other route behaves exactly as it did. Deleting
+`config/anthropic.json` and unsetting `ANTHROPIC_API_KEY` is the whole uninstall,
+the same property accounts have.
+
+The route is gated the way shared profile writes are, and for a sharper reason:
+it spends money on somebody's key. On a loopback bind there is nobody else on the
+socket. Bound to `--host=0.0.0.0` it requires a session, so a stranger who can
+reach the port cannot run up a bill on it.
+
+That gate is necessary and was not sufficient, which the deployment work made
+obvious: sign-up is open, so "requires an account" means "requires thirty
+seconds". There is a cap as well — 30 calls an hour, per account where there is
+one and per socket where there is not. Two details in it are the whole design.
+It is taken **inside `interpret`, at the line that spends**, after every
+pre-flight check has had its chance to throw, so nothing that never reached the
+API is charged for; and the failures that provably cost nothing — a rejected
+key, a model the key cannot reach, no network — hand the call back, because
+"you mistyped your key" must not also mean "and you are locked out for an hour"
+at the exact moment somebody is trying to fix it. It is a cap on a runaway and
+not a budget: it resets on restart, and the Anthropic console's spend limit is
+the thing that is actually a budget.
+
+**Dictation adds nothing to the stack.** It is the browser's own
+`SpeechRecognition`, so it needs no key and no package, and the button is not
+drawn where the API is missing. In Chrome it is a round trip to Google's servers,
+which is a surprising thing for a tool whose pitch is that it runs on your
+laptop — so the hint under the button says so out loud rather than leaving it to
+be discovered.
+
+### What was considered and not done
+
+- **Streaming the answer.** The output is a tool call, not prose; there is
+  nothing to stream but a spinner, and the call takes a few seconds.
+- **Letting it write `text` (the raw FTS5 query).** It would duplicate the
+  keyword gates with worse ranking and no way to see what it did.
+- **Merging its answer into the filters on screen.** It is told what is on
+  screen and returns a complete set that replaces it. A half-stated answer
+  merged into whatever happened to be there is the version nobody can predict,
+  explain, or diff — and the diff is the feature.
+- **Forcing `tool_choice`.** Forced tool choice and extended thinking have
+  historically not been combinable. A request that 400s on a parameter
+  combination is a worse failure than the one forcing it would prevent, so the
+  prompt asks three times and the no-tool-call path is handled: the model's own
+  words are shown, which for an ambiguous request is usually a useful question.
+
