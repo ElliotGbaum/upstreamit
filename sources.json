@@ -1,0 +1,290 @@
+{
+  "$comment": [
+    "Registry of upstream sources we pull ATS company slugs from. Adding a source is config, not code.",
+    "kind:   github-raw (repo + branch + files[].path) | http (files[].url, any host) | file (local path, for manual dumps / CSV exports)",
+    "format: json-array (array of strings) | json-objects (+slugKey) | json-keys | text-lines | csv (+column, optional where) | regex-scrape (+pattern, optional between)",
+    "Optional per-file: jsonPath ('data.companies') to descend before parsing; where ({column: value}) to select rows of a mixed-ATS table; headers (supports ${ENV_VAR} so API keys stay out of this file).",
+    "Slugs are extracted from full board URLs automatically, so pointing `column` at a board_url is usually the most robust choice.",
+    "Set enabled:false to park a source without deleting its config."
+  ],
+  "sources": [
+    {
+      "id": "hf-latmay",
+      "kind": "http",
+      "name": "HuggingFace: latmay/ats-career-page-urls",
+      "license": "CC BY 4.0",
+      "upstreamSchedule": "none — a static snapshot (July 2026). Re-check the dataset page for newer revisions.",
+      "notes": "Not a GitHub repo. Highest-yield single source found anywhere: 7,809 ashby URLs, ~3,855 of them live boards. One CSV of canonical career-page URLs across every ATS; we read canonical_url and let the URL patterns route each row, so one file feeds every ATS. Junk rows (bare integers, $10.2K, .well-known) are dropped by slug validation.",
+      "enabled": true,
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
+          "ats": "ashby",
+          "format": "csv",
+          "column": "canonical_url"
+        },
+        {
+          "url": "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
+          "ats": "greenhouse",
+          "format": "csv",
+          "column": "canonical_url"
+        },
+        {
+          "url": "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
+          "ats": "lever",
+          "format": "csv",
+          "column": "canonical_url"
+        }
+      ]
+    },
+    {
+      "id": "backfill",
+      "kind": "file",
+      "name": "One-time non-GitHub backfill (2026-08-11)",
+      "license": "mixed — see notes",
+      "upstreamSchedule": "n/a — a captured one-time harvest. Common Crawl is the repeatable part; re-run it per new monthly crawl.",
+      "notes": "Union of four non-GitHub avenues, each slug HEAD-verified live at capture time: Common Crawl index (49 crawls, CC-MAIN-*-index, ~3,300 live), Wayback CDX (jobs.ashbyhq.com domain history, ~3,246 live), a Kaggle ATS company directory (95% live, the cleanest single feed), and urlscan.io + hiring.cafe as new-board tripwires. Ruled out and NOT represented here: Ashby has no sitemap or public directory and its collection endpoints 401; search-engine enumeration is CAPTCHA-blocked; BuiltWith and Wappalyzer do not track Ashby at all; certificate/DNS enumeration is meaningless because every board is a path on one shared host.",
+      "enabled": true,
+      "optional": true,
+      "files": [{ "path": "data/backfill/ashby-nongithub-2026-08-11.txt", "ats": "ashby", "format": "text-lines" }]
+    },
+    {
+      "id": "openroles",
+      "kind": "github-raw",
+      "name": "datascry/openroles",
+      "repo": "datascry/openroles",
+      "branch": "main",
+      "license": "MIT (code) / CC BY-SA 4.0 (data) — share-alike applies if you redistribute derived slug lists",
+      "upstreamSchedule": "cron 43 2 * * 1 (weekly-harvest.yml, Mondays) — observed refresh of the tenant lists is roughly biweekly",
+      "notes": "Largest Ashby list found (4,079) and the only one that ships its own live/dead probe status, which we use to skip boards it already knows are dead. Covers 53 ATS families.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "data/tenants/ashby.json",
+          "ats": "ashby",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "status": { "not": "dead" } }
+        },
+        {
+          "path": "data/tenants/greenhouse.json",
+          "ats": "greenhouse",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "status": { "not": "dead" } }
+        },
+        {
+          "path": "data/tenants/lever.json",
+          "ats": "lever",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "status": { "not": "dead" } }
+        }
+      ]
+    },
+    {
+      "id": "kalil",
+      "kind": "github-raw",
+      "name": "kalil0321/ats-scrapers",
+      "repo": "kalil0321/ats-scrapers",
+      "branch": "main",
+      "license": "MIT",
+      "upstreamSchedule": "none — batch commits by the maintainer, roughly monthly (ashby.csv: 2026-07-23 '+592 discovered Ashby boards', 2026-05-23, 2026-05-11)",
+      "notes": "3,448 Ashby boards across 46 ATS families, and the only source that ships company display names next to slugs (header: name,slug,url). Actively maintained, just not cron-driven.",
+      "enabled": true,
+      "files": [
+        { "path": "ats-companies/ashby.csv", "ats": "ashby", "format": "csv", "column": "url" },
+        { "path": "ats-companies/greenhouse.csv", "ats": "greenhouse", "format": "csv", "column": "url" },
+        { "path": "ats-companies/lever.csv", "ats": "lever", "format": "csv", "column": "url" }
+      ]
+    },
+    {
+      "id": "jobseek",
+      "kind": "github-raw",
+      "name": "colophon-group/jobseek",
+      "repo": "colophon-group/jobseek",
+      "branch": "main",
+      "license": "AGPL-3.0 (code); see LICENSE-JOB-DATA for the data files",
+      "upstreamSchedule": "systemd timer 03:00 UTC discovers candidates; additions land as reviewed PRs, ~15-20 companies/day",
+      "notes": "Freshest source. boards.csv is one mixed-ATS table (5,874 rows across ~40 ATS families) that is the declared source of truth for their production crawler. We read board_url and let the normalizer unwrap the slug, which covers all rows including the ones whose monitor_config uses a non-standard key.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "apps/crawler/data/boards.csv",
+          "ats": "ashby",
+          "format": "csv",
+          "column": "board_url",
+          "where": { "monitor_type": "ashby" }
+        },
+        {
+          "path": "apps/crawler/data/boards.csv",
+          "ats": "greenhouse",
+          "format": "csv",
+          "column": "board_url",
+          "where": { "monitor_type": "greenhouse" }
+        },
+        {
+          "path": "apps/crawler/data/boards.csv",
+          "ats": "lever",
+          "format": "csv",
+          "column": "board_url",
+          "where": { "monitor_type": "lever" }
+        }
+      ]
+    },
+    {
+      "id": "feashliaa",
+      "kind": "github-raw",
+      "name": "Feashliaa/job-board-aggregator",
+      "repo": "Feashliaa/job-board-aggregator",
+      "branch": "main",
+      "license": "MIT",
+      "upstreamSchedule": "none for slug lists — regenerated manually every 1-2 months (ashby list last touched 2026-06-16). The repo's daily 07:33 UTC cron only refreshes job data and trend snapshots, NOT these company lists.",
+      "notes": "Biggest single dump of slugs by volume, and the only source here covering bamboohr / icims / paylocity. Flat JSON arrays of strings. Workday entries are pipe-encoded tenant|wdN|site triples.",
+      "enabled": true,
+      "files": [
+        { "path": "data/ashby_companies.json", "ats": "ashby", "format": "json-array" },
+        { "path": "data/greenhouse_companies.json", "ats": "greenhouse", "format": "json-array" },
+        { "path": "data/lever_companies.json", "ats": "lever", "format": "json-array" },
+        { "path": "data/workday_companies.json", "ats": "workday", "format": "json-array" },
+        { "path": "data/bamboohr_companies.json", "ats": "bamboohr", "format": "json-array" },
+        { "path": "data/icims_companies.json", "ats": "icims", "format": "json-array" },
+        { "path": "data/paylocity_companies_clean.json", "ats": "paylocity", "format": "json-objects", "slugKey": "guid" }
+      ]
+    },
+    {
+      "id": "jobsync",
+      "kind": "github-raw",
+      "name": "Mayank-glitch-cpu/JobSync-Service",
+      "repo": "Mayank-glitch-cpu/JobSync-Service",
+      "branch": "main",
+      "license": "MIT",
+      "upstreamSchedule": "none — abandoned. File lives under legacy/ and last changed 2026-04-14.",
+      "notes": "Tiny (120 entries) but hand-verified, and contributes a handful of slugs the larger sources miss. Effectively a one-time backfill; kept enabled only because polling it is free.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "legacy/backend/data/ashby-slugs.json",
+          "ats": "ashby",
+          "format": "json-objects",
+          "slugKey": "slug"
+        }
+      ]
+    },
+    {
+      "id": "tjwenger",
+      "kind": "github-raw",
+      "name": "tjwenger/job_scraper",
+      "repo": "tjwenger/job_scraper",
+      "branch": "main",
+      "license": "see repo",
+      "upstreamSchedule": "none — hand-maintained Python literal.",
+      "notes": "74 hand-curated slugs scraped out of a Python list literal. Small, but skews toward well-known companies the bulk sources oddly lack (vercel, mercury, snyk, temporal, wiz).",
+      "enabled": true,
+      "files": [
+        {
+          "path": "scrapers/ashby.py",
+          "ats": "ashby",
+          "format": "regex-scrape",
+          "between": ["ASHBY_COMPANIES = [", "]"],
+          "pattern": "\"([^\"]+)\""
+        }
+      ]
+    },
+    {
+      "id": "cryptojobs",
+      "kind": "github-raw",
+      "name": "crypto-jobs-fyi/crawler",
+      "repo": "crypto-jobs-fyi/crawler",
+      "branch": "main",
+      "license": "Apache-2.0",
+      "upstreamSchedule": "cron 0 8 * * 2,6 (Tue + Sat) refreshes jobs; the company list itself is hand-curated",
+      "notes": "365 hand-curated crypto / AI / fintech companies with the ATS named per row. Small, but this vertical is under-represented in the bulk crawls. We read jobs_url and let the URL patterns route each row to the right ATS, so one file feeds every ATS at once.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "companies.json",
+          "ats": "ashby",
+          "format": "json-objects",
+          "jsonPath": "companies",
+          "slugKey": "jobs_url"
+        },
+        {
+          "path": "companies.json",
+          "ats": "greenhouse",
+          "format": "json-objects",
+          "jsonPath": "companies",
+          "slugKey": "jobs_url"
+        },
+        {
+          "path": "companies.json",
+          "ats": "lever",
+          "format": "json-objects",
+          "jsonPath": "companies",
+          "slugKey": "jobs_url"
+        }
+      ]
+    },
+    {
+      "id": "outscal",
+      "kind": "github-raw",
+      "name": "outscal/OpenJobs",
+      "repo": "outscal/OpenJobs",
+      "branch": "main",
+      "license": "MIT",
+      "upstreamSchedule": "none for the company file — harvested and committed by the maintainers",
+      "notes": "12,144 companies skewed toward gaming studios and tech, which the general-purpose crawls miss. ats_links is an array of full board URLs per company, so the array is flattened and the URL patterns pick out the rows belonging to each ATS.",
+      "enabled": true,
+      "files": [
+        { "path": "data/companies_v2.json", "ats": "ashby", "format": "json-objects", "slugKey": "ats_links" },
+        { "path": "data/companies_v2.json", "ats": "greenhouse", "format": "json-objects", "slugKey": "ats_links" },
+        { "path": "data/companies_v2.json", "ats": "lever", "format": "json-objects", "slugKey": "ats_links" }
+      ]
+    },
+    {
+      "id": "openjobsdata",
+      "kind": "github-raw",
+      "name": "ConorsCode/open-jobs-data",
+      "repo": "ConorsCode/open-jobs-data",
+      "branch": "main",
+      "license": "MIT",
+      "upstreamSchedule": "cron 0 6 * * * (update.yml) — a genuine daily refresh",
+      "notes": "Only 378 companies, but hand-curated brand names and the one source here with a real daily cron, so it is the fastest to reflect a newly-launched board.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "companies.json",
+          "ats": "ashby",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "platform": "ashby" }
+        },
+        {
+          "path": "companies.json",
+          "ats": "greenhouse",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "platform": "greenhouse" }
+        },
+        {
+          "path": "companies.json",
+          "ats": "lever",
+          "format": "json-objects",
+          "slugKey": "slug",
+          "where": { "platform": "lever" }
+        }
+      ]
+    },
+    {
+      "id": "manual",
+      "kind": "file",
+      "name": "Local manual additions",
+      "license": "n/a",
+      "upstreamSchedule": "n/a",
+      "notes": "Slugs you add by hand or export from elsewhere (a tech-lookup CSV, a spreadsheet, a probe run). One slug per line; blank lines and #comments ignored. Safe to leave empty.",
+      "enabled": true,
+      "optional": true,
+      "files": [{ "path": "data/manual/ashby.txt", "ats": "ashby", "format": "text-lines" }]
+    }
+  ]
+}

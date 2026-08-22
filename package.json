@@ -1,0 +1,36 @@
+{
+  "name": "job-finder-ats",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Aggregates ATS company slugs from public datasets, sweeps the ATS job APIs, normalizes the results, and filters them against a portable profile.",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "sync": "node src/sync-slugs.mjs",
+    "sync:dry": "node src/sync-slugs.mjs --dry-run",
+    "sync:check": "node src/sync-slugs.mjs --check",
+    "verify": "node src/probe-boards.mjs --ats=ashby --only-unknown && node src/probe-boards.mjs --ats=greenhouse --only-unknown && node src/probe-boards.mjs --ats=lever --only-unknown",
+    "verify:all": "node src/probe-boards.mjs --ats=ashby && node src/probe-boards.mjs --ats=greenhouse && node src/probe-boards.mjs --ats=lever",
+    "sweep": "npm run sweep:ashby && npm run sweep:greenhouse && npm run sweep:lever",
+    "derive": "node src/derive.mjs",
+    "derive:new": "node src/derive.mjs --only-new",
+    "find": "node src/find.mjs",
+    "serve": "node src/server.mjs",
+    "accounts": "node src/accounts.mjs",
+    "daily": "node src/daily.mjs",
+    "schedule": "node src/schedule.mjs",
+    "test": "node src/derive-test.mjs && node src/filter-test.mjs && node src/adapters-test.mjs && node src/users-test.mjs",
+    "stats": "node src/stats.mjs",
+    "progress": "node src/progress-server.mjs",
+    "refresh": "npm run sync && npm run verify && npm run sweep && npm run derive",
+    "db": "sqlite3 -readonly -init db-init.sql data/jobs.db",
+    "verify:ashby": "node src/probe-boards.mjs --ats=ashby --only-unknown",
+    "verify:greenhouse": "node src/probe-boards.mjs --ats=greenhouse --only-unknown",
+    "sweep:ashby": "node src/sweep.mjs --ats=ashby",
+    "sweep:greenhouse": "node src/sweep.mjs --ats=greenhouse",
+    "verify:lever": "node src/probe-boards.mjs --ats=lever --only-unknown",
+    "sweep:lever": "node src/sweep.mjs --ats=lever"
+  }
+}

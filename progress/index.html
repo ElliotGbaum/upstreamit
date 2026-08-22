@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Finder ATS — build progress</title>
+<style>
+  :root{
+    --bg:#f7f7f8; --panel:#ffffff; --line:#e6e6e9; --line-soft:#f0f0f2;
+    --ink:#16161a; --ink-2:#55555f; --ink-3:#8b8b95;
+    --accent:#4338ca; --accent-soft:#eef2ff;
+    --ok:#0f7a4f; --ok-soft:#e8f6ef;
+    --warn:#a05a00; --warn-soft:#fdf3e3;
+    --err:#b42318; --err-soft:#fdecea;
+    --radius:12px;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0d0d10; --panel:#161619; --line:#26262c; --line-soft:#1e1e23;
+      --ink:#f2f2f4; --ink-2:#a8a8b3; --ink-3:#6e6e7a;
+      --accent:#a5b4fc; --accent-soft:#1e1b4b;
+      --ok:#5fd39b; --ok-soft:#0d2a1e;
+      --warn:#f5b455; --warn-soft:#2b1f0a;
+      --err:#f98a80; --err-soft:#2c110e;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:20px;font-weight:650;letter-spacing:-.01em;margin:0}
+  .sub{color:var(--ink-3);font-size:13px}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--ok);
+         box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent);
+         animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:22px 0}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .stat .v{font-size:23px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .l{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);
+     font-weight:600;margin:28px 0 10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .task{padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+  .task:last-child{border-bottom:0}
+  .task-top{display:flex;align-items:center;gap:10px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.running{background:var(--accent);animation:pulse 1.6s infinite}
+  .dot.done{background:var(--ok)} .dot.error{background:var(--err)}
+  .dot.queued{background:var(--ink-3);opacity:.4}
+  .name{font-weight:550;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pct{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:12px;font-family:var(--mono)}
+  .bar{height:4px;background:var(--line-soft);border-radius:99px;margin-top:9px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;
+         transition:width .4s cubic-bezier(.4,0,.2,1)}
+  .task.done .bar>i{background:var(--ok)}
+  .task.error .bar>i{background:var(--err)}
+  .note{color:var(--ink-3);font-size:12px;margin-top:7px;font-family:var(--mono)}
+  .log{font-family:var(--mono);font-size:12px;max-height:420px;overflow:auto}
+  .log div{padding:6px 16px;border-bottom:1px solid var(--line-soft);display:flex;gap:12px}
+  .log div:last-child{border-bottom:0}
+  .log time{color:var(--ink-3);flex:none;font-variant-numeric:tabular-nums}
+  .log .m{color:var(--ink-2);min-width:0;word-break:break-word}
+  .log .lvl-ok .m{color:var(--ok)} .log .lvl-warn .m{color:var(--warn)} .log .lvl-error .m{color:var(--err)}
+  .empty{padding:26px 16px;color:var(--ink-3);text-align:center}
+  footer{margin-top:26px;color:var(--ink-3);font-size:12px;display:flex;gap:14px;flex-wrap:wrap}
+  kbd{font-family:var(--mono);background:var(--line-soft);border:1px solid var(--line);
+      border-radius:5px;padding:1px 5px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="pulse" id="pulse"></span>
+    <h1>Job Finder ATS</h1>
+    <span class="sub" id="tagline">build progress</span>
+  </header>
+  <div class="sub" id="updated">connecting…</div>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>Tasks</h2>
+  <div class="card" id="tasks"><div class="empty">waiting for the first task to report…</div></div>
+
+  <h2>Log</h2>
+  <div class="card log" id="log"><div class="empty">nothing logged yet</div></div>
+
+  <footer>
+    <span>auto-refreshes every 2s</span>
+    <span>press <kbd>R</kbd> to refresh now</span>
+  </footer>
+</div>
+
+<script>
+const fmt = n => Number(n).toLocaleString();
+const ago = ts => {
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 60) return Math.floor(s) + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  return Math.floor(s / 3600) + 'h ago';
+};
+const dur = ms => {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60);
+  return m < 60 ? m + 'm ' + (s % 60) + 's' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+};
+
+let lastJson = '';
+
+async function refresh(){
+  let state;
+  try {
+    const res = await fetch('state.json?_=' + Date.now(), {cache:'no-store'});
+    state = await res.json();
+  } catch {
+    document.getElementById('updated').textContent = 'waiting for state.json…';
+    document.getElementById('pulse').style.background = 'var(--warn)';
+    return;
+  }
+  const json = JSON.stringify(state);
+  if (json === lastJson) { stamp(state); return; }
+  lastJson = json;
+
+  document.getElementById('pulse').style.background = 'var(--ok)';
+  stamp(state);
+
+  // ---- stat tiles
+  const stats = Object.entries(state.stats || {});
+  document.getElementById('stats').innerHTML = stats.length
+    ? stats.map(([k, s]) =>
+        `<div class="stat"><div class="v">${typeof s.value === 'number' ? fmt(s.value) : s.value}</div>` +
+        `<div class="l">${esc(s.label || k)}</div></div>`).join('')
+    : '';
+
+  // ---- tasks, running first, then queued, then finished newest-first
+  const order = {running:0, queued:1, error:2, done:3};
+  const tasks = Object.values(state.tasks || {}).sort((a,b) =>
+    (order[a.status] ?? 4) - (order[b.status] ?? 4) || (b.updated||0) - (a.updated||0));
+
+  document.getElementById('tasks').innerHTML = tasks.length ? tasks.map(t => {
+    const pct = t.total ? Math.min(100, (t.done || 0) / t.total * 100) : (t.status === 'done' ? 100 : 0);
+    const right = t.total
+      ? `${fmt(t.done || 0)} / ${fmt(t.total)} · ${pct.toFixed(pct < 10 ? 1 : 0)}%`
+      : (t.status === 'done' ? 'done' : t.status);
+    const took = t.finished && t.started ? ' · ' + dur(t.finished - t.started) : '';
+    return `<div class="task ${t.status}">
+      <div class="task-top">
+        <span class="dot ${t.status}"></span>
+        <span class="name">${esc(t.label || t.task)}</span>
+        <span class="pct">${right}${took}</span>
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="empty">waiting for the first task to report…</div>';
+
+  // ---- log, newest first
+  const log = (state.log || []).slice().reverse();
+  document.getElementById('log').innerHTML = log.length ? log.map(e =>
+    `<div class="lvl-${e.level || 'info'}"><time>${new Date(e.at).toLocaleTimeString([], {hour12:false})}</time>` +
+    `<span class="m">${esc(e.message)}</span></div>`).join('')
+    : '<div class="empty">nothing logged yet</div>';
+}
+
+function stamp(state){
+  const running = Object.values(state.tasks || {}).filter(t => t.status === 'running').length;
+  document.getElementById('updated').textContent =
+    `updated ${ago(state.updated)} · ${running} task${running === 1 ? '' : 's'} running` +
+    (state.started ? ` · building for ${dur(Date.now() - state.started)}` : '');
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+refresh();
+setInterval(refresh, 2000);
+addEventListener('keydown', e => { if (e.key === 'r' || e.key === 'R') refresh(); });
+</script>
+</body>
+</html>

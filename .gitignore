@@ -1,0 +1,29 @@
+# Third-party Claude Code skills (mattpocock/skills) - installed as editable copies
+.claude/skills/
+
+# Accounts. Password hashes, session tokens and someone's list of jobs they
+# applied to. These live in their own file, separate from the scraped job data,
+# and that file is never a git object.
+data/users.db
+data/users.db-shm
+data/users.db-wal
+
+# The Google OAuth client secret, when Google sign-in is configured.
+config/google-oauth.json
+
+# The scraped jobs database. 4.5 GB on disk and it changes every sweep, so it
+# is never a git object — GitHub rejects any single file over 100 MB anyway.
+# Rebuild it from scratch with: npm run refresh
+data/jobs.db
+data/jobs.db-shm
+data/jobs.db-wal
+
+# Runtime state written by the sweeps, not source.
+data/sync-state.json
+data/daily-history.jsonl
+progress/state.json
+
+# Node and macOS noise.
+node_modules/
+.DS_Store
+npm-debug.log*

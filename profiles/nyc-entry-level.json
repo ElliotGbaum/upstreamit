@@ -1,0 +1,52 @@
+{
+  "name": "nyc-entry-level",
+  "owner": "elliotgreenbaum@gmail.com",
+  "label": "NYC · entry level · solutions & operations",
+  "notes": "Elliot's criteria, settled 2026-08-15. A solutions / GTM / operations profile, not a software-engineering one. 'consulting' is deliberately a description keyword and not a title keyword: it produced 0 title hits in 4,760 jobs and 42 description hits. `owner` is why this no longer boots for strangers: it is one person's job search, not the worked example for the whole corpus. The server lists it and serves it only to a session signed in as that address; the CLI and the daily run read the file directly and are unaffected.",
+
+  "title_keywords": [
+    "implementation",
+    "deployment",
+    "solutions",
+    "consultant",
+    "strategist",
+    "ai",
+    "product",
+    "specialist",
+    "analyst",
+    "associate",
+    "operations",
+    "technical"
+  ],
+  "title_match": "any",
+  "description_keywords": ["consulting", "implementation", "client-facing", "stakeholder", "onboarding"],
+  "exclude_title_keywords": ["intern", "internship", "senior", "staff", "principal", "director", "vp"],
+  "exclude_description_keywords": ["security clearance", "unpaid", "commission only"],
+
+  "metros": ["nyc"],
+  "remote_counts_as_match": false,
+  "workplace": ["onsite", "hybrid"],
+
+  "max_years_experience": 2,
+  "include_intern": false,
+
+  "employment_type": ["FullTime"],
+  "posted_within_days": 90,
+  "salary_min": null,
+
+
+  "unknowns": {
+    "metro": "include",
+    "workplace": "include",
+    "experience": "include",
+    "salary": "include",
+    "employment_type": "include",
+    "posted": "include",
+    "job_function": "include",
+    "skills": "include",
+    "degree": "include",
+    "visa": "include"
+  },
+
+  "limit": 100
+}
