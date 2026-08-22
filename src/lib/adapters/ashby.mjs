@@ -179,7 +179,6 @@ function mapJob(row, slug, boardName) {
   job.has_equity = hasEquity(row.compensation);
 
   job.description_text = row.descriptionPlain ?? null;
-  job.description_html = row.descriptionHtml ?? null;
 
   return job;
 }
