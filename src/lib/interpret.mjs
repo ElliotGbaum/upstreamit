@@ -71,6 +71,32 @@ import { UNKNOWNABLE, SORTS, activeCriteria, normalizeProfile } from './filter/p
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CONFIG_FILE = join(ROOT, 'config', 'anthropic.json');
 
+/**
+ * An environment variable, treating blank as absent.
+ *
+ * Not fussiness. `.env` ships as a template with `ANTHROPIC_API_KEY=` and two
+ * commented-out lines under it, and `process.loadEnvFile` sets a blank name to
+ * the empty string rather than leaving it unset — so `??`, which only falls
+ * through on null and undefined, would read that empty string as an answer.
+ * Three things would have gone wrong the first time somebody uncommented a line
+ * and left it blank: a key in `config/anthropic.json` would be shadowed by the
+ * blank one and the feature would report itself unconfigured; the model would
+ * become `''`; and `Number('')` is `0`, which is the value that turns the
+ * spending cap **off**. The last one is the reason this exists — a config typo
+ * must not silently uncap the only route here that spends money.
+ */
+const envText = (name) => {
+  const raw = process.env[name];
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+};
+
+const envNumber = (name, fallback) => {
+  const raw = envText(name);
+  if (raw === null) return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+};
+
 /** The model. One line, so changing it is one edit and it is visible in /api/meta. */
 export const DEFAULT_MODEL = 'claude-opus-5';
 
@@ -93,15 +119,22 @@ export const METRO_OPTIONS = 200;
  * This is the only route in the project that spends money, and it is the only
  * one whose worst case is a bill rather than a slow page. On a laptop that does
  * not matter; on the deployed copy the route is open to anyone with an account,
- * and "anyone with an account" on a public sign-up is anyone. 30 an hour is more
- * than a person describing a job search will ever use in a sitting and a bounded
- * number of calls per account per hour, which is the property that matters.
+ * and "anyone with an account" on a public sign-up is anyone.
+ *
+ * **5 is deliberately tight.** It was 30 — comfortably more than anyone would
+ * use in a sitting — and it is now a number you can actually reach: describing
+ * a search, reading what it set, and rewording it twice is four. That is the
+ * trade being made on purpose. The failure it is sized against is not a person
+ * being slightly inconvenienced, it is an unattended bill on somebody else's
+ * key, and the inconvenience is one line in `.env` away from gone while the
+ * bill is not. Someone who hits it has the whole filter rail still in front of
+ * them, which is what the refusal below says.
  *
  * A sliding window in memory, deliberately: it resets on restart, and that is
  * the correct trade for a limiter whose job is to cap a runaway, not to bill
- * accurately. `ANTHROPIC_CALLS_PER_HOUR=0` turns it off.
+ * accurately. `ANTHROPIC_CALLS_PER_HOUR` raises or lowers it; `0` turns it off.
  */
-export const CALLS_PER_HOUR = Number(process.env.ANTHROPIC_CALLS_PER_HOUR ?? 30);
+export const CALLS_PER_HOUR = envNumber('ANTHROPIC_CALLS_PER_HOUR', 5);
 
 const calls = new Map();
 
@@ -129,7 +162,13 @@ export function rateLimit(who, now = Date.now()) {
   if (recent.length >= CALLS_PER_HOUR) {
     const freeIn = Math.ceil((hour - (now - recent[0])) / 60_000);
     calls.set(key, recent);
-    return `that is ${CALLS_PER_HOUR} searches described in an hour, which is the cap — the next one is free in about ${freeIn} minute${freeIn === 1 ? '' : 's'}. The filters below all still work.`;
+    // Both counts are pluralised. `CALLS_PER_HOUR` is configurable and somebody
+    // will set it to 1 — "that is 1 searches described in an hour" is the kind
+    // of sentence that makes a careful tool look careless, and it only appears
+    // at a setting nobody tests with.
+    const searches = CALLS_PER_HOUR === 1 ? '1 search' : `${CALLS_PER_HOUR} searches`;
+    const minutes = freeIn === 1 ? '1 minute' : `${freeIn} minutes`;
+    return `that is ${searches} described in an hour, which is the cap — the next one is free in about ${minutes}. The filters below all still work.`;
   }
 
   recent.push(now);
@@ -174,6 +213,11 @@ export function wasFree(err, Anthropic) {
 /**
  * Credentials, from the environment or `config/anthropic.json`.
  *
+ * `.env` at the project root arrives here as the environment: `lib/env.mjs`
+ * loads it before the server imports this module, and a variable the shell
+ * already set wins over the file, so nothing below has to know which of the
+ * three it came from.
+ *
  * Same shape and same precedence as `googleConfig()` — env first, file second,
  * dormant when neither is there. The key itself never leaves this module: what
  * the API serves is `enabled`, the model name, and where it found the key, so
@@ -188,12 +232,21 @@ export function aiConfig() {
       /* a malformed config is the same as no config, and says so in /api/meta */
     }
   }
-  const apiKey = process.env.ANTHROPIC_API_KEY ?? file.api_key ?? null;
+  // Blank counts as absent at every step — see `envText`. A `.env` with the
+  // template's empty `ANTHROPIC_API_KEY=` still lets `config/anthropic.json`
+  // answer, which is the precedence anybody would expect and the opposite of
+  // what `??` alone would do.
+  const fileKey = typeof file.api_key === 'string' && file.api_key.trim() ? file.api_key.trim() : null;
+  const envKey = envText('ANTHROPIC_API_KEY');
+  const apiKey = envKey ?? fileKey;
+
+  const fileModel = typeof file.model === 'string' && file.model.trim() ? file.model.trim() : null;
+
   return {
     apiKey,
     enabled: Boolean(apiKey),
-    model: process.env.ANTHROPIC_MODEL ?? file.model ?? DEFAULT_MODEL,
-    source: process.env.ANTHROPIC_API_KEY ? 'ANTHROPIC_API_KEY' : apiKey ? CONFIG_FILE : null,
+    model: envText('ANTHROPIC_MODEL') ?? fileModel ?? DEFAULT_MODEL,
+    source: envKey ? 'ANTHROPIC_API_KEY' : apiKey ? CONFIG_FILE : null,
     configFile: CONFIG_FILE,
   };
 }
@@ -239,7 +292,7 @@ export function aiMeta({ accounts = false, signedIn = false } = {}) {
     // with no explanation.
     setup: config.enabled
       ? null
-      : `set ANTHROPIC_API_KEY in the environment, or put {"api_key": "sk-ant-..."} in ${CONFIG_FILE}`,
+      : `put ANTHROPIC_API_KEY=sk-ant-... in the project's .env, set it in the environment, or put {"api_key": "sk-ant-..."} in ${CONFIG_FILE}`,
     requires_account: true,
     usable,
     blocked,

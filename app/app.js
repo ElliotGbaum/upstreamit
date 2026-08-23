@@ -17,7 +17,6 @@
 
 import { account } from './account.js';
 import { installAiBox } from './ai.js';
-import { companyMark } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n ?? 0).toLocaleString('en-US');
@@ -933,7 +932,7 @@ function jobCard(row, i) {
     toggleWhy(card, row, i + 1);
   };
 
-  card.append(rank, companyMark(row.company), main, whyBtn);
+  card.append(rank, main, whyBtn);
   // Order matters: the breakdown belongs above the description, not under
   // 5 KB of it.
   if (openWhyId === row.id) card.append(rankPanel(row, i + 1));

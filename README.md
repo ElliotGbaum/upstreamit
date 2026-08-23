@@ -620,8 +620,9 @@ takes the same profile document as the CLI. [Accounts](#accounts) add `/api/auth
 
 ### Describe your search, and let it fill the filters in
 
-**Optional, off by default, and nothing is behind it.** The panel at the top of the rail
-takes a sentence — typed or dictated — and sets the forty controls below it:
+**Optional, off by default, and the one thing here that needs an account.** The panel at
+the top of the rail takes a sentence — typed or dictated — and sets the forty controls
+below it:
 
 > *entry-level ops or solutions roles in NYC, I'd take remote too, nothing needing a
 > security clearance*
@@ -654,9 +655,14 @@ Three things about how it behaves, each of which is a decision rather than an ac
 and until it has one the panel says so and does nothing else:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+cp .env.example .env     # then paste the key after ANTHROPIC_API_KEY=
 npm run serve
 ```
+
+`.env` is gitignored and read at startup by `src/lib/env.mjs`. A variable already set
+in the shell wins over the file, so `export ANTHROPIC_API_KEY=sk-ant-...` still works and
+still takes precedence — which is what the deployed copy relies on, where `fly secrets set`
+supplies the key and no `.env` is shipped at all.
 
 ...or put it in `config/anthropic.json` (gitignored, same as the Google OAuth secret):
 
@@ -664,17 +670,34 @@ npm run serve
 { "api_key": "sk-ant-...", "model": "claude-opus-5" }
 ```
 
-Each press is one API call — roughly 6k input tokens and 500 output, well under a cent on
-`claude-opus-5`. `ANTHROPIC_MODEL` overrides the model. This is the project's only network
+A blank value counts as no value, at every level: the template's empty
+`ANTHROPIC_API_KEY=` does not shadow a key in `config/anthropic.json`, and a blank
+`ANTHROPIC_CALLS_PER_HOUR=` means the default rather than `0` — which would mean *no cap*
+on the one route here that spends money.
+
+Each press is one API call. **Measured, not estimated: 9,600 input tokens and ~400 output,
+which is about 6c on `claude-opus-5`** — the tool schema and the 200-metro list dominate the
+input, so the cost barely moves with how much you type. At the 5/hour cap that is at most
+~29c per account per hour. `ANTHROPIC_MODEL` overrides the model. This is the project's only network
 dependency at *query* time and its only npm dependency at all; with no key set, the server
 never loads the SDK and the app is exactly what it was.
 
-**It is capped at 30 calls per hour per person** — per account where there is one, per
-socket where there isn't (`ANTHROPIC_CALLS_PER_HOUR`, `0` to remove it). This is the only
-route in the project whose worst case is a bill rather than a slow page, and the deployed
-copy is open to anyone who signs up. The cap is taken at the line that spends, so a failure
-that costs nothing — a rejected key, an unreachable API — gives the call back; mistyping
-your key should not lock you out at the moment you are trying to fix it.
+**Signing in is required for this one panel, and only this one.** It is the single
+exception to [nothing is behind an account](#accounts), and the reason is that every press
+spends real money on your key. That makes *who is asking* a question that has to have an
+answer: an anonymous caller cannot be capped, cannot be told they have reached their limit,
+and cannot be told apart from a script. Signed out, the panel says so and offers the way in;
+the other forty controls, and every job, count, description and apply link, stay anonymous.
+
+**And it is capped at 5 calls per hour per account** (`ANTHROPIC_CALLS_PER_HOUR` to raise it,
+`0` to remove it). Five is deliberately tight — describing a search, reading what it set and
+rewording it twice is four — because the failure it is sized against is an unattended bill,
+not a mildly inconvenienced person. Someone who hits it still has the whole filter rail. The cap is taken at the line that spends, so a failure that costs nothing — a
+rejected key, an unreachable API — gives the call back; mistyping your key should not lock
+you out at the moment you are trying to fix it.
+
+On a server started with `--no-accounts` the panel is permanently unavailable and says
+that instead, because there is no sign-in screen to send anyone to.
 
 **Dictation is your browser's, not ours.** The Speak button is the built-in
 `SpeechRecognition` API — no key, no dependency, and it does not appear in a browser that
@@ -709,9 +732,15 @@ restart.
 
 ## Accounts
 
-**Optional, and nothing is behind them.** Signed out, the app is exactly what it was: every
-job, every filter, every leave-one-out count, every description and every apply link. There
-is no gate, no nag, and no reduced mode. What an account adds is *memory*:
+**Optional, and one thing is behind them.** Signed out, the app is the app: every job,
+every filter, every leave-one-out count, every description and every apply link. No nag, no
+reduced mode, and — with one exception — no gate.
+
+The exception is [**Describe your search**](#describe-your-search-and-let-it-fill-the-filters-in),
+which needs an account because every press spends real money on an API key, and a caller who
+cannot be identified cannot be capped. It is the only one, it is a feature that did not exist
+until it was added, and nothing that worked signed out before it stopped working. Everything
+else an account touches is still purely *memory*:
 
 - **Your filters, kept.** The working filter document is saved as you change it and restored
   when you come back, so a search you spent ten minutes building is still there tomorrow.

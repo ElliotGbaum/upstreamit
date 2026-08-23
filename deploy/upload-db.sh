@@ -1,70 +1,59 @@
 #!/bin/sh
-# Put the jobs database on the Fly volume.
+# Put the jobs database on the Fly volume. Run from the project root.
 #
-# Run from the project root, on your laptop, after `fly deploy` has created the
-# machine. This is the slow, once-in-a-while step; ordinary code deploys never
-# touch it.
+# This is the slow, once-in-a-while step; ordinary `fly deploy` code deploys
+# never touch it. Fully non-interactive — `fly sftp put` and `fly ssh console -C`
+# both take commands directly.
 #
-# What it does, in order:
-#   1. VACUUM INTO a compact copy    — reclaims free pages left by the sweeps
-#   2. gzip that copy                — SQLite text compresses well, ~3x
-#   3. hand you the two upload commands, with the paths filled in
+#   1. VACUUM INTO a compact copy    (your working database is never modified)
+#   2. gzip it                        (~3.3 GB -> ~865 MB)
+#   3. upload it to the volume
+#   4. unpack and restart
 set -e
 
 SRC=data/jobs.db
 OUT=data/jobs-deploy.db
 GZ=$OUT.gz
+REMOTE=/data/jobs.db
 
-if [ ! -f "$SRC" ]; then
-  echo "No $SRC here. Run this from the project root." >&2
-  exit 1
+[ -f "$SRC" ] || { echo "No $SRC here. Run this from the project root." >&2; exit 1; }
+command -v fly >/dev/null || { echo "flyctl not installed. See DEPLOY.md step 2." >&2; exit 1; }
+
+echo
+echo "==> 1/4  Compacting $SRC (reads the whole database; a few minutes)"
+rm -f "$OUT" "$GZ"
+# VACUUM INTO writes a fresh copy and never modifies or write-locks the original,
+# so the database you use every day is untouched.
+sqlite3 "$SRC" "VACUUM INTO '$OUT';"
+echo "    $(du -h "$SRC" | cut -f1) -> $(du -h "$OUT" | cut -f1)"
+
+echo
+echo "==> 2/4  Compressing"
+gzip -1 "$OUT"
+echo "    $(du -h "$GZ" | cut -f1)"
+
+echo
+echo "==> 3/4  Uploading to the volume (the long one)"
+fly sftp put "$GZ" /data/jobs.db.gz
+
+echo
+echo "==> 4/4  Unpacking"
+# The volume cannot hold the old database and the new one at once (6 GB, and
+# each copy is ~3.3 GB), and space is not reclaimed by deleting a file the
+# running server still has open. So: drop the old one, restart into the
+# entrypoint's idle branch (which releases the handle and frees the space),
+# unpack, then restart for real. The site is down for the unpack only.
+if fly ssh console -C "test -f $REMOTE" >/dev/null 2>&1; then
+  echo "    replacing the existing database — the site will be down for a minute"
+  fly ssh console -C "rm -f $REMOTE"
+  fly apps restart          # boots into "no database", releasing the old handle
 fi
 
-echo
-echo "==> 1/3  Compacting $SRC (this reads the whole database; a few minutes)"
-rm -f "$OUT" "$GZ"
-# VACUUM INTO writes a fresh, defragmented copy and never modifies the original,
-# so the database you use every day is not touched or locked for writing.
-sqlite3 "$SRC" "VACUUM INTO '$OUT';"
-echo "    $SRC  $(du -h "$SRC" | cut -f1)  ->  $OUT  $(du -h "$OUT" | cut -f1)"
+fly ssh console -C "gunzip -f /data/jobs.db.gz"
+fly apps restart
 
 echo
-echo "==> 2/3  Compressing (a few minutes)"
-gzip -1 "$OUT"
-echo "    $GZ  $(du -h "$GZ" | cut -f1)"
-
+echo "==> Done. Checking it came up:"
+fly logs --no-tail 2>&1 | tail -6
 echo
-echo "==> 3/3  Upload"
-cat <<TXT
-
-    Two commands, in this order.
-
-    a) Open an SFTP session and send the file. This is the long one — watch
-       your upload speed; roughly 15 minutes per GB on a 10 Mbps connection.
-
-           fly sftp shell
-
-       then at the '»' prompt, one line:
-
-           put $GZ /data/jobs.db.gz
-
-       then Ctrl-D to leave.
-
-    b) Unpack it on the machine and start the app for real:
-
-           fly ssh console
-
-       then at the '#' prompt, one line at a time:
-
-           gunzip /data/jobs.db.gz
-           exit
-
-       then back on your laptop:
-
-           fly apps restart
-
-    Then check it came up:
-
-           fly logs
-
-TXT
+echo "    Local copy left at $GZ — delete it to reclaim the space."

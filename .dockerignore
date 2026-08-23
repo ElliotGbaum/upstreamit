@@ -18,5 +18,12 @@ node_modules/
 # and src/server.mjs; the sweep and sync tools run on a laptop, not in here.
 src/*-test.mjs
 
+# Secrets. On Fly the key arrives as a real environment variable (`fly secrets
+# set ANTHROPIC_API_KEY=...`, see DEPLOY.md), which wins over a file anyway, so
+# baking a local .env into the image would add nothing but a copy of the key.
+.env
+.env.local
+config/
+
 .DS_Store
 npm-debug.log*

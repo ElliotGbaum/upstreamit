@@ -316,66 +316,26 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .sechead select{padding:3px 7px;font-size:12px}
 
 .jobs{display:flex;flex-direction:column;gap:7px}
-/* Four columns: the rank, the company's mark, the card itself, and the `i`.
-   The mark is the new one, and it is there because it is the one thing every
-   job board — LinkedIn, Indeed, Wellfound, a hosted Greenhouse page — puts in
-   that position. A company you are scanning for is found by its mark several
-   rows before you have read the line of text beside it, and a name with no
-   mark next to it has to win that fight on typography alone, which is the
-   fight it was losing under the title. */
 .job{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-     padding:12px 14px;display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto;
-     column-gap:11px;row-gap:12px;cursor:pointer;transition:border-color .12s}
+     padding:12px 14px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:12px;
+     cursor:pointer;transition:border-color .12s}
 .job:hover{border-color:var(--ink-3)}
 .job.open{border-color:var(--accent)}
-/* Right-aligned so the ones, tens and hundreds stack against the mark instead
-   of drifting away from it as the list gets longer. */
-.rank{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums;font-family:var(--mono);
-      padding-top:4px;text-align:right}
+.rank{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums;font-family:var(--mono);padding-top:2px}
 
-/* The stand-in for a logo. Nothing populates `companies.logo_url`, so this is
-   the monogram every board falls back to when an employer has no image.
-
-   The hue arrives on the element as `--h`, derived from the company name in
-   ui.js; saturation and lightness live here. That split is the point: the same
-   employer gets the same colour on every row without anything being stored,
-   and the tile is pale on white and deep on black without the script having to
-   know which one is on screen. */
-.logo{--sat:44%;--bg-l:93%;--ink-l:33%;--line-l:87%;
-      width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-      font-size:12.5px;font-weight:650;letter-spacing:.01em;line-height:1;user-select:none;
-      background:hsl(var(--h,222) var(--sat) var(--bg-l));
-      color:hsl(var(--h,222) var(--sat) var(--ink-l));
-      border:1px solid hsl(var(--h,222) var(--sat) var(--line-l))}
-/* Dark flips the tile inside out — a deep ground and a light monogram — and it
-   is three lightnesses, not three colours, because the hue is the row's. */
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .logo{--sat:38%;--bg-l:18%;--ink-l:75%;--line-l:26%}
-}
-:root[data-theme="dark"] .logo{--sat:38%;--bg-l:18%;--ink-l:75%;--line-l:26%}
-/* A posting with no company still needs the column to be a column — otherwise
-   every card under it steps sideways. Draining the saturation leaves the same
-   tile in plain grey, in whichever theme is on; it has to come after the dark
-   rules above to outrank them. */
-.job .logo.blank{--sat:0%}
-
-/* The title carried a permanent underline, and down 200 rows that underline
-   was the loudest thing on the page: it pulled the eye so hard that the
-   company under it read as a caption on the title rather than as the other
-   half of the answer. It is still a link — the pointer says so, the whole card
-   is clickable, and the underline comes back under the cursor. */
-.job h4{margin:0 0 2px;font-size:15px;font-weight:650;letter-spacing:-.008em;line-height:1.32}
-.job h4 a{text-decoration:none}
-.job h4 a:hover,.job h4 a:focus-visible{text-decoration:underline;text-decoration-thickness:1px;
-                                        text-underline-offset:2px}
-/* The company is full-strength ink now rather than a grey step below the
-   title. Which job it is and who it is at are two halves of one answer, and
-   every board treats them that way; the company gives up size and weight to
-   the title, not colour. The department is the genuinely secondary part and
-   drops back to grey on its own. */
-.job .co{font-size:13px;line-height:1.4;font-weight:400;color:var(--ink-3)}
-.job .co b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:-.004em}
-.job .co .dept{color:var(--ink-3);font-size:12.5px}
+.job h4{margin:0 0 3px;font-size:14.5px;font-weight:600;letter-spacing:-.005em;line-height:1.35}
+/* The link underline used to be the loudest thing on the card; thin it out so
+   the title still reads as a link without swamping the company under it. */
+.job h4 a{text-decoration-thickness:1px;text-underline-offset:2px;
+          text-decoration-color:color-mix(in srgb,currentColor 32%,transparent)}
+.job h4 a:hover,.job h4 a:focus-visible{text-decoration-color:currentColor}
+/* The title is the only bold line on a card. The company is lifted out of the
+   grey by ink, not by weight — a second semi-bold line sitting right under the
+   heading competes with it instead of supporting it. The department stays a
+   step further back so the eye still lands on the company first. */
+.job .co{font-size:13px;line-height:1.4;font-weight:400}
+.job .co b{color:var(--ink-2);font-weight:500}
+.job .co .dept{color:var(--ink-3)}
 .job .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .job .why{color:var(--ink-3);font-size:11.5px;margin-top:6px;font-family:var(--mono)}
 /* `.score` is the saved view's right-hand column now — status and a date. The
@@ -424,13 +384,6 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .rank-why .part.off{opacity:.5}
 .rank-why .foot{color:var(--ink-3);font-size:11.5px;line-height:1.5;margin-top:11px;
                 border-top:1px solid var(--line-soft);padding-top:9px}
-/* On a phone the row has no width to spare and the mark is the first thing
-   that can go: the company name is right there in words. */
-@media (max-width:560px){
-  .job{grid-template-columns:24px minmax(0,1fr) auto}
-  .logo{display:none}
-}
-
 @media (max-width:760px){
   .rank-why .part{grid-template-columns:minmax(88px,116px) minmax(0,1fr) auto}
   .rank-why .txt{grid-column:1/-1}

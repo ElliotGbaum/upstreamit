@@ -36,15 +36,44 @@ export function installAiBox({ meta, getProfile, setProfile }) {
   const out = $('ai-out');
   const note = $('ai-note');
 
-  // No key configured: the card stays, and says the one thing that would turn
-  // it on. A control that is present but silently dead is the version that
-  // wastes somebody's afternoon.
-  if (!meta?.ai?.enabled) {
+  const ai = meta?.ai ?? {};
+
+  /** Nobody can use it: leave the card, say why, and stop. */
+  const shut = (message, { warn = false } = {}) => {
     box.disabled = true;
-    go.disabled = true;
+    go.hidden = true;
     mic.hidden = true;
-    note.textContent = `Not set up yet — ${meta?.ai?.setup ?? 'no API key configured'}.`;
-    note.classList.add('warn-note');
+    note.textContent = message;
+    note.classList.toggle('warn-note', warn);
+  };
+
+  // No key configured. An operator's problem, not a visitor's, so it gets the
+  // sentence that fixes it. A control that is present but silently dead is the
+  // version that wastes somebody's afternoon.
+  if (!ai.enabled) {
+    shut(`Not set up yet — ${ai.setup ?? 'no API key configured'}.`, { warn: true });
+    return;
+  }
+
+  // Configured, but not for whoever is reading. This is the one thing in the
+  // app behind an account — it spends real money per press — so signed out the
+  // card explains that and offers the way in, rather than failing on click. The
+  // placeholder stays visible through the disabled box on purpose: what it does
+  // is the reason to sign in, so it should be readable before you do.
+  if (!ai.usable) {
+    shut(ai.blocked ?? 'Sign in to use this.');
+    // ...and the way in, but only where there is one. A server started with
+    // `--no-accounts` has no sign-in screen, so offering the button there would
+    // send somebody to a door that does not open — the message already says
+    // that this one is the operator's decision and not theirs to fix.
+    if (meta?.auth?.enabled) {
+      const link = document.createElement('a');
+      link.className = 'btn primary';
+      link.href = '/signin';
+      link.textContent = 'Sign in';
+      link.title = 'Free, optional everywhere else in this app — and it keeps your filters and saved jobs';
+      go.after(link);
+    }
     return;
   }
 
@@ -53,7 +82,7 @@ export function installAiBox({ meta, getProfile, setProfile }) {
     : 'Type it in plain language — a sentence is enough.';
 
   // The server refuses anything longer, so the box should not accept it either.
-  if (meta.ai.max_text) box.maxLength = meta.ai.max_text;
+  if (ai.max_text) box.maxLength = ai.max_text;
 
   // ------------------------------------------------------------- dictation --
 
