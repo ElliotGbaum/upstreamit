@@ -29,8 +29,8 @@ import { openDb } from '../db.mjs';
 import { fold } from '../derive/text.mjs';
 import { GUESSED_ONSITE } from '../derive/workplace.mjs';
 import { normalizeProfile } from './profile.mjs';
-import { compileProfile, evaluate, classify, failedKeys, hits, compileTerms } from './match.mjs';
-import { scoreJob, explain, sortRows, salaryLabel, textSpecificity } from './rank.mjs';
+import { compileProfile, screen, hits, compileTerms } from './match.mjs';
+import { scoreJob, explain, sortRows, topRows, salaryLabel, textSpecificity } from './rank.mjs';
 import { ATS_KEYS, COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, companySizeBand } from '../schema.mjs';
 import { countryName } from '../adapters/iso-countries.mjs';
 
@@ -86,6 +86,21 @@ function corpusGeneration(db, key, { fresh = false } = {}) {
   ].join(':');
   generationCache.set(key, { value, at: Date.now() });
   return value;
+}
+
+/**
+ * The generation key, plus the one thing it does not watch: `job_events`.
+ *
+ * `corpusGeneration` is about the *index* — the open jobs and their derived
+ * columns — and that is all the index needs. `corpusMeta` reads two more
+ * tables' worth of history (`days`, and `activity` beside it), and a sweep can
+ * append events without moving the open-job count. `MAX(rowid)` on an integer
+ * primary key is an index seek to the last row and costs ~0.01 ms, so watching
+ * it is free and the alternative — serving yesterday's activity strip — is not.
+ */
+function corpusStamp(db, key) {
+  const events = db.prepare('SELECT MAX(rowid) n FROM job_events').get()?.n ?? 0;
+  return `${corpusGeneration(db, key)}:${events}`;
 }
 
 /**
@@ -199,6 +214,7 @@ function parseList(json) {
 export function invalidateIndex() {
   cache.clear();
   generationCache.clear();
+  metaCache.clear();
 }
 
 // ------------------------------------------------------------------ search --
@@ -233,11 +249,15 @@ export function search(db, rawProfile, opts = {}) {
   let textField = null;
   let textSpec = 1;
   if (profile.text) {
-    const result = ftsSearch(db, profile.text);
+    // `textQuery` is what turns a half-typed word into a prefix search; the
+    // ranker below gets the same rewritten query, so "which column matched"
+    // is answered about the query that actually ran and not a stricter one.
+    const query = textQuery(profile.text);
+    const result = ftsSearch(db, query);
     if (result.error) warnings.push(`text search: ${result.error}`);
     else {
       ftsIds = result.ids;
-      textField = textFieldRanker(db, profile.text);
+      textField = textFieldRanker(db, query);
       textSpec = textSpecificity(ftsIds.size, index.jobs.length);
     }
   }
@@ -260,23 +280,33 @@ export function search(db, rawProfile, opts = {}) {
   let scanned = 0;
   let titleGated = 0;
 
+  // One object, reused for every job. `screen` writes its answers here instead
+  // of returning them, which is the difference between zero allocations in this
+  // loop and 337,000 of them.
+  const verdict = { titleHits: null, failures: 0, failedKey: null, bucket: null, unknownOn: null };
+
   for (const job of index.jobs) {
     if (restrictTo && !restrictTo.has(job.id)) continue;
     if (ftsIds && !ftsIds.has(job.id)) continue;
     if (excludedIds && excludedIds.has(job.id)) continue;
     scanned++;
 
-    const verdict = evaluate(job, profile, c);
-    if (!verdict) continue;
+    if (!screen(job, profile, c, verdict)) continue; // title gate
     titleGated++;
 
-    const failed = failedKeys(verdict.verdicts, profile.unknowns);
-    if (facets) tallyFacets(facets, job, failed, profile);
-    if (failed.length) continue;
+    // Two or more failures: excluded, and countable towards no facet either —
+    // see `screen`, which stops asking at that point for exactly this reason.
+    if (verdict.failures > 1) continue;
+    if (facets) tallyFacets(facets, job, verdict.failedKey, profile);
+    if (verdict.failures) continue;
 
-    const bucket = classify(verdict.verdicts, profile.unknowns);
-    if (bucket === 'out') continue;
-    (bucket === 'in' ? inRows : asideRows).push({ job, titleHits: verdict.titleHits, verdicts: verdict.verdicts });
+    (verdict.bucket === 'in' ? inRows : asideRows).push({
+      job,
+      titleHits: verdict.titleHits,
+      // The criteria this posting is silent on. Kept rather than the whole
+      // verdict map, because this is the only part of it anything reads.
+      unknownOn: verdict.unknownOn,
+    });
   }
 
   // ------------------------------------------------- description keywords --
@@ -314,26 +344,40 @@ export function search(db, rawProfile, opts = {}) {
     row.why = explain({ descHits: row.descHits ?? [] });
   }
 
+  const matched = inRows.length;
+  const limit = opts.limit ?? profile.limit;
+  const offset = opts.offset ?? 0;
+
   // The ordering runs after the score, never instead of it: every sort falls
   // through to the score and then to a fixed tiebreak, so two identical queries
   // always come back in the same order whichever one is picked.
-  sortRows(inRows, profile.sort);
-  sortRows(asideRows, profile.sort);
+  //
+  // **How deep that ordering has to go depends on collapsing.** Collapsing
+  // walks the whole list in rank order and keeps the best copy of each
+  // duplicate, so it needs every row placed. Paging does not: a request reads
+  // `offset + limit` rows and never looks below them, and on an unfiltered
+  // corpus that is 200 rows out of 337,000 — ordering the other 337,000 was a
+  // third of the query. `topRows` returns exactly what the full sort's first
+  // `k` would have been; see the note there on why "exactly" is provable.
+  const collapsing = profile.collapse_duplicates;
+  const inOrdered = collapsing ? sortRows(inRows, profile.sort) : topRows(inRows, profile.sort, offset + limit);
+  const asideOrdered = collapsing ? sortRows(asideRows, profile.sort) : topRows(asideRows, profile.sort, limit);
 
   // Collapsing happens after the sort so the copy that survives is the
   // best-ranked one, not whichever the scan reached first.
-  const matched = inRows.length;
-  const shown = profile.collapse_duplicates ? collapse(inRows) : inRows;
-  const shownAside = profile.collapse_duplicates ? collapse(asideRows) : asideRows;
+  const shown = collapsing ? collapse(inOrdered) : inOrdered;
+  const shownAside = collapsing ? collapse(asideOrdered) : asideOrdered;
 
-  const limit = opts.limit ?? profile.limit;
-  const offset = opts.offset ?? 0;
+  // `shown` is the whole match set when collapsing and only the page when not,
+  // so the totals come off the row arrays rather than off the page.
+  const total = collapsing ? shown.length : matched;
+  const asideTotal = collapsing ? shownAside.length : asideRows.length;
 
   return {
     profile,
     warnings,
-    total: shown.length,
-    aside_total: shownAside.length,
+    total,
+    aside_total: asideTotal,
     results: shown.slice(offset, offset + limit).map(present),
     aside: shownAside.slice(0, limit).map(present),
     facets: facets ? finishFacets(facets, db, profile) : null,
@@ -345,7 +389,7 @@ export function search(db, rawProfile, opts = {}) {
       // How many postings the collapse folded away. Reported rather than
       // silently applied: a result count that drops from 453 to 291 with no
       // explanation is indistinguishable from a filter that went wrong.
-      folded: matched - shown.length,
+      folded: matched - total,
       set_aside: asideRows.length,
     },
     stats: {
@@ -450,9 +494,7 @@ function present(row) {
     // absent means "nothing was collapsed at all" — two different statements.
     duplicates: row.duplicates,
     duplicate_metros: row.duplicateMetros ? [...row.duplicateMetros] : undefined,
-    unknown_on: Object.entries(row.verdicts)
-      .filter(([, v]) => v === 'unknown')
-      .map(([k]) => k),
+    unknown_on: row.unknownOn ?? [],
   };
 }
 
@@ -479,17 +521,17 @@ const FACET_DIMENSIONS = [
   // counts sum to the unfiltered total and no job is counted twice. That also
   // makes it the cheapest sanity check in the UI — if the ATS rows stop summing
   // to the result total, a facet is lying somewhere.
-  { key: 'ats', criterion: 'ats', values: (j) => [j.ats], order: ATS_KEYS },
+  { key: 'ats', criterion: 'ats', value: (j) => j.ats, order: ATS_KEYS },
   { key: 'metro', criterion: 'metro', values: (j) => j.metros },
-  { key: 'workplace', criterion: 'workplace', values: (j) => [j.workplace ?? 'unknown'] },
-  { key: 'seniority', criterion: 'experience', values: (j) => [j.seniority ?? 'unknown'] },
+  { key: 'workplace', criterion: 'workplace', value: (j) => j.workplace ?? 'unknown' },
+  { key: 'seniority', criterion: 'experience', value: (j) => j.seniority ?? 'unknown' },
   // No `unknown` row, for the reason `metro` has none: the list is a list of
   // types you can ask for, and "unstated" is not one of them. `matchEmploymentType`
   // answers UNKNOWN for those jobs and the `employment_type` unknown policy —
   // `include` by default — decides what happens to them. Offering it as a
   // tick-box asked the profile for a value it rejects, and the panel said so.
-  { key: 'employment_type', criterion: 'employment_type', values: (j) => (j.employment_type ? [j.employment_type] : []) },
-  { key: 'job_function', criterion: 'job_function', values: (j) => [j.job_function ?? 'other'] },
+  { key: 'employment_type', criterion: 'employment_type', value: (j) => j.employment_type },
+  { key: 'job_function', criterion: 'job_function', value: (j) => j.job_function ?? 'other' },
   // Not a tally but a sample: the salary ladder is built from the figures in
   // the result set at render time, so `collect` gathers the numbers and
   // `finishFacets` decides where the rungs go. See `salaryLadder`.
@@ -499,21 +541,21 @@ const FACET_DIMENSIONS = [
   {
     key: 'company_size',
     criterion: 'company_size',
-    values: (j) => [j.company_size],
+    value: (j) => j.company_size,
     order: COMPANY_SIZE_BANDS.map((b) => b.value),
   },
   {
     key: 'remote_scope',
     criterion: 'remote_scope',
-    values: (j) => (j.remote_scope ? [j.remote_scope] : []),
+    value: (j) => j.remote_scope,
     order: REMOTE_SCOPES,
   },
-  { key: 'pay_period', criterion: 'pay_period', values: (j) => (j.pay_period ? [j.pay_period] : []), order: PAY_PERIODS },
-  { key: 'degree', criterion: 'degree', values: (j) => (j.degree ? [j.degree] : []), order: ['none', 'bachelors', 'masters', 'phd'] },
+  { key: 'pay_period', criterion: 'pay_period', value: (j) => j.pay_period, order: PAY_PERIODS },
+  { key: 'degree', criterion: 'degree', value: (j) => j.degree, order: ['none', 'bachelors', 'masters', 'phd'] },
   {
     key: 'visa',
     criterion: 'visa',
-    values: (j) => (j.visa === 1 ? ['sponsors'] : j.visa === 0 ? ['will not sponsor'] : []),
+    value: (j) => (j.visa === 1 ? 'sponsors' : j.visa === 0 ? 'will not sponsor' : null),
     order: ['sponsors', 'will not sponsor'],
   },
   // The one facet that counts what a control would **remove** rather than what
@@ -521,22 +563,22 @@ const FACET_DIMENSIONS = [
   // clearance; the checkbox drops them. The page labels it as such — a count
   // that means the opposite of every other count on the page and does not say
   // so is worse than no count.
-  { key: 'clearance', criterion: 'clearance', values: (j) => (j.clearance === 1 ? ['requires clearance'] : []) },
-  { key: 'currency', criterion: 'currency', values: (j) => (j.currency ? [j.currency] : []) },
+  { key: 'clearance', criterion: 'clearance', value: (j) => (j.clearance === 1 ? 'requires clearance' : null) },
+  { key: 'currency', criterion: 'currency', value: (j) => j.currency },
   // Two rows, both of them worth seeing. The control is a single checkbox and
   // reads the `yes` count; the `not stated` count next to it is the cost of
   // ticking it, which is the number that should decide whether you do.
-  { key: 'equity', criterion: 'equity', values: (j) => [j.equity === 1 ? 'yes' : 'not stated'], order: ['yes', 'not stated'] },
+  { key: 'equity', criterion: 'equity', value: (j) => (j.equity === 1 ? 'yes' : 'not stated'), order: ['yes', 'not stated'] },
   {
     key: 'salary_source',
     criterion: 'salary_source',
-    values: (j) => [!j.salary_known ? 'not published' : j.salary_src === 'as-stated' ? 'as-stated' : 'reinterpreted'],
+    value: (j) => (!j.salary_known ? 'not published' : j.salary_src === 'as-stated' ? 'as-stated' : 'reinterpreted'),
     order: ['as-stated', 'reinterpreted', 'not published'],
   },
   // Company and skills are counted over the result set rather than
   // leave-one-out: they are almost never the criterion someone is loosening,
   // and "which companies am I looking at" is the more useful question.
-  { key: 'company', criterion: null, values: (j) => [j.company_name ?? j.company_slug] },
+  { key: 'company', criterion: null, value: (j) => j.company_name ?? j.company_slug },
   { key: 'skill', criterion: null, values: (j) => j.skills },
 ];
 
@@ -689,13 +731,47 @@ function newFacets(profile) {
  * already the list of criteria that would exclude it, so this is a set-size
  * check rather than a re-evaluation.
  */
-function tallyFacets(facets, job, failed, profile) {
-  for (const dim of FACET_DIMENSIONS) {
-    if (failed.length > 1) continue;
-    if (failed.length === 1 && failed[0] !== dim.criterion) continue;
+/**
+ * Which dimensions a job failing exactly one criterion can still count towards.
+ *
+ * The leave-one-out rule says a job that fails only criterion K counts towards
+ * the dimensions built on K and towards nothing else — so that lookup is a Map
+ * built once here, not a twenty-iteration scan per job. Two dimensions share
+ * `metro` (place and country) and dimensions with a null criterion — company
+ * and skill, counted over the result set rather than leave-one-out — belong to
+ * no bucket, which is exactly the old `failed[0] !== dim.criterion` outcome.
+ */
+const DIMENSIONS_BY_CRITERION = new Map();
+for (const dim of FACET_DIMENSIONS) {
+  if (dim.criterion == null) continue;
+  const list = DIMENSIONS_BY_CRITERION.get(dim.criterion);
+  if (list) list.push(dim);
+  else DIMENSIONS_BY_CRITERION.set(dim.criterion, [dim]);
+}
+
+function tallyFacets(facets, job, failedKey, profile) {
+  // `failedKey` is null when the job cleared everything and the name of the one
+  // criterion it did not otherwise. The two-or-more case never gets here: the
+  // caller drops it, and `screen` stops evaluating as soon as it knows.
+  //
+  // The lookup replaces what used to be a twenty-iteration scan per job, most
+  // of it spent deciding that this dimension was not the failing one.
+  const dims = failedKey === null ? FACET_DIMENSIONS : DIMENSIONS_BY_CRITERION.get(failedKey);
+  if (!dims) return;
+
+  for (const dim of dims) {
     const bucket = facets[dim.key];
     if (dim.collect) {
       bucket.push(dim.collect(job, profile));
+      continue;
+    }
+    // A dimension that yields one value says so, and is counted without
+    // wrapping it in an array first: the old shape allocated a fresh
+    // one-element array per dimension per job, which on an unfiltered scan is
+    // millions of throwaway arrays and the GC pause to go with them.
+    if (dim.value) {
+      const value = dim.value(job, profile);
+      if (value != null) bucket.set(value, (bucket.get(value) ?? 0) + 1);
       continue;
     }
     for (const value of dim.values(job, profile)) {
@@ -849,6 +925,57 @@ function quoteFts(term) {
 }
 
 /**
+ * Anything that means something to FTS5 rather than to a reader. A query
+ * carrying one of these was written *at* the engine — `company:(devops OR sre)`,
+ * `"staff engineer"`, `data NOT analyst` — and is passed through untouched,
+ * because rewriting it would change what it asked for.
+ *
+ * `+`, FTS5's phrase-concatenation operator, is *not* on this list. Nobody
+ * writes it without quotes around the phrases it joins, so the quote catches
+ * that query anyway — and leaving `+` off means `c++` tokenizes to the word `c`
+ * the way it does everywhere else, instead of parsing as syntax and failing.
+ */
+const FTS_SYNTAX = /["*^():]|(?:^|\s)(?:AND|OR|NOT|NEAR)(?:\s|$)/;
+
+/**
+ * The shortest word we will complete for you. A one- or two-letter prefix is
+ * not evidence of anything: `a*` matches 341,582 of 341,589 documents and costs
+ * 1.5 s to say so, where `ai` as a whole word is 164,895 and 24 ms. Below this
+ * the term stays exact, which is also what someone typing `go`, `ai` or `qa`
+ * meant — `go*` would bury them in `google` and `governance`.
+ */
+const PREFIX_MIN = 3;
+
+/**
+ * Turn what someone typed in the search box into an FTS5 query.
+ *
+ * FTS5 matches whole tokens, so `afterque` found nothing at all until the `ry`
+ * arrived — a search box that answers "no such company" to eight of the nine
+ * letters of a company it has 27 jobs from. Every word long enough to be a real
+ * prefix therefore gets FTS5's `*`, so a half-typed name still finds its
+ * employer and `data eng` still finds data engineers.
+ *
+ * Words are joined with an explicit `AND`, which is what adjacent phrases
+ * already meant to FTS5 — this only says it out loud alongside the wildcards.
+ *
+ * Two things it deliberately does not do. It does not complete *inside* a word:
+ * this index has no trigram over it, so `query` will never find `AfterQuery`,
+ * only `afterq` will. And it does not touch a query that already speaks FTS5
+ * (see `FTS_SYNTAX`) — someone who typed `"staff engineer"` in quotes asked for
+ * that phrase exactly, and a wildcard would widen a deliberately narrow search.
+ */
+export function textQuery(text) {
+  const raw = String(text ?? '').trim();
+  if (!raw || FTS_SYNTAX.test(raw)) return raw;
+  // The same split unicode61 makes: everything that is not a letter or a digit
+  // is a separator, so `c#`, `react-native` and `hi!` tokenize here exactly the
+  // way the index tokenized the prose.
+  const words = raw.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (!words.length) return raw;
+  return words.map((w) => `${quoteFts(w)}${w.length >= PREFIX_MIN ? '*' : ''}`).join(' AND ');
+}
+
+/**
  * Run one FTS5 query and return the matching job ids.
  *
  * A malformed query is a user error, not a crash — `implementation AND` is a
@@ -877,10 +1004,14 @@ export function ftsSearch(db, query) {
  * because every row that reached the ranker is already known to match
  * somewhere, so anything absent from both narrow sets matched on prose.
  *
- * The term is interpolated into a column filter rather than quoted as a phrase,
- * so a reader who types FTS syntax keeps it: `company:(devops OR sre)` is a
- * query someone can reasonably write, and re-quoting it would turn it into a
- * search for that literal string. The cost is that a malformed term can parse
+ * `text` here is the *rewritten* query `search()` ran, not the raw box — a
+ * prefix search must stay a prefix search on the way through, or `afterque`
+ * would match the gate and then match neither column and read as a body hit.
+ *
+ * It is interpolated into a column filter rather than quoted as a phrase, so a
+ * reader who types FTS syntax keeps it: `company:(devops OR sre)` is a query
+ * someone can reasonably write, and re-quoting it would turn it into a search
+ * for that literal string. The cost is that a malformed term can parse
  * here even though it parsed in the gate — an unbalanced paren wrapped in
  * another paren is a different expression. That is why a failed column query
  * degrades to `null` instead of throwing: every row then reads as `body`, the
@@ -1031,7 +1162,33 @@ function stalestSweep(meta) {
 /** How many metro rows `corpusMeta` samples. See the comment on `metros`. */
 const METRO_SAMPLE = 250;
 
+const metaCache = new Map(); // db path -> { stamp, value }
+
+/**
+ * Everything the page needs to describe the corpus, cached until the corpus
+ * changes.
+ *
+ * This is eleven aggregate queries — a `GROUP BY` over 337k skill rows, another
+ * over every job's ATS, two over the event log — and none of them depend on who
+ * is asking or on anything but the data. Recomputing them on every page load
+ * cost ~70 ms locally and ~300 ms on the deployed machine, all of it in front of
+ * the first search, which is the wait a visitor actually notices.
+ *
+ * The result is shared, not copied: `/api/meta` spreads it into a fresh object
+ * and `interpret` reads two counts off it. Nothing mutates it, and nothing
+ * should — treat what comes back as frozen.
+ */
 export function corpusMeta(db) {
+  const key = dbKey(db);
+  const stamp = corpusStamp(db, key);
+  const hit = metaCache.get(key);
+  if (hit && hit.stamp === stamp) return hit.value;
+  const value = buildCorpusMeta(db);
+  metaCache.set(key, { stamp, value });
+  return value;
+}
+
+function buildCorpusMeta(db) {
   const meta = Object.fromEntries(db.prepare('SELECT key, value FROM meta').all().map((r) => [r.key, r.value]));
   // Three counts, three queries, on purpose. As one `SELECT` with a `CASE` in
   // it there is no index that answers all three at once, so SQLite scanned the

@@ -96,26 +96,66 @@ const ORG_QUERY = `query ApiOrganizationFromHostedJobsPageName($organizationHost
   }
 }`;
 
-export async function fetchOrganization(slug) {
+// The same lookup restricted to the hosted job board — the query the
+// jobs.ashbyhq.com front end itself runs before rendering anything. An org that
+// answers the plain query but returns null here has switched its hosted page
+// off (it serves the board through its own site instead), and every `jobUrl`
+// the posting API hands out for it renders "Page not found". The endpoint caps
+// operations at one top-level field, so this cannot be an alias inside
+// ORG_QUERY.
+const HOSTED_QUERY = `query ApiOrganizationFromHostedJobsPageName($organizationHostedJobsPageName: String!) {
+  organization: organizationFromHostedJobsPageName(organizationHostedJobsPageName: $organizationHostedJobsPageName, searchContext: JobBoard) {
+    name
+    __typename
+  }
+}`;
+
+async function orgQuery(slug, query) {
   const res = await getJson(GRAPHQL_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       operationName: 'ApiOrganizationFromHostedJobsPageName',
       variables: { organizationHostedJobsPageName: slug },
-      query: ORG_QUERY,
+      query,
     }),
     timeoutMs: 30_000,
   });
-  if (!res.ok) return null;
-  const org = res.data?.data?.organization;
-  if (!org) return null;
-  return {
+  if (!res.ok) return { ok: false, organization: null };
+  return { ok: true, organization: res.data?.data?.organization ?? null };
+}
+
+export async function fetchOrganization(slug) {
+  const { ok, organization: org } = await orgQuery(slug, ORG_QUERY);
+  if (!ok || !org) return null;
+  const record = {
     name: org.name ?? null,
     website: org.publicWebsite ?? null,
     careers_url: org.customJobsPageUrl ?? null,
     allow_indexing: org.allowJobPostIndexing ?? null,
   };
+  // Whether the hosted page still exists only matters when there is somewhere
+  // else to send people, so the second request is spent only on orgs that name
+  // their own careers page. A failed probe leaves the field undefined —
+  // unknown, never "disabled" — so a flaky minute cannot relink a healthy
+  // board.
+  if (record.careers_url) {
+    const hosted = await orgQuery(slug, HOSTED_QUERY);
+    if (hosted.ok) record.hosted_disabled = hosted.organization ? 0 : 1;
+  }
+  return record;
+}
+
+/**
+ * Deep link into a company's own careers page for one posting.
+ *
+ * Ashby's embed reads `ashby_jid` from the host page's query string; these are
+ * the links such a careers page renders for itself. Used in place of `jobUrl`
+ * when the hosted board is disabled and `jobUrl` is a guaranteed
+ * "Page not found".
+ */
+export function externalJobUrl(careersUrl, nativeId) {
+  return `${careersUrl}${careersUrl.includes('?') ? '&' : '?'}ashby_jid=${encodeURIComponent(nativeId)}`;
 }
 
 function mapJob(row, slug, boardName) {

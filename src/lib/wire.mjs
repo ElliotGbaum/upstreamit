@@ -15,6 +15,10 @@ export const CONTENT_TYPES = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  // Served as its own type on purpose: Chrome ignores a manifest handed back as
+  // application/json, so the install prompt and the home-screen icon depend on
+  // this line rather than on the file being present.
+  '.webmanifest': 'application/manifest+json',
 };
 
 export function json(res, status, body, headers = {}) {

@@ -41,21 +41,21 @@ function modeFromPath(path = location.pathname) {
 
 const COPY = {
   signin: {
-    title: 'Sign in · Job Finder',
+    title: 'Sign in · UpstreamIt',
     head: 'Welcome back',
     sub: 'Sign in to pick up your filters and your saved jobs.',
     submit: 'Sign in',
     switch: ['New here?', 'Create an account', 'signup'],
   },
   signup: {
-    title: 'Create an account · Job Finder',
+    title: 'Create an account · UpstreamIt',
     head: 'Create an account',
-    sub: 'Two fields. It only ever stores your filters and the jobs you save.',
+    sub: "Store your filters and the jobs you're applying to",
     submit: 'Create account',
     switch: ['Already have one?', 'Sign in', 'signin'],
   },
   password: {
-    title: 'Change your password · Job Finder',
+    title: 'Change your password · UpstreamIt',
     head: 'Change your password',
     sub: 'Every other session signs out when you do this.',
     submit: 'Change password',
@@ -67,17 +67,6 @@ let user = null;
 let googleOn = false;
 
 // ------------------------------------------------------------------ chrome --
-
-$('theme').onclick = () => {
-  const now = document.documentElement.getAttribute('data-theme');
-  const next = now === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  try {
-    localStorage.setItem('theme', next);
-  } catch {
-    /* the page works without it */
-  }
-};
 
 for (const tab of document.querySelectorAll('.tabs button')) {
   tab.onclick = () => setMode(tab.dataset.mode, { push: true });

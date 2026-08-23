@@ -30,6 +30,11 @@ export function installAiBox({ meta, getProfile, setProfile }) {
   const card = $('ai-card');
   if (!card) return;
 
+  // Switched off in the markup. Nothing to install — no listeners, no
+  // microphone, and no setup-error message drawn into a card nobody can see.
+  // Remove the `hidden` attribute in app/index.html to turn it back on.
+  if (card.hidden) return;
+
   const box = $('ai-text');
   const go = $('ai-go');
   const mic = $('ai-mic');

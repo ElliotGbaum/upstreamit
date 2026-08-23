@@ -51,6 +51,10 @@ export function parseFragment(raw) {
   let text = fold(raw);
   if (!text) return out;
 
+  // Underscores are separators, never spelling: `AZ_Mesa_HQ` is a Greenhouse
+  // office code. They also block `\b`, so left in place they would hide the
+  // decorators (`hq`) and qualifiers (`az`) inside one opaque token.
+  text = text.replace(/_/g, ' ');
   text = flattenParens(text);
   if (REMOTE_RE.test(text)) {
     out.remote = true;
@@ -113,6 +117,16 @@ export function parseFragment(raw) {
       if (group?.country) out.countries.add(group.country);
       continue;
     }
+    // The comma-less spelling of a qualified city. `Dallas, TX` has always
+    // resolved; `Dallas TX` minted a phantom `dallas-tx` metro — see
+    // `resolveGlued` for the shape and the guard.
+    const glued = resolveGlued(part);
+    if (glued) {
+      out.metros.add(glued.metro);
+      out.cities.push({ city: part, metro: glued.metro, minted: false });
+      if (glued.country) out.countries.add(glued.country);
+      continue;
+    }
     // Unknown place name. Only treat it as a city — and mint a metro id from
     // it — when it looks like one: not a stray number, not a postal code, not
     // a single letter. Otherwise it is reported as unmatched.
@@ -128,6 +142,89 @@ export function parseFragment(raw) {
 
   if (country && !out.countries.size) out.countries.add(country);
   return out;
+}
+
+/**
+ * A component that reads "city + its own qualifier", comma missing.
+ *
+ * `Dallas, TX` has always resolved: the comma splits it, `tx` reads as a
+ * region, the qualified lookup does the rest. `Dallas TX` — the same answer
+ * minus one comma — fell through to the mint and became a phantom `dallas-tx`
+ * metro, and a job whose only metro is the phantom answers a confident *no*
+ * to a Dallas search. Not an unknown the policy could keep: invisible.
+ * Measured before the fix, the glued shapes (`us-ny-new-york`, `boston-ma`,
+ * `london-uk`, `berlin-germany`, `atlanta-georgia`…) covered every US metro
+ * and most European ones.
+ *
+ * So, before minting, strip a recognised region or country off either end —
+ * two levels deep, for `US NY New York` — and look the remainder up again.
+ *
+ * The guard is what keeps this from being a guess: the stripped qualifier
+ * must *agree* with the metro it resolves to, or the strip is rejected and
+ * the component mints exactly as before. Agreement means the group's own
+ * region for a state/province, the group's country for a country name, or
+ * the group's ISO code for a bare code the country table refuses (`Berlin
+ * DE` — `de` is reserved for Delaware). That is what keeps `Portland ME`
+ * (Maine, not Oregon's group), `Paris TX` (Texas, not France), `Surrey GB`
+ * (England, not Vancouver's suburb) and `Costa Mesa` (`costa` reads as Costa
+ * Rica) apart instead of merged wrongly — a wrong merge silently mixes a
+ * different city into a metro search, which is worse than the split.
+ */
+const QUALIFIER_WORDS_MAX = 3; // regions run to three words: `new south wales`
+
+function readQualifier(token) {
+  const region = REGIONS.get(token) ?? null;
+  const country = COUNTRIES[token] ?? null;
+  if (!region && !country) return null;
+  return { region, country, token };
+}
+
+function agreesWith(group, q) {
+  if (!group) return false;
+  if (q.region) {
+    if (group.region && group.region.toLowerCase() === q.region.code) return true;
+    if (!group.region && group.country === q.region.country) return true;
+  }
+  if (q.country && group.country === q.country) return true;
+  return q.token === group.country;
+}
+
+function lookupQualified(cityPart, q, depth) {
+  // An explicit disambiguated entry is the table's own answer — `newark, ca`
+  // is Bay Area whatever the guard would say — so it outranks `agreesWith`.
+  const qualified = q.region ? CITY_TO_METRO.get(`${cityPart}, ${q.region.code}`) : null;
+  if (qualified) return { metro: qualified, group: METRO_BY_ID.get(qualified) };
+  const metro = CITY_TO_METRO.get(cityPart) ?? resolveGlued(cityPart, depth + 1)?.metro;
+  if (!metro) return null;
+  const group = METRO_BY_ID.get(metro);
+  return agreesWith(group, q) ? { metro, group } : null;
+}
+
+function resolveGlued(part, depth = 0) {
+  if (depth > 1) return null;
+  return (
+    gluedWords(part.split(' '), depth) ??
+    // Greenhouse names offices `US-MA-Boston`. A bare hyphen is never a
+    // separator (`Baden-Wurttemberg`, `Winston-Salem` are one name each), but
+    // reading the hyphenated tokens as words here is safe for the same reason
+    // the rest of this is: nothing merges unless the qualifier agrees with
+    // the metro it resolves to, so `La-Mesa` and `FL-Midtown` still mint.
+    (part.includes('-') ? gluedWords(part.split(/[-\s]+/).filter(Boolean), depth) : null)
+  );
+}
+
+function gluedWords(words, depth) {
+  if (words.length < 2) return null;
+  for (const fromEnd of [true, false]) {
+    for (let take = Math.min(QUALIFIER_WORDS_MAX, words.length - 1); take >= 1; take--) {
+      const q = readQualifier((fromEnd ? words.slice(-take) : words.slice(0, take)).join(' '));
+      if (!q) continue;
+      const rest = (fromEnd ? words.slice(0, -take) : words.slice(take)).join(' ');
+      const hit = lookupQualified(rest, q, depth);
+      if (hit) return { metro: hit.metro, country: hit.group?.country ?? q.country ?? q.region?.country ?? null };
+    }
+  }
+  return null;
 }
 
 /**

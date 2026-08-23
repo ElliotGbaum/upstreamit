@@ -85,6 +85,39 @@ check('unions across all signals', deriveLocation({
   locations_all: '["Remote","Brooklyn, NY"]', location_raw: 'Remote', city: 'NYC', region: 'NY',
 }).metros, ['nyc']);
 
+// Regression: "Dallas, TX" resolved but "Dallas TX" minted a phantom
+// `dallas-tx` metro — and a job whose only metro is the phantom answers a
+// confident `no` to a Dallas search, invisible rather than unknown. The glued
+// spelling of a city and its own qualifier must resolve like the comma one.
+check('glued state suffix', metrosOf('Dallas TX'), ['dallas']);
+check('glued state suffix, multiword city', metrosOf('New York City NY'), ['nyc']);
+check('glued state prefix', metrosOf('MA Boston'), ['boston']);
+check('glued country suffix', metrosOf('London UK'), ['london']);
+check('glued country prefix', metrosOf('Germany Berlin'), ['berlin']);
+check('glued full state name', metrosOf('Atlanta Georgia'), ['atlanta']);
+// `de` is reserved for Delaware in the country table; the group's own ISO
+// code is still a valid reading of the token.
+check('glued ISO code on a reserved letter pair', metrosOf('Berlin DE'), ['berlin']);
+check('glued chain of qualifiers', metrosOf('US NY New York'), ['nyc']);
+check('glued qualifier keeps disambiguated entry', metrosOf('Newark CA'), ['sf-bay']);
+// The guard: a qualifier that contradicts the metro it would resolve to is
+// rejected, and the component mints exactly as before. A wrong merge mixes a
+// different city into a metro search, which is worse than the split.
+check('guard: Portland ME is not Portland OR', metrosOf('Portland ME'), ['portland-me']);
+check('guard: Paris TX is not Paris FR', metrosOf('Paris TX'), ['paris-tx']);
+check('guard: Surrey GB is not Vancouver', metrosOf('Surrey GB'), ['surrey-gb']);
+check('guard: Costa Mesa is not Mesa AZ', metrosOf('Costa Mesa'), ['costa-mesa']);
+check('guard: La Mesa is not Mesa AZ', metrosOf('La Mesa'), ['la-mesa']);
+check('guard: Washington State is not DC', metrosOf('Washington State'), ['washington-state']);
+// The hyphen-glued spelling of the same thing — Greenhouse office codes.
+check('hyphen-glued office code', metrosOf('US-MA-Boston'), ['boston']);
+check('hyphen-glued with spaced city', metrosOf('US-CA-Menlo Park'), ['sf-bay']);
+check('guard: FL-Midtown is not NYC midtown', metrosOf('FL-Midtown'), ['fl-midtown']);
+check('guard: La-Mesa still minted', metrosOf('La-Mesa'), ['la-mesa']);
+check('underscore office code', metrosOf('AZ_Mesa_HQ'), ['phoenix']);
+check('hyphenated one-name city unharmed', metrosOf('Boulogne-Billancourt'), ['paris']);
+check('hyphenated region unharmed', metrosOf('Riederich, Baden-Wurttemberg'), ['stuttgart']);
+
 // ----------------------------------------------------------------- workplace --
 const noLoc = { metros: [], remoteHint: false };
 check('enum wins', deriveWorkplace({ raw_workplace: 'Hybrid', raw_remote: 1 }, noLoc).workplace, 'hybrid');

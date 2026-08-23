@@ -1548,15 +1548,6 @@ function bindControls() {
     };
   }
 
-  $('theme').onclick = () => {
-    const now = document.documentElement.getAttribute('data-theme');
-    const next = now === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    safeSet('theme', next);
-  };
-  const savedTheme = safeGet('theme');
-  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
-
   $('reset').onclick = () => {
     // Reset to the engine's defaults, not to a copy of them kept here.
     profile = {
@@ -1851,9 +1842,13 @@ function resolveSave(raw) {
 function describeSaveTarget() {
   const { store, name, mode, over } = resolveSave($('save-name').value);
 
-  $('save-where').textContent = store === 'mine'
+  // Saving to the account is worth a line, because it is the case where the set
+  // leaves this computer. The file-backed save needs no explaining.
+  const where = $('save-where');
+  where.textContent = store === 'mine'
     ? 'Saved to your account — only you can see it, on any computer you sign in from.'
-    : 'Saved on this computer, in profiles/ — the same file the command line and the daily run read.';
+    : '';
+  where.hidden = !where.textContent;
 
   const stored = `${name}${store === 'mine' ? '' : '.json'}`;
   const note = $('save-note');
@@ -2009,8 +2004,20 @@ function fillProfileSelect(selected) {
 
 async function boot() {
   bindControls();
+
+  // Both requests leave now, together. The account layer's first call — "who
+  // is this?" — does not depend on anything in the corpus description, and
+  // awaiting them one after the other put a whole round trip of nothing in
+  // front of the first search. Whoever answers second is the only wait.
+  //
+  // Nothing is awaited here: an account call that fails must not stop the
+  // corpus from loading, so the rejection is caught at the promise and handed
+  // to `account.init` as a null.
+  const metaLoading = api('/api/meta');
+  const whoLoading = api('/api/auth/me').catch(() => null);
+
   try {
-    meta = await api('/api/meta');
+    meta = await metaLoading;
   } catch (err) {
     showWarnings([`could not reach the server: ${err.message}`]);
     return;
@@ -2040,6 +2047,8 @@ async function boot() {
   try {
     remembered = await account.init({
       meta,
+      // Already in flight since the top of `boot` — see above.
+      who: whoLoading,
       getProfile: () => profile,
       setProfile: (next) => {
         profile = next;
@@ -2100,7 +2109,11 @@ async function boot() {
     const first = meta.profiles?.[0];
     if (first) {
       try {
-        profile = await api(`/api/profiles/${encodeURIComponent(first.name)}`);
+        // The document usually arrived with `/api/meta` — see `boot_profile`
+        // there, which is this same `profiles[0]` chosen server-side. Fetching
+        // it by name is the fallback for a file that could not be read, and for
+        // a server that predates the field.
+        profile = meta.boot_profile ?? (await api(`/api/profiles/${encodeURIComponent(first.name)}`));
         $('profile-select').value = `shared:${first.name}`;
       } catch {
         profile = {};

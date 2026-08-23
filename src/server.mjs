@@ -73,6 +73,7 @@ import { profilesVisibleTo, ownerOf, ownedBy, PROFILE_DIR } from './find.mjs';
 import { json, readBody, CONTENT_TYPES as TYPES } from './lib/wire.mjs';
 import { interpret, aiMeta, CALLS_PER_HOUR } from './lib/interpret.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
+import { isSecureRequest } from './lib/users/auth.mjs';
 import { openUsersDb } from './lib/users/store.mjs';
 import { APPLICATION_STATUSES, STATUS_LABELS } from './lib/users/schema.mjs';
 
@@ -81,6 +82,25 @@ const APP_DIR = join(ROOT, 'app');
 
 /** Profile names become filenames. Anything outside this never touches a path. */
 const SAFE_NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
+
+/**
+ * The document the page opens on: the first profile this viewer can see.
+ *
+ * Same choice `/api/meta` publishes as `profiles[0]`, made in one place so the
+ * name and the document cannot disagree. A file that has gone missing or gone
+ * malformed since it was listed returns null rather than throwing — the page
+ * falls back to fetching it by name, and a broken starter profile should not
+ * take the whole meta call down with it.
+ */
+async function bootProfile(profiles) {
+  const first = profiles[0];
+  if (!first?.path) return null;
+  try {
+    return JSON.parse(await readFile(first.path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
 
 function parseArgs(argv) {
   const args = { port: 7799, host: '127.0.0.1', db: undefined, usersDb: undefined, open: false, accounts: true };
@@ -114,14 +134,61 @@ export function createApp(db, { accounts = null, sharedProfileWrites = true } = 
     const url = new URL(req.url, 'http://localhost');
     const path = decodeURIComponent(url.pathname);
 
+    if (redirectFromWww(req, res, url)) return;
+
     try {
       if (accounts && (await accounts.handle(req, res, path, url))) return;
       if (path.startsWith('/api/')) return await api(db, req, res, path, url, { accounts, sharedProfileWrites });
-      return await serveStatic(res, path);
+      return await serveStatic(req, res, path);
     } catch (err) {
       json(res, 500, { error: err.message });
     }
   };
+}
+
+/**
+ * Send `www.example.com` to the bare `example.com`, permanently.
+ *
+ * Both names point at this one app — the custom domain puts `www` and the apex
+ * on the same Fly addresses — so without this the site answers to two hostnames
+ * that a browser treats as unrelated origins. Cookies are why that matters:
+ * `sessionCookie` sets no `Domain` attribute (users/auth.mjs), which makes the
+ * session host-only, so a sign-in at `www.` simply is not there at the apex. A
+ * visitor would be signed out by following a link that differs by four
+ * characters, and `sameOrigin` would then reject the POST that tried to fix it.
+ *
+ * Written against the `Host` we were actually reached on rather than a domain
+ * in a constant: it survives the domain changing, and every host without the
+ * prefix — the apex, `job-finder-ats.fly.dev`, `localhost:8080` — falls through
+ * untouched.
+ *
+ * @returns {boolean} true when a redirect was sent and the caller must stop.
+ */
+function redirectFromWww(req, res, url) {
+  const host = req.headers.host;
+  if (!host?.startsWith('www.')) return false;
+  const apex = host.slice(4);
+  if (!apex) return false; // a bare `www.` Host is malformed; serve it normally
+
+  // `url.pathname`, not the decoded `path`: Location carries the encoded form,
+  // and re-encoding a decoded path is how a literal `%2F` turns into a `/`.
+  const target = `${isSecureRequest(req) ? 'https' : 'http'}://${apex}${url.pathname}${url.search}`;
+
+  // 308 rather than 301 for a body-carrying method: 301 permits a client to
+  // retry a POST as a GET, which would drop a sign-in silently. 301 stays for
+  // plain navigation, which is all that realistically arrives here.
+  //
+  // `no-cache` because a permanent redirect is otherwise permanent in every
+  // visitor's browser forever. If this site ever wants `www` to be the
+  // canonical name instead, the old rule and the new one meet in a redirect
+  // loop that only a manual cache clear breaks. Revalidating costs one request
+  // on a hostname almost nobody types any more.
+  res.writeHead(req.method === 'GET' || req.method === 'HEAD' ? 301 : 308, {
+    location: target,
+    'cache-control': 'no-cache',
+  });
+  res.end();
+  return true;
 }
 
 async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
@@ -144,12 +211,23 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
   // expressible, not just Elliot's.
   if (path === '/api/meta' && req.method === 'GET') {
     const index = getIndex(db);
+    const profiles = profilesVisibleTo(viewer);
     return json(res, 200, {
       ...corpusMeta(db),
       // Theirs first, then the ones that belong to everyone — the page boots
       // into `profiles[0]`, so this ordering *is* "sign in and your filters are
       // already there".
-      profiles: profilesVisibleTo(viewer),
+      profiles,
+      // And the document itself, not just its name.
+      //
+      // The page boots into `profiles[0]` and used to go and fetch it, which
+      // put a whole round trip between "the page knows what to search for" and
+      // "the page asks". Nothing in that trip was undecided — this route
+      // already chose which profile it is, and `listProfiles` already read and
+      // parsed the file to find out who owns it. Sending it costs a kilobyte
+      // and removes a wait in front of the first search, which is the wait a
+      // visitor actually sees.
+      boot_profile: await bootProfile(profiles),
       // The unknown-policy controls are generated from this, not duplicated in
       // the page — the same rule the metro dropdown follows.
       unknowns: UNKNOWNABLE,
@@ -385,7 +463,7 @@ const PAGES = {
  */
 const PRIVATE = new Set([join(APP_DIR, 'landing.html').toLowerCase()]);
 
-async function serveStatic(res, path) {
+async function serveStatic(req, res, path) {
   const clean = path.replace(/\/+$/, '') || '/';
   const rel = clean === '/' ? 'index.html' : (PAGES[clean] ?? path.replace(/^\/+/, ''));
   // Contain the served path inside APP_DIR. This is a local tool, but a
@@ -403,13 +481,70 @@ async function serveStatic(res, path) {
     return;
   }
   try {
-    await stat(target);
-    const body = await readFile(target);
-    res.writeHead(200, { 'content-type': TYPES[extname(target)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
-    res.end(body);
+    const info = await stat(target);
+    const entry = await staticEntry(target, info);
+    const type = TYPES[extname(target)] ?? 'application/octet-stream';
+
+    // `no-cache` is not `no-store`: it means "you may keep this, ask me before
+    // you use it". The browser then sends the tag back and gets 304 and an
+    // empty body instead of the file — app.js alone is 87 KB, and it had been
+    // arriving in full on every single page load and every navigation between
+    // the app and the sign-in pages.
+    //
+    // Not `immutable`, and not a max-age: these filenames carry no content
+    // hash, so a cached copy the browser is allowed to *use* without asking is
+    // a deploy that some visitors never see. Revalidation costs one small
+    // round trip and can never serve yesterday's app.
+    const headers = { 'content-type': type, 'cache-control': 'no-cache', etag: entry.etag };
+
+    if (holdsTag(req, entry.etag)) {
+      res.writeHead(304, headers);
+      res.end();
+      return;
+    }
+    res.writeHead(200, { ...headers, 'content-length': entry.body.length });
+    res.end(entry.body);
   } catch {
     res.writeHead(404).end('not found');
   }
+}
+
+/**
+ * The app's files, held in memory with a tag, re-read when they change on disk.
+ *
+ * `app/` is eight small files that every page load asks for, and in the
+ * container they are baked into the image and cannot change at all. Reading
+ * them off the disk per request bought nothing; keeping them costs ~200 KB.
+ *
+ * The tag is the file's size and modification time, not a hash of its contents:
+ * it only has to change when the file does, and `stat` is the call this already
+ * makes to find out whether the file exists.
+ */
+const staticCache = new Map(); // absolute path -> { key, etag, body }
+
+async function staticEntry(target, info) {
+  const key = `${info.size}-${info.mtimeMs}`;
+  const hit = staticCache.get(target);
+  if (hit && hit.key === key) return hit;
+  const entry = { key, etag: `W/"${info.size.toString(36)}-${Math.round(info.mtimeMs).toString(36)}"`, body: await readFile(target) };
+  staticCache.set(target, entry);
+  return entry;
+}
+
+/**
+ * Is the browser already holding this version?
+ *
+ * `If-None-Match` may list several tags, and an intermediary is allowed to hand
+ * back a tag it has weakened, so this compares over the list with the `W/`
+ * prefix stripped from both sides — the weak comparison the spec specifies for
+ * a GET, and the one that keeps a 304 working through Fly's proxy.
+ */
+function holdsTag(req, etag) {
+  const header = req.headers['if-none-match'];
+  if (!header) return false;
+  const bare = (tag) => tag.trim().replace(/^W\//, '');
+  const wanted = bare(etag);
+  return header.split(',').some((tag) => bare(tag) === wanted);
 }
 
 async function main() {
@@ -428,13 +563,26 @@ async function main() {
   const loopback = isLoopback(args.host);
   const server = createServer(createApp(db, { accounts, sharedProfileWrites: loopback }));
 
+  // Warm the index **before** opening the port, not after.
+  //
+  // Building it is one synchronous pass over every open row — 3 seconds on a
+  // laptop and ~20 on the deployed machine — and synchronous means the event
+  // loop is held for the whole of it. Warming inside the `listen` callback
+  // therefore did not avoid the wait, it hid it: the port was already open, so
+  // Fly had already started sending real traffic, and the first visitors after
+  // a deploy sat through the build with a page that appeared to be hanging.
+  //
+  // Doing it first costs the same seconds against startup, where the platform
+  // is already waiting for the port and nobody is watching a blank screen.
+  const started = Date.now();
+  getIndex(db);
+  const warmMs = Date.now() - started;
+
   server.listen(args.port, args.host, () => {
-    const started = Date.now();
-    const index = getIndex(db); // warm it now, so the first search is not the slow one
-    console.log(`\n  Job Finder → http://${args.host}:${args.port}`);
+    console.log(`\n  UpstreamIt → http://${args.host}:${args.port}`);
     console.log(
       `  ${meta.open.toLocaleString('en-US')} open jobs · ${meta.companies.toLocaleString('en-US')} boards · ` +
-        `${meta.metros_total.toLocaleString('en-US')} metros · index warm in ${Date.now() - started} ms`,
+        `${meta.metros_total.toLocaleString('en-US')} metros · index warm in ${warmMs} ms`,
     );
     console.log(
       accounts
@@ -452,7 +600,6 @@ async function main() {
         console.log('');
       }
     }
-    void index;
   });
 }
 
