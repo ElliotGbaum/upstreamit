@@ -1,11 +1,11 @@
 {
   "ats": "greenhouse",
-  "generated_at": "2026-08-22T16:11:00.045Z",
-  "probed": 15197,
-  "partial": false,
+  "generated_at": "2026-08-23T08:46:14.501Z",
+  "probed": 31,
+  "partial": true,
   "counts": {
-    "exists": 8272,
-    "dead": 6925,
+    "exists": 27,
+    "dead": 4,
     "error": 0
   },
   "companies": {
@@ -961,6 +961,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "accompanyhealth": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "accordion": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -1184,6 +1188,10 @@
     "activehours": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "activeops": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "actpowerservices": {
       "status": "exists",
@@ -2557,6 +2565,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "alnylampharmaceuticals": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "aloft": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -2576,6 +2588,10 @@
     "alpenlabs": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "alpha9": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "alpha9oncology": {
       "status": "exists",
@@ -6521,6 +6537,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "bcg": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "bcgdv": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -9692,6 +9712,10 @@
     "canaanpartners18": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "canada": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "canada1": {
       "status": "exists",
@@ -14289,6 +14313,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "cts": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "cubedev": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -16457,6 +16485,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "drive": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "drivecanvas": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -18073,6 +18105,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "enterprisesolutions": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "enterprizesoftware": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -18856,6 +18892,10 @@
     "evydtech": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "ex": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "exabeam": {
       "status": "exists",
@@ -20117,6 +20157,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "fleet": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "fleetio": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -20456,6 +20500,10 @@
     "fms": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "fna": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "fnalityjobs": {
       "status": "dead",
@@ -21580,6 +21628,10 @@
     "fwdus": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "fxpro": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "fyllo": {
       "status": "dead",
@@ -23637,6 +23689,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "grey": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "greycroft": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -24612,6 +24668,10 @@
     "hearcomkr": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "hearst": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "hearstnewspaperstexas": {
       "status": "dead",
@@ -30733,6 +30793,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "legend": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "legendcareers": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -31192,6 +31256,10 @@
     "lightstep": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "lightworks": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "lightyearhealthphysiatrist": {
       "status": "dead",
@@ -32100,6 +32168,10 @@
     "lucanetgroup": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "lucania": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "lucenia": {
       "status": "exists",
@@ -33165,6 +33237,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "mavens": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "mavenscareers": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -33324,6 +33400,10 @@
     "mcft": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "mcg": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "mcghealth": {
       "status": "exists",
@@ -34501,6 +34581,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "misspiggy": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "mit": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -34560,6 +34644,10 @@
     "mizzenandmain": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "mjm": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "mks2technologies": {
       "status": "exists",
@@ -38637,6 +38725,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "onestream": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "onestreamsoftware": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -40129,6 +40221,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "paralegal": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "parallaxvolatilityadvisers": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -41028,6 +41124,10 @@
     "petuum": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "petvet": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "petvetkalamazoo": {
       "status": "exists",
@@ -42580,6 +42680,10 @@
     "privacy": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "private": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "private-alliancedefendingfreedom": {
       "status": "exists",
@@ -44701,6 +44805,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "remedy": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "remedyedgelondon": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -46785,6 +46893,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
     },
+    "scaleops": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
+    },
     "scalespace": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
@@ -46832,6 +46944,10 @@
     "schmidtfutures": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "schneiderdowns": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "scholarship": {
       "status": "dead",
@@ -47800,6 +47916,10 @@
     "shednycinc": {
       "status": "exists",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "sheetz": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "shein": {
       "status": "exists",
@@ -49824,6 +49944,10 @@
     "spectory": {
       "status": "dead",
       "checked_at": "2026-08-22T16:11:00.045Z"
+    },
+    "spectrum": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:14.501Z"
     },
     "spectrumvascular": {
       "status": "exists",

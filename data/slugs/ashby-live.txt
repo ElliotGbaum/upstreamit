@@ -14,6 +14,7 @@
 3imembers
 3y-health
 42dot
+4m
 5bluesoftware
 7gen
 80000hours
@@ -97,6 +98,7 @@ agentis-capital-advisors
 agentmail
 aghanim
 agi-inc
+agon
 agreena
 agzen
 aiand
@@ -299,6 +301,7 @@ arthur-ai
 artian
 articul8
 artie
+artificial
 artificial.agency
 artificialanalysis
 artisan
@@ -352,6 +355,7 @@ atomic-invest
 atomicindustries
 atominvest
 atomos
+atp
 atrato
 atria
 atrix
@@ -383,6 +387,7 @@ avala
 avantos
 avelios-medical
 aven
+aveni
 avid4
 avida
 aviv
@@ -435,6 +440,7 @@ beach-bum
 beaconai
 beacons
 beaconsoftware
+beaker
 beam-up
 beamery
 beamimpact
@@ -526,6 +532,7 @@ bluenote
 bluerocksecurity
 blumen
 boam
+bob
 bobyard
 bodysoul
 bold
@@ -581,6 +588,8 @@ brooklyn-health
 brookwood
 browse.ai
 browserbase
+brumby
+bruno
 brunswick
 bubble
 buena
@@ -640,6 +649,7 @@ capy
 cara-ai
 carbonhealth
 carbonx
+cardflight
 cardless
 careers.azx.io
 careerstrengo
@@ -691,6 +701,7 @@ certa
 certifid
 certifyos
 cerve
+cge
 chaidiscovery
 chainalysis-careers
 chainalysis-government-solutions
@@ -961,6 +972,7 @@ dapster
 darkroom
 darwin
 dash0
+databook
 datafold
 dataguard
 datalab
@@ -1007,6 +1019,7 @@ deeptune
 deepwalk
 deeter-analytics
 defense
+defenseunicorns
 definefinancial
 definelycareers
 defy-security
@@ -1052,6 +1065,7 @@ discern
 discovery-loop
 dispatch
 displai
+distance
 distributed-spectrum
 distributor-wire-cable
 distyl
@@ -1283,6 +1297,7 @@ fathom
 fathom.video
 faves
 favorited
+fazeshift
 featherlessai
 feathery
 feathr
@@ -1371,6 +1386,7 @@ fluidstack
 flutterflow
 flux
 fnatic
+foam
 focal
 focus
 focused
@@ -1415,6 +1431,7 @@ fourth-power
 fourtwothree
 foxelligroup
 foxglove
+fr
 frameplay
 frec
 freckle
@@ -1430,6 +1447,8 @@ friendliai
 frontapp
 frontcareers
 frontier
+frontiersecurity
+frontify
 fruitist
 fs-studio
 fsh
@@ -1450,6 +1469,7 @@ furtherai
 fuse
 fuser
 futurefitai
+futurehouse
 futureworks
 fwd-people
 fyi
@@ -1476,6 +1496,7 @@ gem-technologies
 gen-digital
 gen-trellis
 gendo
+genera
 general-context
 general-medicine
 generalintelligencecompany
@@ -1505,6 +1526,7 @@ getting-attention
 ghost
 gigaml
 gigaton
+gigi
 gigsafe
 gimlet
 gismart
@@ -1564,6 +1586,7 @@ granular-energy.com
 grapevine
 graphite
 graphitehq
+graphyte
 gratia
 gravie
 gravity
@@ -1572,6 +1595,7 @@ gravitysketch
 gray swan ai
 graymatter-robotics
 greatquestion
+greatsky
 green-tree-school-and-services
 greenboard
 greenlight
@@ -1660,6 +1684,7 @@ healthtech-1
 heart-and-soil
 hebbia-ai
 hedra
+hedral
 heidihealth.com.au
 heirloomcarbon
 helicon
@@ -1710,6 +1735,7 @@ hivehealth
 hivemq
 hiverge
 hivesmart-consulting
+hivewatch
 hiya
 hobbes
 hockeystack
@@ -1866,6 +1892,7 @@ irregular
 isaacoperations
 isometric
 it labs
+iterable
 iverify
 ivo-inc
 iwoca.co.uk
@@ -2100,6 +2127,7 @@ lido.fi
 life-space-digital
 lifelabs learning
 lifen
+lifespan
 lifestance
 liftoff
 light
@@ -2125,8 +2153,10 @@ linera.io
 linero
 lingodotdev
 links-academy
+linkt
 linkup
 linqapp
+linro
 lio
 liqid-lam
 liqid-lig
@@ -2193,6 +2223,7 @@ lyrebird-health
 lyric
 m-kopa
 m13
+m7health
 maca
 mach
 mach9
@@ -2247,6 +2278,7 @@ materialize
 materialsecurity
 matia
 maticrobots
+matrix
 matter-intelligence
 matter-labs
 matterworks
@@ -2280,6 +2312,7 @@ medraai
 medscout
 meetmarvin
 megazone
+melio
 meliora-academy
 melius
 melotech
@@ -2380,8 +2413,10 @@ monarchcrops
 monarchmoney
 mondoo
 monei
+moneyhash
 monk
 monogram
+monomerbio
 monsters
 montauk-capital
 montecarlodata
@@ -2471,6 +2506,7 @@ neon money talks
 neon-health
 neonredwood
 neotaste
+neptune
 nerdwallet
 nessolabs
 nest-health
@@ -2569,6 +2605,7 @@ novus
 nox-metals
 noxus
 noyo
+npv
 npx
 ntegrity
 ntt-data-aivista
@@ -2584,11 +2621,14 @@ nuna
 nuon
 nursa
 nusano
+nutanix
+nx1
 nylas
 oak
 oakland-feather-river-camp
 oaknorth
 oakslab
+oath
 oberst
 obrio
 observable-space
@@ -2596,6 +2636,7 @@ obsidiansystems
 obviant
 obvio
 obvious
+ocean
 oceanus
 ocra
 oden-technologies
@@ -2661,9 +2702,11 @@ openhomefoundation
 openloophealth
 openlooppartners
 openly
+openmind
 openobserve-careers
 openrouter
 opensea
+opentable
 opfoundation
 oplabs
 opslevel
@@ -2778,6 +2821,7 @@ passport
 passthrough
 patch.io
 pathos
+pathways
 pathwork
 patlytics
 patreon
@@ -2793,6 +2837,7 @@ payflip
 paymentology
 payrails
 payscale
+payward
 payzen-inc
 pch-digital
 peakmetrics
@@ -2837,6 +2882,7 @@ pharsalus
 phasebiolabs
 phia
 phil
+philo
 phinitylabs
 phlair
 phoebe-work
@@ -2861,6 +2907,7 @@ pingo
 pioneer
 pirros
 pivot
+pivotal
 pivotal-health
 pivotrobotics
 pixaera
@@ -2888,6 +2935,7 @@ playlab
 playpowerlabs
 playson
 plenful
+plentific
 pleo
 pliant
 plinth
@@ -2978,6 +3026,7 @@ prometheus
 promise
 promise-studios
 prompt
+pronoia
 propel
 propelus
 prophecygov
@@ -3064,6 +3113,7 @@ rain-technologies
 raindrop
 rainfallhealth
 rainforest-pay
+rainmaker
 rallyuxr
 ramielcapital
 ramp
@@ -3111,6 +3161,7 @@ redpine
 reducto
 reedsy
 reevo
+refer
 reflect-orbital
 reflectionai
 reflexrobotics
@@ -3291,6 +3342,7 @@ sardine
 saris-ai
 saronic
 sarvam
+sash
 satispay
 satoshilabs
 saturn
@@ -3308,6 +3360,7 @@ scalemath
 scaler
 scalera
 scan-com
+scape
 scarlet
 scholarly
 schoolhouse-world
@@ -3400,6 +3453,7 @@ siena
 sierra
 sierra-studio
 sieve
+sievo
 sifflet
 sift
 siftscience
@@ -3431,6 +3485,7 @@ singulate
 sintra
 sio-logistics
 siro
+sisense
 sisu
 sitecore
 sitemate
@@ -3505,6 +3560,7 @@ sona
 sonar-us
 sondermind
 sonio
+sophos
 sorare
 sorcerer
 soris
@@ -3533,6 +3589,7 @@ speak
 speakeasy
 spear-ai
 spearbio
+special
 speckle
 specright
 specter
@@ -4000,6 +4057,7 @@ unmind
 unstructured
 unto-labs
 unwrap
+up
 upchurch
 upcodes
 upflow
