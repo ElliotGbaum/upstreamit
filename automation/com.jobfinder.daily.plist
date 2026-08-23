@@ -5,9 +5,8 @@
   <key>Label</key>            <string>com.jobfinder.daily</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/bin/node</string>
-    <string>/Users/elliotgreenbaum/Job Finder ATS/src/daily.mjs</string>
-    <string>--quiet</string>
+    <string>/bin/sh</string>
+    <string>/Users/elliotgreenbaum/Job Finder ATS/automation/daily-local.sh</string>
   </array>
   <key>WorkingDirectory</key> <string>/Users/elliotgreenbaum/Job Finder ATS</string>
   <key>StartCalendarInterval</key>
