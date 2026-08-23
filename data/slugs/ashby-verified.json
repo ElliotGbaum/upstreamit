@@ -1,11 +1,11 @@
 {
   "ats": "ashby",
-  "generated_at": "2026-08-22T17:43:53.386Z",
-  "probed": 150,
+  "generated_at": "2026-08-23T08:46:13.082Z",
+  "probed": 61,
   "partial": true,
   "counts": {
-    "exists": 84,
-    "dead": 66,
+    "exists": 58,
+    "dead": 3,
     "error": 0
   },
   "companies": {
@@ -104,6 +104,10 @@
     "42dot": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "4m": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "500ms": {
       "status": "dead",
@@ -544,6 +548,10 @@
     "agility": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "agon": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "agora": {
       "status": "dead",
@@ -1277,6 +1285,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
     },
+    "applause": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "apple-roofing": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -1585,6 +1597,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "artificial": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "artificial.agency": {
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
@@ -1849,6 +1865,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "atp": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "atrato": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -2016,6 +2036,10 @@
     "aven": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "aveni": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "aventure": {
       "status": "dead",
@@ -2304,6 +2328,10 @@
     "beaconsoftware": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "beaker": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "beakon": {
       "status": "dead",
@@ -2809,6 +2837,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "bob": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "bobsled": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -3104,6 +3136,14 @@
     "browserbase": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "brumby": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
+    "bruno": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "brunswick": {
       "status": "exists",
@@ -3405,6 +3445,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T17:43:53.386Z"
     },
+    "cardflight": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "cardino.de": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
@@ -3684,6 +3728,10 @@
     "cfdx.io": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "cge": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "chai": {
       "status": "dead",
@@ -5145,6 +5193,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "databook": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "datacurve": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -5380,6 +5432,10 @@
     "defense": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "defenseunicorns": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "definefinancial": {
       "status": "exists",
@@ -5624,6 +5680,10 @@
     "displai": {
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "distance": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "distill": {
       "status": "dead",
@@ -6901,6 +6961,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "fazeshift": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "featherlessai": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -7405,6 +7469,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "foam": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "focal": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -7637,6 +7705,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "fr": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "fractional": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -7732,6 +7804,14 @@
     "frontier": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "frontiersecurity": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
+    "frontify": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "fruitist": {
       "status": "exists",
@@ -7844,6 +7924,10 @@
     "futurefitai": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "futurehouse": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "futureworks": {
       "status": "exists",
@@ -7980,6 +8064,10 @@
     "gendo": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "genera": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "general-context": {
       "status": "exists",
@@ -8144,6 +8232,10 @@
     "gigaton": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "gigi": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "gigsafe": {
       "status": "exists",
@@ -8433,6 +8525,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "graphyte": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "gratia": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -8472,6 +8568,10 @@
     "greatquestion": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "greatsky": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "green-tree-school-and-services": {
       "status": "exists",
@@ -8929,9 +9029,17 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "hedge": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "hedra": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "hedral": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "heidihealth.com.au": {
       "status": "exists",
@@ -9176,6 +9284,10 @@
     "hivesmart-consulting": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "hivewatch": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "hiya": {
       "status": "exists",
@@ -10020,6 +10132,10 @@
     "italic": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "iterable": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "iterative": {
       "status": "dead",
@@ -11277,6 +11393,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "lifespan": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "lifestance": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -11409,6 +11529,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "linkt": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "linktree": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -11420,6 +11544,10 @@
     "linqapp": {
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "linro": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "lio": {
       "status": "exists",
@@ -11732,6 +11860,10 @@
     "m13": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "m7health": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "maca": {
       "status": "exists",
@@ -12057,6 +12189,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "matrix": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "matter-intelligence": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -12240,6 +12376,10 @@
     "megazone": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "melio": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "meliora-academy": {
       "status": "exists",
@@ -12781,6 +12921,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "moneyhash": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "moneyworld": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -12796,6 +12940,10 @@
     "monogram": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "monomerbio": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "monq": {
       "status": "dead",
@@ -13265,6 +13413,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "neptune": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "nerdwallet": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -13717,6 +13869,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
     },
+    "npv": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "npx": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -13793,9 +13949,17 @@
       "status": "exists",
       "checked_at": "2026-08-22T17:43:53.386Z"
     },
+    "nutanix": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "nuveaux-trading": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "nx1": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "nylas": {
       "status": "exists",
@@ -13828,6 +13992,10 @@
     "oasiz": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "oath": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "oberst": {
       "status": "exists",
@@ -13872,6 +14040,10 @@
     "occam": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "ocean": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "oceanus": {
       "status": "exists",
@@ -14209,6 +14381,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "openmind": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "openobserve-careers": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -14228,6 +14404,10 @@
     "openstore": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "opentable": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "operator": {
       "status": "dead",
@@ -14829,6 +15009,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "pathways": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "pathwork": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -14904,6 +15088,10 @@
     "payscale": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "payward": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "payzen-inc": {
       "status": "exists",
@@ -15133,6 +15321,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "philo": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "phinitylabs": {
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
@@ -15260,6 +15452,10 @@
     "pivot": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "pivotal": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "pivotal-health": {
       "status": "exists",
@@ -15412,6 +15608,10 @@
     "plenful": {
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
+    },
+    "plentific": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "pleo": {
       "status": "exists",
@@ -15937,6 +16137,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
     },
+    "pronoia": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "proofofplay": {
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -16377,6 +16581,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "rainmaker": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "rallyuxr": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -16580,6 +16788,10 @@
     "reevo": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "refer": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "reference": {
       "status": "dead",
@@ -26257,6 +26469,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T18:00:05.073Z"
     },
+    "sash": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "satispay": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -26344,6 +26560,10 @@
     "scan-com": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "scape": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "scarlet": {
       "status": "exists",
@@ -26869,6 +27089,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "sievo": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "sifflet": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -27000,6 +27224,10 @@
     "siro": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "sisense": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "sisu": {
       "status": "exists",
@@ -27445,6 +27673,10 @@
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "sophos": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "sora": {
       "status": "dead",
       "checked_at": "2026-08-11T18:00:05.073Z"
@@ -27581,6 +27813,10 @@
       "status": "dead",
       "checked_at": "2026-08-11T17:50:39.944Z"
     },
+    "special": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
+    },
     "speckle": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
@@ -27616,6 +27852,10 @@
     "spendesk": {
       "status": "exists",
       "checked_at": "2026-08-11T17:50:39.944Z"
+    },
+    "sperosolutions": {
+      "status": "dead",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "spexi": {
       "status": "exists",
@@ -30116,6 +30356,10 @@
     "unwrap": {
       "status": "exists",
       "checked_at": "2026-08-22T17:43:53.386Z"
+    },
+    "up": {
+      "status": "exists",
+      "checked_at": "2026-08-23T08:46:13.082Z"
     },
     "upandup": {
       "status": "dead",

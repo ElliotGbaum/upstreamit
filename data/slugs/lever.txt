@@ -142,6 +142,7 @@ addx
 addy
 adello
 adeptailabs
+adeptid
 adhawk
 adhoclabs
 adidevelopments
@@ -498,6 +499,7 @@ apruve
 apryse
 apt-deco
 apt-edge
+aptamino
 aptible
 aptiv-connectedservices
 aptiv-mobility
@@ -1224,6 +1226,7 @@ calstart
 calven
 calypsoai
 calyptia
+calyptus
 calyxcontainers
 camber
 cambiumnetworks
@@ -2942,6 +2945,7 @@ fwgsolutions
 fynd
 fyusion
 g2i
+gabbwireless
 gabi
 gagezero
 gaiago.eu
@@ -3008,6 +3012,7 @@ geocomply-2
 geophy
 georgian
 geotab
+germanamerican
 gess
 get-vocal-pbc
 getansa
@@ -3351,6 +3356,7 @@ hawthorne-health
 hayeslocums
 haymaker
 haystack
+haywardtyler
 hazelanalytics
 hcgfunds
 hcvt
@@ -4110,6 +4116,7 @@ klikmedia
 klivvr
 klktn
 kloud
+klscott
 klubworks
 klue
 klym
@@ -4295,6 +4302,7 @@ legalvision
 legend
 legion-farm
 legitimatetech
+lemnis
 lemonade
 lemonaid
 lempire
@@ -4618,6 +4626,7 @@ manomano
 manrepeller
 mantanetwork
 mantisinnovation
+mantra
 manty
 maple-finance
 maplemedia
@@ -4845,6 +4854,7 @@ milliondollarbabyco
 milltownpartners
 milocredit
 milwaukee2020
+mimic
 mimir
 mimsoftware
 mindbloom
@@ -4967,6 +4977,7 @@ moorecolson
 moovweb
 morningbrew
 morningconsult
+moroch
 mos
 mosaic-2
 mosaicbuilders
@@ -5478,6 +5489,7 @@ osaro
 oscer
 osedea
 osmind
+osmoses
 osnational
 oso
 osomprivacy
@@ -5537,6 +5549,7 @@ oyster
 ozonenetworks
 p-1ai
 p3vetpartners
+paceline
 pacerpro
 pachama
 pachyderm
@@ -5581,6 +5594,7 @@ paralleldomain
 parallelsystems
 parallelwireless
 paramedicservices
+parametrix
 paramobility
 parcellab
 parcelvision
@@ -6379,6 +6393,7 @@ repeat
 replate
 replicant
 replicated
+replimune
 replit
 reply
 repreach
@@ -6861,6 +6876,7 @@ shuttl-2
 shyftlabs
 shyftmoving
 shyp
+sibros
 sidebench
 sidecarhealth
 sideinc
@@ -6944,6 +6960,7 @@ skill-lync
 skillcloudhcm
 skillerszone
 skilljar
+skillsalliance
 skillshare
 skima
 skims
