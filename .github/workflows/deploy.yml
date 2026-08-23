@@ -1,0 +1,72 @@
+# Deploy to Fly on every push to main that changes something the image ships.
+#
+# Before this existed, `git push` and `fly deploy` were two separate things you
+# had to remember, and forgetting the second is how the live site ended up two
+# hours ahead of GitHub while the repo sat on stale code. Now the push is the
+# deploy.
+#
+# **The paths filter is the interesting part.** `daily.yml` commits a slug
+# refresh to main every single morning, and `data/` is in `.dockerignore` — it
+# never reaches the image. Deploying on *every* push would therefore rebuild and
+# restart the machine daily to ship a byte-identical container. So this lists
+# what the Dockerfile actually copies, plus the two files that describe the
+# machine itself, and ignores everything else. Adding a `COPY` to the Dockerfile
+# means adding its source here too.
+#
+# The database is not part of a deploy and never has been. It lives on the
+# volume at /data and is uploaded by hand with ./deploy/upload-db.sh; a deploy
+# replaces the code around it and leaves it, the accounts and the saved profiles
+# exactly where they are.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "app/**"
+      - "profiles/**"
+      - "deploy/**"
+      - "package.json"
+      - "package-lock.json"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "fly.toml"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# One deploy at a time. Two overlapping `fly deploy` runs against a single
+# machine race over which image it ends on, and the loser wins about half the
+# time. Queue rather than cancel: a superseded deploy is still a correct
+# intermediate state, and cancelling mid-release is how a machine gets stranded.
+concurrency:
+  group: deploy-fly
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - run: npm ci
+
+      # The gate. Every test here is self-contained — no network, no API key,
+      # no jobs.db — so it costs about a minute and it is the only thing
+      # standing between a bad commit and the public URL.
+      - name: Test
+        run: npm test
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # --remote-only: build on Fly's builder rather than needing Docker here.
+      # The context is ~5 MB after .dockerignore, so the upload is trivial.
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

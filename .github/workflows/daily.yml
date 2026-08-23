@@ -1,15 +1,27 @@
-# Daily job sweep + diff.
+# Daily slug refresh.
 #
 # Written by `node src/schedule.mjs`. GitHub's cron is **UTC only** — there is
 # no timezone field — so this fires at 08:15 UTC year-round and drifts
 # relative to local time across daylight saving. Adjust the minute/hour here if
 # that matters.
 #
-# The 1.0 GB database is deliberately not committed. Each run rebuilds it from
-# the sweep (24 seconds for 4,297 boards) and uploads the report; the cost of
-# that is losing the `job_events` history that makes the diff meaningful, so
-# the run restores the previous database from the last successful run's cache
-# before sweeping.
+# **This syncs the slug store and nothing else.** It used to run the whole
+# pipeline — restore a cached database, verify, sweep, derive, report — which
+# took 11+ minutes a day to build a database that was thrown away at the end of
+# the run. It was thrown away because it never had anywhere to go: the deployed
+# site is fed from `data/jobs.db` on the laptop, by hand, with
+# `./deploy/upload-db.sh`. The only output of this job that outlived it was
+# the slug commit at the bottom, and meanwhile the laptop's own daily run was
+# syncing the same slugs to a different answer and fighting this one for the
+# file every morning.
+#
+# So: this owns `data/slugs/`, and the laptop's launchd job runs with
+# `--skip-sync` and owns `data/jobs.db`. One writer per file. See the header
+# of src/schedule.mjs.
+#
+# No database is needed here at all — `sync-slugs.mjs` only reads upstream
+# company lists and writes JSON — so there is no cache step and nothing to
+# restore.
 name: daily
 
 on:
@@ -21,13 +33,11 @@ permissions:
   contents: write
 
 jobs:
-  sweep:
+  slugs:
     runs-on: ubuntu-latest
-    # A cold Greenhouse sweep measured 32.1 minutes on its own (8,272 boards,
-    # 2.5 GB), so the old 30 was under the cost of a single stage and every
-    # cache-miss run died partway through. Warm runs finish in minutes because
-    # unchanged boards answer 304; this ceiling is sized for the cold one.
-    timeout-minutes: 90
+    # Minutes, not the 90 the full pipeline needed. This is a few dozen HTTP
+    # gets against raw.githubusercontent.com and a handful of JSON writes.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -35,44 +45,27 @@ jobs:
         with:
           node-version: "24"
 
-      # The event log is the whole reason "what's new" works, and it only exists
-      # inside the database. Restoring it means the diff compares against
-      # yesterday rather than against an empty table.
-      - name: Restore the job database
-        uses: actions/cache/restore@v4
-        with:
-          path: data/jobs.db
-          key: jobs-db-${{ github.run_id }}
-          restore-keys: |
-            jobs-db-
-
-      - name: Run the pipeline
-        run: node src/daily.mjs --quiet
-
-      - name: Save the job database
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: data/jobs.db
-          key: jobs-db-${{ github.run_id }}
-
-      - name: Upload the report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: daily-report
-          path: |
-            data/daily-report.md
-            data/derive-report.md
-            data/sync-report.md
-          retention-days: 30
+      - name: Sync the slug store
+        run: node src/sync-slugs.mjs
 
       # Slug stores are small and worth keeping in git — they are the part that
-      # accumulates, and a diff on them shows which sources moved.
+      # accumulates, and a diff on them shows which sources moved. This is the
+      # commit the laptop fast-forwards to before its own sweep.
+      #
+      # `data/sync-state.json` is deliberately not in the add list: it is
+      # gitignored runtime state, so adding it was always a no-op.
       - name: Commit the slug store
         run: |
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
-          git add data/slugs data/sync-state.json data/sync-report.md data/daily-history.jsonl || true
+          git add data/slugs data/sync-report.md || true
           git diff --staged --quiet || git commit -m "daily: slug refresh $(date -u +%F)"
           git push || true
+
+      - name: Upload the sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-report
+          path: data/sync-report.md
+          retention-days: 30

@@ -10,26 +10,40 @@
  *
  * PROJECT.md left the choice of runner open between macOS `launchd`, GitHub
  * Actions in your own repo, and a scheduled cloud agent. This writes the first
- * two — they are files, and files can sit in the repo unused — and installs
- * nothing unless asked. A background job that starts running because a script
- * was executed once is the kind of surprise this project should not have.
+ * two and installs nothing unless asked — a background job that starts running
+ * because a script was executed once is the kind of surprise this project
+ * should not have.
  *
- * The trade-off, since it decides which one you want:
+ * **The two runners are not alternatives any more. They split the work.**
+ * They used to be a pick-one, and for a while both were switched on: each ran
+ * the whole pipeline every morning, each rewrote `data/slugs/` from its own
+ * sync, and the two answers disagreed by a few hundred slugs and ~76,000 lines
+ * of reordering — every day, forever. Neither was wrong; they were just both
+ * doing the same job badly. So each now does the half it is actually good at:
  *
- *   launchd          runs only while this laptop is awake. Zero accounts, zero
- *                    setup, and the 1.0 GB database stays on your disk.
- *   GitHub Actions   runs whether the laptop is on or not, but the database has
- *                    to live somewhere the runner can reach — a 1.0 GB SQLite
- *                    file is past what a repo should carry, so the workflow
- *                    written here rebuilds from the sweep each run and uploads
- *                    the report as an artifact rather than committing the DB.
+ *   GitHub Actions   syncs the slug store and commits it. Nothing else. It has
+ *                    a reliable network — the run that exposed this had the
+ *                    laptop failing every fetch to raw.githubusercontent.com
+ *                    while the runner got all of them, 109 slugs' worth — and
+ *                    it runs whether the laptop is awake or not. Seconds, not
+ *                    the 11+ minutes the full pipeline cost it.
+ *   launchd          sweeps, derives and reports, with `--skip-sync`. It is
+ *                    the only one of the two that maintains `data/jobs.db`,
+ *                    which is the database the deployed site is fed from by
+ *                    `deploy/upload-db.sh`, so this half has to be here. It
+ *                    fast-forwards the repo first so it sweeps the slugs
+ *                    GitHub found this morning rather than last week's.
+ *
+ * The rule that keeps them from fighting: **exactly one writer per file.**
+ * GitHub owns `data/slugs/`; the laptop owns `data/jobs.db`. Turning the sync
+ * back on locally, or the sweep back on in CI, re-creates the conflict.
  *
  * `launchd` misses runs when the machine is asleep rather than queueing them.
  * That is the right behaviour here: the sweep is a full refresh, not an
  * increment, so a missed morning costs nothing but a day of diff granularity.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, chmodSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -39,6 +53,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LABEL = 'com.jobfinder.daily';
 const PLIST_SRC = join(ROOT, 'automation', `${LABEL}.plist`);
 const PLIST_DEST = join(homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
+const WRAPPER = join(ROOT, 'automation', 'daily-local.sh');
 const WORKFLOW = join(ROOT, '.github', 'workflows', 'daily.yml');
 
 function parseArgs(argv) {
@@ -76,9 +91,8 @@ function plist({ hour, minute }) {
   <key>Label</key>            <string>${LABEL}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>${process.execPath}</string>
-    <string>${join(ROOT, 'src', 'daily.mjs')}</string>
-    <string>--quiet</string>
+    <string>/bin/sh</string>
+    <string>${join(ROOT, 'automation', 'daily-local.sh')}</string>
   </array>
   <key>WorkingDirectory</key> <string>${ROOT}</string>
   <key>StartCalendarInterval</key>
@@ -99,21 +113,82 @@ function plist({ hour, minute }) {
 `;
 }
 
+/**
+ * What launchd actually runs.
+ *
+ * A wrapper rather than `node src/daily.mjs` directly, for one reason: the
+ * pipeline has to fast-forward the repo before it sweeps. GitHub Actions owns
+ * `data/slugs/` now (see the header), so without a pull this machine would
+ * sweep whatever slug store it last saw and quietly drift further behind every
+ * morning.
+ *
+ * `--ff-only` is the whole safety argument. It fast-forwards or it fails; it
+ * will not merge, will not rebase, will not touch a file you have edited, and
+ * cannot leave the working tree half-resolved at 08:15 while nobody is looking.
+ * A failure is fine and expected — you have local commits, or the network is
+ * down — so it is logged and stepped over rather than aborting the sweep, which
+ * is the part of the morning that matters.
+ *
+ * `--skip-sync` is the other half of the split: syncing here is what used to
+ * fight with the workflow.
+ *
+ * Both interpolated paths are quoted, and that is not decoration: this project
+ * lives in `~/Job Finder ATS`, so an unquoted `${ROOT}/src/daily.mjs` reaches
+ * node as the three arguments `.../Job`, `Finder` and `ATS/src/daily.mjs`, and
+ * the job fails every morning with a confusing "Cannot find module .../Job".
+ */
+function wrapper() {
+  return `#!/bin/sh
+# Written by \`node src/schedule.mjs\` — edit that, not this.
+#
+# launchd runs this, not node directly, so the repo can be fast-forwarded
+# first. See the header of src/schedule.mjs for why the sync is skipped.
+set -u
+cd "${ROOT}" || exit 1
+
+echo ""
+echo "=== daily $(date '+%Y-%m-%d %H:%M:%S') ==="
+
+# Fast-forward only. Never merges, never rebases, never touches an edited file.
+# Expected to fail whenever there is local work; that is not a reason to skip
+# the sweep, so the failure is noted and the run continues.
+if /usr/bin/git pull --ff-only --quiet 2>&1; then
+  echo "slug store: up to date with origin"
+else
+  echo "slug store: could not fast-forward (local commits, or offline) — sweeping with what is on disk"
+fi
+
+exec "${process.execPath}" "${join(ROOT, 'src', 'daily.mjs')}" --quiet --skip-sync
+`;
+}
+
 function workflow({ hour, minute }) {
   // GitHub cron is UTC with no timezone support, so the comment has to say so
   // or the job silently drifts by an hour twice a year.
-  return `# Daily job sweep + diff.
+  return `# Daily slug refresh.
 #
 # Written by \`node src/schedule.mjs\`. GitHub's cron is **UTC only** — there is
 # no timezone field — so this fires at ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} UTC year-round and drifts
 # relative to local time across daylight saving. Adjust the minute/hour here if
 # that matters.
 #
-# The 1.0 GB database is deliberately not committed. Each run rebuilds it from
-# the sweep (24 seconds for 4,297 boards) and uploads the report; the cost of
-# that is losing the \`job_events\` history that makes the diff meaningful, so
-# the run restores the previous database from the last successful run's cache
-# before sweeping.
+# **This syncs the slug store and nothing else.** It used to run the whole
+# pipeline — restore a cached database, verify, sweep, derive, report — which
+# took 11+ minutes a day to build a database that was thrown away at the end of
+# the run. It was thrown away because it never had anywhere to go: the deployed
+# site is fed from \`data/jobs.db\` on the laptop, by hand, with
+# \`./deploy/upload-db.sh\`. The only output of this job that outlived it was
+# the slug commit at the bottom, and meanwhile the laptop's own daily run was
+# syncing the same slugs to a different answer and fighting this one for the
+# file every morning.
+#
+# So: this owns \`data/slugs/\`, and the laptop's launchd job runs with
+# \`--skip-sync\` and owns \`data/jobs.db\`. One writer per file. See the header
+# of src/schedule.mjs.
+#
+# No database is needed here at all — \`sync-slugs.mjs\` only reads upstream
+# company lists and writes JSON — so there is no cache step and nothing to
+# restore.
 name: daily
 
 on:
@@ -125,13 +200,11 @@ permissions:
   contents: write
 
 jobs:
-  sweep:
+  slugs:
     runs-on: ubuntu-latest
-    # A cold Greenhouse sweep measured 32.1 minutes on its own (8,272 boards,
-    # 2.5 GB), so the old 30 was under the cost of a single stage and every
-    # cache-miss run died partway through. Warm runs finish in minutes because
-    # unchanged boards answer 304; this ceiling is sized for the cold one.
-    timeout-minutes: 90
+    # Minutes, not the 90 the full pipeline needed. This is a few dozen HTTP
+    # gets against raw.githubusercontent.com and a handful of JSON writes.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -139,47 +212,30 @@ jobs:
         with:
           node-version: "24"
 
-      # The event log is the whole reason "what's new" works, and it only exists
-      # inside the database. Restoring it means the diff compares against
-      # yesterday rather than against an empty table.
-      - name: Restore the job database
-        uses: actions/cache/restore@v4
-        with:
-          path: data/jobs.db
-          key: jobs-db-\${{ github.run_id }}
-          restore-keys: |
-            jobs-db-
-
-      - name: Run the pipeline
-        run: node src/daily.mjs --quiet
-
-      - name: Save the job database
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: data/jobs.db
-          key: jobs-db-\${{ github.run_id }}
-
-      - name: Upload the report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: daily-report
-          path: |
-            data/daily-report.md
-            data/derive-report.md
-            data/sync-report.md
-          retention-days: 30
+      - name: Sync the slug store
+        run: node src/sync-slugs.mjs
 
       # Slug stores are small and worth keeping in git — they are the part that
-      # accumulates, and a diff on them shows which sources moved.
+      # accumulates, and a diff on them shows which sources moved. This is the
+      # commit the laptop fast-forwards to before its own sweep.
+      #
+      # \`data/sync-state.json\` is deliberately not in the add list: it is
+      # gitignored runtime state, so adding it was always a no-op.
       - name: Commit the slug store
         run: |
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
-          git add data/slugs data/sync-state.json data/sync-report.md data/daily-history.jsonl || true
+          git add data/slugs data/sync-report.md || true
           git diff --staged --quiet || git commit -m "daily: slug refresh $(date -u +%F)"
           git push || true
+
+      - name: Upload the sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-report
+          path: data/sync-report.md
+          retention-days: 30
 `;
 }
 
@@ -227,10 +283,16 @@ function main() {
   mkdirSync(dirname(PLIST_SRC), { recursive: true });
   mkdirSync(dirname(WORKFLOW), { recursive: true });
   writeFileSync(PLIST_SRC, plist(args));
+  writeFileSync(WRAPPER, wrapper());
+  // The plist hands this to /bin/sh by name, which does not need the execute
+  // bit — but `./automation/daily-local.sh` from a terminal does, and someone
+  // debugging a morning that went wrong will type exactly that.
+  chmodSync(WRAPPER, 0o755);
   writeFileSync(WORKFLOW, workflow(args));
 
   console.log('');
   console.log(`  wrote  ${PLIST_SRC.replace(`${ROOT}/`, '')}      (macOS launchd, ${args.at} local)`);
+  console.log(`  wrote  ${WRAPPER.replace(`${ROOT}/`, '')}           (what launchd runs: pull, then sweep)`);
   console.log(`  wrote  ${WORKFLOW.replace(`${ROOT}/`, '')}   (GitHub Actions, ${args.at} UTC)`);
   console.log('');
 
@@ -249,14 +311,16 @@ function main() {
     return;
   }
 
-  console.log('  Nothing has been scheduled. Pick one:');
+  console.log('  Nothing has been scheduled. These two halves are meant to run together:');
   console.log('');
-  console.log('  macOS, local only — runs when the laptop is awake:');
+  console.log('  1. GitHub Actions — syncs the slug store and commits it, laptop or no laptop:');
+  console.log('      git add .github/workflows/daily.yml && git commit && git push');
+  console.log('');
+  console.log(`  2. macOS launchd — sweeps and reports against your local database, ${args.at} local:`);
   console.log(`      npm run schedule -- --install --at=${args.at}`);
   console.log('');
-  console.log('  GitHub Actions — runs whether the laptop is on or not:');
-  console.log('      git add .github/workflows/daily.yml && git commit && git push');
-  console.log('      (the workflow rebuilds the database each run and uploads the report)');
+  console.log('  Either alone is fine. What is not fine is putting the sync back into the');
+  console.log('  local run: both would then write data/slugs/ and disagree every morning.');
   console.log('');
   console.log('  Or neither — `npm run daily` does the same work on demand.');
   console.log('');
