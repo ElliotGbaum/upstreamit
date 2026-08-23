@@ -15,6 +15,12 @@ config/google-oauth.json
 # git object is a key somebody else can spend.
 config/anthropic.json
 
+# The same key, and any other secret, when kept in a .env instead. Same reason:
+# a key in a git object is a key somebody else can spend. .env.example is the
+# committed copy and holds no values.
+.env
+.env.local
+
 # The scraped jobs database. 4.5 GB on disk and it changes every sweep, so it
 # is never a git object — GitHub rejects any single file over 100 MB anyway.
 # Rebuild it from scratch with: npm run refresh
@@ -22,9 +28,16 @@ data/jobs.db
 data/jobs.db-shm
 data/jobs.db-wal
 
+# The compacted copy ./deploy/upload-db.sh makes on its way to Fly, and the
+# gzip of it (~857 MB). Rebuilt from data/jobs.db on every deploy, so there is
+# nothing here worth keeping — and the .gz is well over GitHub's 100 MB limit.
+data/jobs-deploy.db
+data/jobs-deploy.db.gz
+
 # Runtime state written by the sweeps, not source.
 data/sync-state.json
 data/daily-history.jsonl
+data/daily.log
 progress/state.json
 
 # Node and macOS noise.

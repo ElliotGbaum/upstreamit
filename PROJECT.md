@@ -40,7 +40,7 @@ and no probe yet.
 | 7. Accounts | **Done** — see below |
 | 8. Greenhouse as a second ATS, + the ATS filter | **Done 2026-08-22** — see below |
 | 9. Lever as a third ATS | **Done 2026-08-22** — 71,789 jobs on 2,025 boards; see below |
-| 10. Describe the search in words instead of forty controls | **Done 2026-08-22** — optional, off without an API key; see below |
+| 10. Describe the search in words instead of forty controls | **Done 2026-08-22** — optional, off without an API key, and the one thing that needs an account; see below |
 
 Everything below the sweep line is now measured on the **full corpus** rather than
 the 400-board sample, so where the two disagree the numbers here supersede the
@@ -539,6 +539,13 @@ Two details that would otherwise bite:
 
 The ask: signing up is optional; without one you get the same app; with one you keep
 your filter preferences, star jobs, record that you applied, and build curated lists.
+
+That held exactly until Phase 10, which added the first and so far only thing an
+account is *required* for — "describe your search", because it spends money per
+press. The rule it replaces the old one with is narrower rather than weaker:
+**an account may be required to spend, never to see.** Every job, filter, count,
+description and apply link is still anonymous, and nothing that worked signed out
+before Phase 10 stopped working.
 
 ### The shape of it
 
@@ -1180,7 +1187,8 @@ Design rules, each now backed by a measurement:
 
 Kept filters, starred jobs, application status, curated lists. Anonymous use unchanged;
 `data/users.db` separate from the committed corpus; Google sign-in built and dormant
-until configured. Written up above.
+until configured. Written up above. Phase 10 later made one route — and only one —
+require a session; see the rule under Phase 7 above.
 
 ### Then: Greenhouse and Lever
 
@@ -1423,23 +1431,56 @@ would narrow the search invisibly.
 
 ### What it costs, and what it does not
 
-One API call per press — about 6k input tokens and 500 out, well under a cent on
-`claude-opus-5`. It is the project's only npm dependency and its only network
+One API call per press. Measured on the first live run: 9,600 input tokens and
+395 out, which is **about 6c** on `claude-opus-5` — an order of magnitude more
+than the "well under a cent" this section estimated before anyone had run it,
+and the correction is the reason the cap moved from 30 to 5. The input is almost
+all fixed cost: the tool schema and the 200-metro list are ~19 KB and the
+person's sentence is a rounding error against them, so the price per press is
+flat no matter how much they type. That also makes it an obvious candidate for
+prompt caching, which is not done yet. It is the project's only npm dependency and its only network
 call at query time, and with no key configured the server never loads the SDK:
 `/api/meta` reports `ai.enabled: false`, the panel says which environment
 variable to set, and every other route behaves exactly as it did. Deleting
 `config/anthropic.json` and unsetting `ANTHROPIC_API_KEY` is the whole uninstall,
 the same property accounts have.
 
-The route is gated the way shared profile writes are, and for a sharper reason:
-it spends money on somebody's key. On a loopback bind there is nobody else on the
-socket. Bound to `--host=0.0.0.0` it requires a session, so a stranger who can
-reach the port cannot run up a bill on it.
+`/api/meta` answers three questions rather than one, because the panel has three
+different things to say and a single boolean is how a control ends up dead with
+no explanation. `enabled` is "is there a key at all" — an operator's question,
+answered by `setup`. `usable` is "may *this* visitor press it". `blocked` is the
+sentence they get when the answer is no, and it is ordered most-fundamental
+first: a server with no key reports the key rather than telling a visitor to sign
+in to something that would not work if they did. Under `--no-accounts` it says
+that instead, since there is no sign-in screen to send anybody to — and the page
+does not draw a Sign in button that opens no door.
 
-That gate is necessary and was not sufficient, which the deployment work made
-obvious: sign-up is open, so "requires an account" means "requires thirty
-seconds". There is a cap as well — 30 calls an hour, per account where there is
-one and per socket where there is not. Two details in it are the whole design.
+**This is the one route in the project that requires an account**, and the only
+exception to "signing in is optional and subtractive of nothing".
+
+It was first gated the way shared profile writes are: anonymous on a loopback
+bind, session required once bound to `--host=0.0.0.0`. That is the right rule for
+a profile write, where the question is whether a stranger can reach the socket,
+and the wrong one here, where the question is who is pressing the button. The
+bind address is a fact about the network; what this route needs is a fact about
+the person. It protected the deployed copy and left the laptop wide open, and
+those are the same route with the same cost per press.
+
+So it requires a session, always. The argument for it is not that describing a
+search is precious — it is that an anonymous caller cannot be capped, cannot be
+told they have reached their limit, and cannot be told apart from a script. Every
+mechanism below this depends on knowing who is asking.
+
+The line it draws is narrower than "accounts now matter": **an account may be
+required to spend, never to see.** Every job, filter, count, description and
+apply link is still anonymous, and the search this route produces is an ordinary
+profile that anyone can then use, save, or run from the CLI.
+
+There is a cap as well — 5 calls an hour per account, a number you can actually
+reach. It was 30, which is comfortably more than anyone uses in a sitting and
+therefore not really a cap at all; the thing it is sized against is an
+unattended bill on somebody else's key, and one line in `.env` undoes the
+inconvenience while nothing undoes the bill. Two details in it are the whole design.
 It is taken **inside `interpret`, at the line that spends**, after every
 pre-flight check has had its chance to throw, so nothing that never reached the
 API is charged for; and the failures that provably cost nothing — a rejected

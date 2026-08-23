@@ -12,13 +12,20 @@
  * a page reading `data/jobs.db` needs no hosting and no account, and the profile
  * it posts is the same portable JSON document the CLI and the daily run read.
  *
- * **Signing in is optional and subtractive of nothing.** Every route below
- * behaves identically with no session: the corpus, the filters, the counts, the
- * descriptions and the apply links are the app, and they are anonymous. What an
- * account adds is *memory* — your filters when you come back, the jobs you
- * starred, and what you did about them — and it is all additive, served from a
- * second database (`data/users.db`) by `src/lib/users/`. Delete that file and
- * this is the Phase 6 server again.
+ * **Signing in is optional, and one route is the exception.** Every route below
+ * but one behaves identically with no session: the corpus, the filters, the
+ * counts, the descriptions and the apply links are the app, and they are
+ * anonymous. What an account adds is *memory* — your filters when you come
+ * back, the jobs you starred, and what you did about them — and that part is
+ * all additive, served from a second database (`data/users.db`) by
+ * `src/lib/users/`. Delete that file and this is the Phase 6 server again.
+ *
+ * The exception is `POST /api/interpret`, which requires one. It is the only
+ * route here that spends real money — an API call on somebody's key, every time
+ * it is pressed — and that makes "who is asking" a question that has to have an
+ * answer: an anonymous caller cannot be capped, cannot be told they have hit
+ * their limit, and cannot be told apart from a script. Every *other* thing an
+ * account touches stays additive, including the search that route produces.
  *
  * **Binds to 127.0.0.1 unless told otherwise.** The database holds a full copy
  * of 61,213 job descriptions and the API will happily serve any of them; that
@@ -41,6 +48,9 @@
  * already there, sign out and you get the starter profile, which is nobody's.
  */
 
+// First, for the side effect: `.env` into the environment before anything
+// below reads a key out of it. See lib/env.mjs — a real variable wins.
+import './lib/env.mjs';
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink, mkdir } from 'node:fs/promises';
 import { join, dirname, extname, normalize } from 'node:path';

@@ -38,7 +38,12 @@ primary_region = "ewr"   # Newark. `fly platform regions` lists the rest.
   source = "jobdata"
   destination = "/data"
 
+# 4 GB, and it has to be shared-cpu-2x to get there: Fly caps shared-cpu-1x at
+# 2 GB, and 2 GB is not enough. The index retains ~427 MB, but *building* it
+# holds the raw SQLite rows and the built objects alive at the same time, which
+# peaked at ~1.5 GB RSS in testing and OOM-killed the 2 GB machine on first
+# boot ("Ineffective mark-compacts near heap limit").
 [[vm]]
   cpu_kind = "shared"
-  cpus = 1
-  memory = "2gb"   # index is ~427 MB retained; this leaves comfortable room.
+  cpus = 2
+  memory = "4gb"

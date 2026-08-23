@@ -193,17 +193,20 @@ default, and I would leave it that way at first. To turn it on:
 fly secrets set ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Before you do: that endpoint spends *your* API credits, and while it correctly
-refuses anonymous requests, anyone who signs up for an account on your site can
-then use it. There is now a cap — **30 calls per hour per account**, and per
-socket for anyone without one, set with `ANTHROPIC_CALLS_PER_HOUR`. At roughly a
-third of a cent a call that bounds one account to about a dime an hour. It is a
-cap on a runaway, not a budget: set a spend limit in the Anthropic console as
-well, because the cap resets when the machine restarts and it cannot count
-accounts somebody has not made yet.
+Before you do: that endpoint spends *your* API credits. It is the one route on
+the site that **requires an account** — signed out, the panel says so and offers
+the sign-in button, and the rest of the site is untouched — and it is capped at
+**5 calls per hour per account** (`ANTHROPIC_CALLS_PER_HOUR`). A call measures
+9,600 input tokens and ~400 output — about **6c** on `claude-opus-5` — so the
+cap bounds one account to roughly 29c an hour, worst case.
+
+Sign-up is open, though, so "requires an account" means "requires thirty
+seconds". The cap is a cap on a runaway, not a budget: it resets when the machine
+restarts, and it cannot count accounts nobody has made yet. Set a spend limit in
+the Anthropic console as well — that is the thing that is actually a budget.
 
 ```
-fly secrets set ANTHROPIC_CALLS_PER_HOUR=10   # optional; the default is 30
+fly secrets set ANTHROPIC_CALLS_PER_HOUR=10   # optional; the default is 5
 ```
 
 **Google sign-in is off** in production. `config/google-oauth.json` is

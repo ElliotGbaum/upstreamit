@@ -38,9 +38,11 @@ import {
   filterTool,
   resolvePlaces,
   vocabulary,
+  aiConfig,
   aiMeta,
   MAX_TEXT,
 } from './lib/interpret.mjs';
+import { DEFAULT_MODEL } from './lib/interpret.mjs';
 import { UNKNOWNABLE } from './lib/filter/profile.mjs';
 import { JOB_FUNCTIONS, WORKPLACE_TYPES, SENIORITY_LEVELS, EMPLOYMENT_TYPES } from './lib/schema.mjs';
 import { SKILL_TERMS } from './lib/derive/signals.mjs';
@@ -274,7 +276,7 @@ const db = corpus();
 
 // ------------------------------------------------------------------ meta --
 {
-  const meta = aiMeta();
+  const meta = aiMeta({ accounts: true, signedIn: true });
   check('meta: the text cap is published', meta.max_text, MAX_TEXT);
   // Whether a key happens to be set on this machine is not the test; that the
   // page is told exactly one of "here is the model" or "here is how to turn it
@@ -282,6 +284,49 @@ const db = corpus();
   check('meta: setup instructions appear exactly when it is off', meta.enabled === (meta.setup === null), true);
   check('meta: a model is named exactly when it is on', meta.enabled === (meta.model !== null), true);
   check('meta: the key itself is never published', Object.keys(meta).includes('apiKey'), false);
+  check('meta: and it says out loud that it needs an account', meta.requires_account, true);
+}
+
+// ------------------------------------------------- who may use it, and why --
+// This is the one feature in the project behind an account, so the page has to
+// be able to tell three different "no"s apart: nobody can use this (no key),
+// nobody here can use this (accounts off), and *you* cannot use this yet (not
+// signed in). Collapsing them into one boolean is how a control ends up dead
+// with no explanation — which is the failure this whole block exists to prevent.
+{
+  const keyed = aiMeta({ accounts: true, signedIn: true }).enabled;
+
+  const state = (opts) => {
+    const m = aiMeta(opts);
+    return { usable: m.usable, blocked: m.blocked === null ? null : 'said something' };
+  };
+
+  check('gate: signed in with accounts on is the only usable state',
+    state({ accounts: true, signedIn: true }), { usable: keyed, blocked: null });
+  check('gate: signed out is not usable', state({ accounts: true, signedIn: false }).usable, false);
+  check('gate: accounts off is not usable', state({ accounts: false, signedIn: true }).usable, false);
+  check('gate: and the default — no arguments at all — is not usable',
+    aiMeta().usable, false);
+
+  if (keyed) {
+    // Only assertable on a machine that has a key configured; without one the
+    // key is the answer to every question and `blocked` is correctly silent.
+    check('gate: signed out is told what to do about it',
+      aiMeta({ accounts: true, signedIn: false }).blocked.includes('account'), true);
+    check('gate: and told the rest of the app is unaffected',
+      aiMeta({ accounts: true, signedIn: false }).blocked.includes('signed out'), true);
+    check('gate: accounts-off names the reason it cannot be fixed by signing in',
+      aiMeta({ accounts: false, signedIn: false }).blocked.includes('switched off'), true);
+  } else {
+    // No key on this machine: the operator's problem outranks the visitor's, so
+    // `setup` is the sentence and `blocked` stays quiet rather than sending
+    // somebody to sign in to a feature that would not work if they did.
+    check('gate: with no key, the key is the answer and not "sign in"',
+      [aiMeta({ accounts: true, signedIn: false }).blocked, aiMeta({ accounts: true, signedIn: true }).blocked],
+      [null, null]);
+    check('gate: and the setup line is what is published instead',
+      aiMeta({ accounts: true, signedIn: false }).setup.includes('ANTHROPIC_API_KEY'), true);
+  }
 }
 
 // ---------------------------------------------------------------- errors --
@@ -341,6 +386,12 @@ const db = corpus();
   check('rate: so is everything up to the cap', spend('b@example.com', CALLS_PER_HOUR), null);
   check('rate: the one after it is not', typeof spend('b@example.com', CALLS_PER_HOUR + 1), 'string');
   check('rate: and the refusal says when', spend('b@example.com', CALLS_PER_HOUR + 1).includes('free in about'), true);
+  // Both counts pluralise. The cap is configurable, so somebody will set it to
+  // 1, and "1 searches" only ever shows up at a setting nobody tests with.
+  check('rate: the message reads correctly at the default',
+    spend('p@example.com', CALLS_PER_HOUR + 1).includes(CALLS_PER_HOUR === 1 ? '1 search described' : `${CALLS_PER_HOUR} searches described`), true);
+  check('rate: no "1 searches" and no "searchses" at any setting',
+    /1 searches|searchses|\b0 minutes\b/.test(spend('q@example.com', CALLS_PER_HOUR + 1)), false);
   // The point of keying it per caller: one person's runaway is not everybody's.
   check('rate: a different caller has their own budget', rateLimit('c@example.com', t0), null);
   // A sliding window, not a bucket that never drains.
@@ -364,6 +415,53 @@ const db = corpus();
   // And the refund actually restores the call.
   spend('d@example.com', CALLS_PER_HOUR, t0);
   check('refund: at the cap, one back is one available', (refund('d@example.com'), rateLimit('d@example.com', t0)), null);
+}
+
+// ------------------------------------------------------------ blank config --
+// `.env` ships as a template — `ANTHROPIC_API_KEY=` with nothing after it and
+// two commented lines under it — and `process.loadEnvFile` sets a blank name to
+// the empty string rather than leaving it unset. Every one of these would have
+// been wrong under a bare `??`, and the last is the one that matters: `Number('')`
+// is `0`, and `0` is the value that turns the spending cap OFF.
+{
+  const saved = {
+    key: process.env.ANTHROPIC_API_KEY,
+    model: process.env.ANTHROPIC_MODEL,
+    cap: process.env.ANTHROPIC_CALLS_PER_HOUR,
+  };
+  const set = (env) => {
+    for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_MODEL']) delete process.env[k];
+    Object.assign(process.env, env);
+    return aiConfig();
+  };
+
+  check('blank: an empty key is not a key', set({ ANTHROPIC_API_KEY: '' }).enabled, false);
+  check('blank: nor is whitespace', set({ ANTHROPIC_API_KEY: '   ' }).enabled, false);
+  check('blank: a real one is', set({ ANTHROPIC_API_KEY: 'sk-ant-test' }).enabled, true);
+  check('blank: and is trimmed', set({ ANTHROPIC_API_KEY: '  sk-ant-test\n' }).apiKey, 'sk-ant-test');
+  check('blank: an empty model falls back to the default',
+    set({ ANTHROPIC_API_KEY: 'sk-ant-test', ANTHROPIC_MODEL: '' }).model, DEFAULT_MODEL);
+  check('blank: a real model override is honoured',
+    set({ ANTHROPIC_API_KEY: 'sk-ant-test', ANTHROPIC_MODEL: 'claude-sonnet-5' }).model, 'claude-sonnet-5');
+
+  // The cap is read at module load, so this one has to re-import to see a
+  // different environment. Worth the awkwardness: it is the assertion that a
+  // blank line in a config file cannot silently uncap the route that spends.
+  const capWith = async (value) => {
+    if (value === null) delete process.env.ANTHROPIC_CALLS_PER_HOUR;
+    else process.env.ANTHROPIC_CALLS_PER_HOUR = value;
+    const fresh = await import(`./lib/interpret.mjs?blank=${encodeURIComponent(String(value))}`);
+    return fresh.CALLS_PER_HOUR;
+  };
+  check('blank: an empty cap is the default, NOT zero', await capWith(''), 5);
+  check('blank: and so is nonsense', await capWith('lots'), 5);
+  check('blank: an explicit 0 still turns the cap off', await capWith('0'), 0);
+  check('blank: a real number is honoured', await capWith('5'), 5);
+
+  for (const [name, value] of [['ANTHROPIC_API_KEY', saved.key], ['ANTHROPIC_MODEL', saved.model], ['ANTHROPIC_CALLS_PER_HOUR', saved.cap]]) {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
 }
 
 // --------------------------------------------------------------------- done --
