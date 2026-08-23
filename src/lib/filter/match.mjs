@@ -75,7 +75,7 @@ export function hits(foldedText, compiled) {
  * doesn't leaves the gate inactive rather than guessing (see `matchDescription`).
  */
 export function compileProfile(profile, index = {}) {
-  return {
+  const c = {
     descriptionIds: index.descriptionIds ?? null,
     missingDescriptions: index.missingDescriptions ?? null,
     title: compileTerms(profile.title_keywords),
@@ -102,6 +102,16 @@ export function compileProfile(profile, index = {}) {
     companies: new Set(profile.companies.map((c) => c.toLowerCase())),
     ats: new Set(profile.ats),
   };
+
+  // The criteria this profile actually asked about, decided once here rather
+  // than re-decided inside every match function 337,000 times. See `CRITERIA`.
+  //
+  // Deferred to the bottom because each `asked` reads the compiled sets above
+  // it — and it has to be non-enumerable-by-accident-proof only in the sense
+  // that nothing downstream iterates `c`; every reader names its field.
+  c.active = CRITERIA.filter((criterion) => criterion.asked(profile, c));
+  c.activeKeys = c.active.map((criterion) => criterion.key);
+  return c;
 }
 
 // ---------------------------------------------------------------- criteria --
@@ -558,27 +568,47 @@ export function matchTitle(job, profile, c) {
  * is the same question as "how many jobs fail on nothing except `metro`", and
  * that is a set operation over this list rather than six near-duplicate queries.
  */
+/**
+ * Every criterion, in one table.
+ *
+ * Each row carries its `test` and, beside it, the question **"did the profile
+ * ask this at all?"** — `asked`. Every `test` above opens with a guard that
+ * returns `MATCH` when its criterion is unconfigured, and `asked` is that same
+ * guard, negated, lifted out of the per-job loop. They are written next to each
+ * other so the pair cannot drift: change a guard, change the line below it.
+ *
+ * That lifting is the difference between a query that runs and one that hangs.
+ * A profile configures a handful of these; the other fifteen answer `MATCH` for
+ * every job in the corpus, and the loop was calling them anyway — twenty calls
+ * and a twenty-key object per job, 6.7M calls on an unfiltered search, all of
+ * them to be told nothing. `compileProfile` now keeps only the rows a profile
+ * actually asked for, and the unfiltered case does no per-criterion work at all.
+ */
 export const CRITERIA = [
-  { key: 'ats', test: matchAts },
-  { key: 'description', test: matchDescription },
-  { key: 'metro', test: matchMetro },
-  { key: 'workplace', test: matchWorkplace },
-  { key: 'experience', test: matchExperience },
-  { key: 'salary', test: matchSalary },
-  { key: 'employment_type', test: matchEmploymentType },
-  { key: 'posted', test: matchPosted },
-  { key: 'job_function', test: matchJobFunction },
-  { key: 'skills', test: matchSkills },
-  { key: 'company', test: matchCompany },
-  { key: 'company_size', test: matchCompanySize },
-  { key: 'remote_scope', test: matchRemoteScope },
-  { key: 'pay_period', test: matchPayPeriod },
-  { key: 'currency', test: matchCurrency },
-  { key: 'equity', test: matchEquity },
-  { key: 'salary_source', test: matchSalarySource },
-  { key: 'visa', test: matchVisa },
-  { key: 'clearance', test: matchClearance },
-  { key: 'degree', test: matchDegree },
+  { key: 'ats', test: matchAts, asked: (p, c) => c.ats.size > 0 },
+  { key: 'description', test: matchDescription, asked: (p) => p.description_keywords.length > 0 },
+  { key: 'metro', test: matchMetro, asked: (p, c) => c.metros.size > 0 || c.countries.size > 0 },
+  { key: 'workplace', test: matchWorkplace, asked: (p, c) => c.workplace.size > 0 },
+  // `c.seniority` is null exactly when neither a band nor a years bound was
+  // given — see `allowedSeniority`, which folds the years into the band set.
+  { key: 'experience', test: matchExperience, asked: (p, c) => Boolean(c.seniority) },
+  { key: 'salary', test: matchSalary, asked: (p) => p.salary_min != null || p.salary_max != null },
+  { key: 'employment_type', test: matchEmploymentType, asked: (p, c) => c.employmentType.size > 0 },
+  { key: 'posted', test: matchPosted, asked: (p) => p.posted_within_days != null },
+  { key: 'job_function', test: matchJobFunction, asked: (p, c) => c.job_functions.size > 0 },
+  // Both halves: `matchSkills` answers the exclusions before it checks whether
+  // anything was asked for, so a profile with only exclusions is still active.
+  { key: 'skills', test: matchSkills, asked: (p, c) => c.skills.size > 0 || c.excludeSkills.size > 0 },
+  { key: 'company', test: matchCompany, asked: (p, c) => c.companies.size > 0 },
+  { key: 'company_size', test: matchCompanySize, asked: (p, c) => c.companySize.size > 0 },
+  { key: 'remote_scope', test: matchRemoteScope, asked: (p, c) => c.remoteScope.size > 0 },
+  { key: 'pay_period', test: matchPayPeriod, asked: (p, c) => c.payPeriod.size > 0 },
+  { key: 'currency', test: matchCurrency, asked: (p, c) => c.currencies.size > 0 },
+  { key: 'equity', test: matchEquity, asked: (p) => Boolean(p.requires_equity) },
+  { key: 'salary_source', test: matchSalarySource, asked: (p) => Boolean(p.salary_stated_only) },
+  { key: 'visa', test: matchVisa, asked: (p) => p.requires_visa_sponsorship === true || Boolean(p.exclude_visa_refusal) },
+  { key: 'clearance', test: matchClearance, asked: (p) => Boolean(p.exclude_clearance) },
+  { key: 'degree', test: matchDegree, asked: (p, c) => c.degree.size > 0 },
 ];
 
 /** The criterion keys, in table order. Hoisted so the hot loops never rebuild it. */
@@ -594,9 +624,89 @@ export function evaluate(job, profile, c) {
   const titleHits = matchTitle(job, profile, c);
   if (titleHits === null) return null;
 
+  // Only the criteria the profile asked about. An unasked one is `MATCH` for
+  // every job by construction (that is what `asked` encodes), and leaving it
+  // out of the map is not a missing answer: `failedKeys` and `classify` both
+  // already skip `undefined`, and they are handed the same key list. A profile
+  // that asks nothing therefore allocates one empty object per job instead of a
+  // twenty-key one, which is most of what the unfiltered scan used to cost.
+  const active = c.active ?? CRITERIA;
   const verdicts = {};
-  for (const { key, test } of CRITERIA) verdicts[key] = test(job, profile, c);
+  for (const { key, test } of active) verdicts[key] = test(job, profile, c);
   return { titleHits, verdicts };
+}
+
+/**
+ * The whole per-job decision in one pass, and the only version of it the scan
+ * runs.
+ *
+ * `evaluate`, `failedKeys` and `classify` below compute the same three answers
+ * in three readable steps, and they remain the reference — `filter-test.mjs`
+ * asserts this function agrees with them on every criterion and every policy,
+ * so the fused copy cannot drift from the plain one. What the fused copy can do
+ * is **stop early**, and that is the point:
+ *
+ *   two failures and the job is finished. It is excluded whatever the
+ *   remaining criteria say, and it is excluded from every facet too, because a
+ *   leave-one-out count only ever counts a job whose *only* obstacle is the
+ *   dimension being counted. The third criterion's answer cannot change the
+ *   outcome and neither can the twentieth, so they are not asked.
+ *
+ * On a filtered search most of the corpus fails early and is dropped after two
+ * or three tests instead of twenty.
+ *
+ * Results are written into the caller's `out` object rather than returned in a
+ * fresh one: this runs once per job in the corpus, and an object per job is the
+ * allocation that shows up as a GC pause. Returns false when the title gate
+ * ruled the job out, in which case `out` is untouched.
+ *
+ * @param {object} out  filled with `titleHits`, `failures`, `failedKey`
+ *   (the single failing criterion, or null when there is not exactly one),
+ *   `bucket` ('in' | 'aside', or null when the job failed), and `unknownOn`
+ *   (the criteria this job is silent on, or null — only meaningful when it
+ *   passed, which is the only case anything reads it).
+ */
+export function screen(job, profile, c, out) {
+  const titleHits = matchTitle(job, profile, c);
+  if (titleHits === null) return false;
+
+  const unknowns = profile.unknowns;
+  const active = c.active ?? CRITERIA;
+  let failures = 0;
+  let failedKey = null;
+  let separate = false;
+  let unknownOn = null;
+
+  for (let i = 0; i < active.length; i++) {
+    const criterion = active[i];
+    const verdict = criterion.test(job, profile, c);
+    if (verdict === MATCH) continue;
+
+    if (verdict === NO) {
+      failedKey = criterion.key;
+      if (++failures > 1) break;
+      continue;
+    }
+
+    // UNKNOWN, and the profile's policy decides what that costs.
+    const policy = unknowns[criterion.key] ?? 'include';
+    if (policy === 'exclude') {
+      failedKey = criterion.key;
+      if (++failures > 1) break;
+      continue;
+    }
+    if (policy === 'separate') separate = true;
+    (unknownOn ??= []).push(criterion.key);
+  }
+
+  out.titleHits = titleHits;
+  out.failures = failures;
+  // Exactly one, or nothing: `failedKey` still holds the second failure after an
+  // early break, and a job with two of them is one for no facet to count.
+  out.failedKey = failures === 1 ? failedKey : null;
+  out.bucket = failures ? null : separate ? 'aside' : 'in';
+  out.unknownOn = unknownOn;
+  return true;
 }
 
 /**
@@ -605,13 +715,13 @@ export function evaluate(job, profile, c) {
  * Empty means it belongs in the results (or the aside list). Exactly one entry
  * means it is one relaxed criterion away, which is what a facet count is for.
  */
-export function failedKeys(verdicts, unknowns) {
+export function failedKeys(verdicts, unknowns, keys = CRITERIA_KEYS) {
   const failed = [];
   // Over `CRITERIA_KEYS` rather than `Object.entries(verdicts)`: this runs once
   // per job that clears the title gate, and entries allocated a twenty-element
   // array of two-element arrays each time -- 1.2M throwaway arrays per query on
   // the current corpus, and the GC bill to go with them.
-  for (const key of CRITERIA_KEYS) {
+  for (const key of keys) {
     const verdict = verdicts[key];
     if (verdict === undefined || verdict === MATCH) continue;
     if (verdict === NO) failed.push(key);
@@ -634,10 +744,10 @@ export function failedKeys(verdicts, unknowns) {
  * on at least one separate criterion. Without that last clause the aside list
  * would be a copy of the result list.
  */
-export function classify(verdicts, unknowns) {
+export function classify(verdicts, unknowns, keys = CRITERIA_KEYS) {
   let anySeparateUnknown = false;
 
-  for (const key of CRITERIA_KEYS) {
+  for (const key of keys) {
     const verdict = verdicts[key];
     if (verdict === undefined || verdict === MATCH) continue;
     const policy = unknowns[key] ?? 'include';

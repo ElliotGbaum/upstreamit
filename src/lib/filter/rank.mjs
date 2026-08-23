@@ -128,8 +128,11 @@ export function scoreJob(job, profile, { titleHits = [], descHits = [], textHit 
     quality: (job.quality ?? 0) * w.quality,
   };
 
-  let total = 0;
-  for (const value of Object.values(parts)) total += value;
+  // Summed by name rather than through `Object.values`, which allocated a
+  // seven-element array for every scored row — one per job on an unfiltered
+  // search, and the ranking pass runs over every candidate the scan kept.
+  const total =
+    parts.text + parts.title + parts.description + parts.recency + parts.salary + parts.years + parts.quality;
   return { score: Math.round(total * 100) / 100, parts };
 }
 
@@ -236,8 +239,74 @@ const SORTERS = {
     ) || b.score - a.score,
 };
 
+/**
+ * The full comparator for a named sort: the sort's own rule, then the score,
+ * then `tiebreak`. Total — `tiebreak` ends on the job id, which is unique — so
+ * there is exactly one correct order and "the best k rows" is unambiguous.
+ */
+function comparatorFor(sort) {
+  const compare = SORTERS[sort] ?? SORTERS.relevance;
+  return (a, b) => compare(a, b) || tiebreak(a, b);
+}
+
 /** Sort in place under one of `SORTS`. An unknown name falls back to the score. */
 export function sortRows(rows, sort = 'relevance') {
-  const compare = SORTERS[sort] ?? SORTERS.relevance;
-  return rows.sort((a, b) => compare(a, b) || tiebreak(a, b));
+  return rows.sort(comparatorFor(sort));
+}
+
+/**
+ * The best `k` rows, in order — without putting the other 337,000 in order too.
+ *
+ * A page of results is 200 rows and the corpus is a third of a million, so an
+ * unfiltered search was spending a third of its time sorting rows that no
+ * request would ever read. This keeps a max-heap of the best `k` seen so far,
+ * worst at the root, so the common case — a row that does not make the page —
+ * costs exactly one comparison and no writes. `k >= rows.length` falls through
+ * to the ordinary sort, which is both the correct answer and the faster one.
+ *
+ * The result is identical to `sortRows(rows, sort).slice(0, k)`, and identical
+ * rather than merely equivalent: `comparatorFor` is a total order, so there is
+ * no set of tied rows for the two to disagree about.
+ */
+export function topRows(rows, sort = 'relevance', k = Infinity) {
+  const compare = comparatorFor(sort);
+  if (!(k > 0)) return [];
+  if (!Number.isFinite(k) || k >= rows.length) return rows.sort(compare);
+
+  const heap = []; // a max-heap under `compare`: heap[0] is the worst kept row
+  const siftUp = (i) => {
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (compare(heap[i], heap[parent]) <= 0) break;
+      const swap = heap[parent];
+      heap[parent] = heap[i];
+      heap[i] = swap;
+      i = parent;
+    }
+  };
+  const siftDown = (i) => {
+    for (;;) {
+      const left = i * 2 + 1;
+      const right = left + 1;
+      let worst = i;
+      if (left < heap.length && compare(heap[left], heap[worst]) > 0) worst = left;
+      if (right < heap.length && compare(heap[right], heap[worst]) > 0) worst = right;
+      if (worst === i) break;
+      const swap = heap[worst];
+      heap[worst] = heap[i];
+      heap[i] = swap;
+      i = worst;
+    }
+  };
+
+  for (const row of rows) {
+    if (heap.length < k) {
+      heap.push(row);
+      siftUp(heap.length - 1);
+    } else if (compare(row, heap[0]) < 0) {
+      heap[0] = row;
+      siftDown(0);
+    }
+  }
+  return heap.sort(compare);
 }

@@ -36,6 +36,7 @@ import {
   matchTitle,
   matchDescription,
   evaluate,
+  screen,
   classify,
   failedKeys,
   hits,
@@ -52,7 +53,7 @@ import {
   matchAts,
 } from './lib/filter/match.mjs';
 import { scoreJob, sortByScore, sortRows, salaryLabel } from './lib/filter/rank.mjs';
-import { ageBandsFor, AGE_BANDS, salaryLadder, SALARY_BANDS } from './lib/filter/index.mjs';
+import { ageBandsFor, AGE_BANDS, salaryLadder, SALARY_BANDS, textQuery } from './lib/filter/index.mjs';
 import { companySizeBand } from './lib/schema.mjs';
 import { fold } from './lib/derive/text.mjs';
 
@@ -535,6 +536,95 @@ check(
   check('evaluate: the title gate short-circuits', evaluate(job({ title: 'Chef de Partie' }), p, c), null);
 }
 
+// ------------------------------------------------------------------ screen --
+//
+// `screen` is the fused form the corpus scan actually runs: one pass that stops
+// asking as soon as two criteria have failed. `evaluate` + `failedKeys` +
+// `classify` are the plain three-step version, and they are what every check
+// above pins down. This block is the bridge between them — it asserts the fast
+// path answers exactly what the readable path answers, across every criterion,
+// every policy and both sides of the early-exit, so an edit to one that forgets
+// the other fails here rather than silently changing what the site returns.
+
+{
+  const JOBS = [
+    job(),
+    job({ metros: ['sf-bay'], countries: ['us'] }),
+    job({ metros: [], countries: [] }),
+    job({ workplace: 'remote', remote_scope: 'worldwide', metros: [] }),
+    job({ workplace: 'unknown' }),
+    job({ salary_known: 1, salary_min: 90_000, salary_max: 140_000, salary_src: 'as-stated', pay_period: 'YEAR', currency: 'USD' }),
+    job({ seniority: 'senior', min_years: 8, max_years: 12, years_known: 1 }),
+    job({ seniority: 'entry', min_years: 0, max_years: 1, years_known: 1, age_days: 2 }),
+    job({ employment_type: null, job_function: 'other', age_days: null }),
+    job({ skills: ['python', 'sql'], degree: 'bachelors', visa: 1, clearance: 1, equity: 1 }),
+    job({ title: 'Chef de Partie', title_norm: 'chef de partie' }),
+    job({ ats: 'lever', company_size: '501-2000', currency: 'EUR', pay_period: 'HOUR' }),
+  ];
+
+  const PROFILES = [
+    {},
+    { metros: ['nyc'] },
+    { metros: ['nyc'], workplace: ['onsite'] },
+    { title_keywords: ['implementation'] },
+    { exclude_title_keywords: ['chef'] },
+    { salary_min: 100_000, seniority: ['mid', 'senior'] },
+    { salary_min: 100_000, unknowns: { salary: 'exclude' } },
+    { salary_min: 100_000, unknowns: { salary: 'separate' } },
+    { metros: ['sf-bay'], salary_min: 200_000, workplace: ['remote'], unknowns: { metro: 'separate', salary: 'separate', workplace: 'exclude' } },
+    { skills: ['python'], skills_match: 'all', degree: ['bachelors'] },
+    { exclude_clearance: true, requires_equity: true, requires_visa_sponsorship: true },
+    { posted_within_days: 7, company_size: ['6-20'], employment_type: ['FullTime'] },
+    { ats: ['lever'], currencies: ['EUR'], pay_period: ['HOUR'], job_functions: ['engineering'] },
+    { max_years_experience: 2, salary_stated_only: true, exclude_skills: ['php'] },
+    { metros: ['nyc'], workplace: ['remote'], salary_min: 300_000, posted_within_days: 1, unknowns: { metro: 'exclude', workplace: 'exclude', salary: 'exclude', posted: 'exclude' } },
+  ];
+
+  const out = {};
+  let agree = 0;
+  const disagree = [];
+
+  for (const input of PROFILES) {
+    const [p, c] = withProfile(input);
+    for (const row of JOBS) {
+      const plain = evaluate(row, p, c);
+      const gated = screen(row, p, c, out);
+
+      // The title gate, first and identically.
+      if (!plain || !gated) {
+        if (Boolean(plain) === Boolean(gated)) agree++;
+        else disagree.push(`title gate disagrees on ${row.title} / ${JSON.stringify(input)}`);
+        continue;
+      }
+
+      const failed = failedKeys(plain.verdicts, p.unknowns, c.activeKeys);
+      const bucket = classify(plain.verdicts, p.unknowns, c.activeKeys);
+      const unknownOn = Object.entries(plain.verdicts).filter(([, v]) => v === 'unknown').map(([k]) => k);
+
+      // Only what the scan reads is compared, because only that has to match:
+      // past two failures `screen` stops early and its `failures` is a floor of
+      // 2 rather than the exact count, which is all the caller ever asks of it.
+      const same =
+        JSON.stringify(plain.titleHits) === JSON.stringify(out.titleHits) &&
+        (failed.length > 1 ? out.failures > 1 : out.failures === failed.length) &&
+        (failed.length === 1 ? out.failedKey === failed[0] : out.failedKey === null) &&
+        (failed.length ? out.bucket === null : out.bucket === bucket) &&
+        (failed.length ? true : JSON.stringify(unknownOn) === JSON.stringify(out.unknownOn ?? []));
+
+      if (same) agree++;
+      else
+        disagree.push(
+          `${row.title} / ${JSON.stringify(input)}\n` +
+            `      plain  failed=${JSON.stringify(failed)} bucket=${bucket} unknownOn=${JSON.stringify(unknownOn)}\n` +
+            `      screen failures=${out.failures} failedKey=${out.failedKey} bucket=${out.bucket} unknownOn=${JSON.stringify(out.unknownOn)}`,
+        );
+    }
+  }
+
+  check('screen: agrees with evaluate+failedKeys+classify on every case', disagree, []);
+  check('screen: the comparison actually ran', agree > 150, true);
+}
+
 // ----------------------------------------------------------------- ranking --
 
 {
@@ -667,6 +757,39 @@ check('salary label: a range', salaryLabel({ salary_known: 1, salary_min: 85000,
 check('salary label: millions read as millions', salaryLabel({ salary_known: 1, salary_min: 1_591_000, salary_max: 1_945_000 }), '$1.6m–$1.9m');
 check('salary label: a single figure', salaryLabel({ salary_known: 1, salary_min: 90000, salary_max: 90000 }), '$90k');
 check('salary label: nothing published', salaryLabel({ salary_known: 0 }), null);
+
+// ------------------------------------------------------- the search box --
+/**
+ * FTS5 matches whole tokens, so a search box that hands it what was typed
+ * answers "no such company" to every prefix of a company it has jobs from —
+ * `afterque` found nothing until the `ry` arrived. These are the two halves of
+ * the fix: half-typed words become prefixes, and a query written *at* FTS5 is
+ * still left exactly as written.
+ */
+{
+  check('search: a half-typed word becomes a prefix', textQuery('afterque'), '"afterque"*');
+  check('search: so does a whole one — nothing narrows on the last letter', textQuery('afterquery'), '"afterquery"*');
+  check('search: every word gets one, joined by AND', textQuery('data eng'), '"data"* AND "eng"*');
+  check('search: punctuation splits words the way the index split them', textQuery('react-native'), '"react"* AND "native"*');
+
+  // A one- or two-letter prefix matches 341,582 of 341,589 documents in 1.5 s.
+  // It is not a filter, it is a full scan with a wildcard on it — and `go` is
+  // a language, not the first half of `governance`.
+  check('search: short words stay exact', textQuery('go'), '"go"');
+  check('search: including the ones inside a longer query', textQuery('ai jobs'), '"ai" AND "jobs"*');
+  check('search: c++ is the word c, not FTS syntax', textQuery('c++'), '"c"');
+
+  // Someone who reached for FTS5 syntax meant it. Widening `"staff engineer"`
+  // into a prefix search would hand back the narrow result they asked to avoid.
+  check('search: a quoted phrase is left alone', textQuery('"staff engineer"'), '"staff engineer"');
+  check('search: a column filter is left alone', textQuery('company:(stripe OR block)'), 'company:(stripe OR block)');
+  check('search: an operator is left alone', textQuery('data NOT analyst'), 'data NOT analyst');
+  // Lowercase `and` is not an FTS5 operator — it is a word someone typed.
+  check('search: a lowercase and is just a word', textQuery('research and development'), '"research"* AND "and"* AND "development"*');
+
+  check('search: an empty box is an empty query', textQuery('   '), '');
+  check('search: an apostrophe splits a word, as it does in the index', textQuery("o'neill"), '"o" AND "neill"*');
+}
 
 // ------------------------------------------------------- whose profile is it --
 /**

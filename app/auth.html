@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · Job Finder</title>
+<title>Sign in · UpstreamIt</title>
+<link rel="icon" href="/favicon.ico?v=2" sizes="32x32">
+<link rel="icon" href="/icon.svg?v=2" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#4c6acd">
 <meta name="robots" content="noindex">
-<!-- The theme, before first paint. The app stores the choice in localStorage,
-     and a white flash on the way into a dark app is worse than no toggle. -->
-<script>
-  try { const t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,12 +23,11 @@
   <!-- --------------------------------------------------- why an account -->
   <section class="pitch">
     <div class="pitch-in">
-      <a class="mark" href="/">Job&nbsp;Finder <span>ATS</span></a>
+      <a class="mark" href="/"><svg class="mark-ico" viewBox="0 0 103 138" aria-hidden="true" focusable="false"><path fill="#647ED3" d="M3 44A3 3 0 0 0 0 47L0 91.25A46.5 46.5 0 0 0 93 91.25L93 26L100.5 26Q102.5 26 101.23 24.46L82.91 2.31Q81 0 79.09 2.31L60.77 24.46Q59.5 26 61.5 26L69 26L69 91.25A22.5 22.5 0 0 1 24 91.25L24 47A3 3 0 0 0 21 44Z"/></svg><span class="wm">Upstream<span class="it">It</span></span></a>
 
       <h1 id="pitch-h">Your search, <em>kept.</em></h1>
       <p class="lead" id="pitch-lead">
-        The whole corpus is open to everyone. An account is only memory — it
-        holds the filters you built, the jobs you starred, and what you did
+        Hold the filters you built, the jobs you starred, and what you did
         about each one.
       </p>
 
@@ -44,7 +43,7 @@
           <span class="n">02</span>
           <div>
             <b>Star a job, then track it</b>
-            <span class="t">Saved, applied, interviewing, offer, rejected — on the card itself.</span>
+            <span class="t">Saved, applied, interviewing, offer, rejected.</span>
           </div>
         </li>
         <li>
@@ -63,10 +62,6 @@
         <div class="stat"><b id="stat-swept">—</b><span>last swept</span></div>
       </div>
 
-      <p class="pitch-foot">
-        Every job, filter and count on this site works signed out, and always will.
-        Nothing here is gated behind an account.
-      </p>
     </div>
   </section>
 
@@ -74,8 +69,6 @@
   <section class="panel">
     <div class="panel-top">
       <a class="back" href="/" id="back">← Back to search</a>
-      <span class="spacer"></span>
-      <button type="button" class="icon-btn" id="theme" title="Light / dark" aria-label="Light or dark theme">◐</button>
     </div>
 
     <div class="form-wrap">

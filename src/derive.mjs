@@ -210,14 +210,15 @@ async function main() {
       "SELECT id, slug FROM companies WHERE name IS NULL OR name = ''",
     ).all();
     const stmt = db.prepare("UPDATE companies SET name = ?, name_source = 'slug' WHERE id = ?");
-    const jobStmt = db.prepare(
-      "UPDATE jobs SET company_name = ? WHERE company_id = ? AND (company_name IS NULL OR company_name = '')",
-    );
-    for (const row of rows) {
-      const label = titleCase(row.slug);
-      stmt.run(label, row.id);
-      jobStmt.run(label, row.id);
-    }
+    for (const row of rows) stmt.run(titleCase(row.slug), row.id);
+    // Jobs inherit from `companies`, not from the loop above: a board named on
+    // an earlier run still sweeps in new rows with a blank company_name, and
+    // those have to pick the stored name up too.
+    db.prepare(
+      `UPDATE jobs SET company_name = (SELECT name FROM companies WHERE companies.id = jobs.company_id)
+       WHERE (company_name IS NULL OR company_name = '')
+         AND company_id IN (SELECT id FROM companies WHERE name IS NOT NULL AND name != '')`,
+    ).run();
     return rows.length;
   });
 

@@ -38,6 +38,7 @@ data/jobs-deploy.db.gz
 data/sync-state.json
 data/daily-history.jsonl
 data/daily.log
+data/repair-ashby.log
 progress/state.json
 
 # Node and macOS noise.

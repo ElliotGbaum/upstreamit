@@ -82,7 +82,7 @@ function signedIn() {
   return Boolean(state.user);
 }
 
-async function init({ meta, getProfile, setProfile, onProfilesChanged }) {
+async function init({ meta, who, getProfile, setProfile, onProfilesChanged }) {
   bridge = { getProfile, setProfile, onProfilesChanged };
   state.enabled = Boolean(meta?.auth?.enabled);
   state.statuses = meta?.auth?.statuses ?? [];
@@ -92,8 +92,11 @@ async function init({ meta, getProfile, setProfile, onProfilesChanged }) {
   showCallbackError();
 
   try {
-    const who = await request('/api/auth/me');
-    if (who.user) await refresh();
+    // `who` is the answer to `/api/auth/me`, already in flight since the page
+    // booted — the call does not depend on anything in `meta`, so it does not
+    // wait for it. A caller that does not pass one asks here, as before.
+    const answer = await (who ?? request('/api/auth/me'));
+    if (answer?.user) await refresh();
   } catch {
     /* the account layer is optional; a page that cannot reach it still works */
   }

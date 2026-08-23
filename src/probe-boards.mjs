@@ -246,7 +246,7 @@ function record(map, slug) {
 function pickNameFields(record) {
   if (!record) return {};
   const kept = {};
-  for (const key of ['name', 'website', 'careers_url', 'allow_indexing']) {
+  for (const key of ['name', 'website', 'careers_url', 'allow_indexing', 'hosted_disabled']) {
     if (record[key] !== undefined) kept[key] = record[key];
   }
   return kept;

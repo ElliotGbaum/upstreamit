@@ -99,8 +99,22 @@ export function goneSince(db, since) {
   return { rows, from, latest };
 }
 
-/** Per-day counts of every event kind — the shape of the corpus over time. */
+const activityCache = new Map(); // `${limitDays}` -> { stamp, value }
+
+/**
+ * Per-day counts of every event kind — the shape of the corpus over time.
+ *
+ * Cached until a new event is logged. This is a `GROUP BY` over the whole event
+ * table — 16 ms locally, ~70 ms on the deployed machine — and `/api/meta` asks
+ * for it on every page load, in front of the first search. `MAX(rowid)` is an
+ * index seek to the last row of an integer primary key and costs nothing, so
+ * "has anything happened since?" is cheaper than answering again.
+ */
 export function activity(db, limitDays = 30) {
+  const stamp = db.prepare('SELECT MAX(rowid) n FROM job_events').get()?.n ?? 0;
+  const hit = activityCache.get(limitDays);
+  if (hit && hit.stamp === stamp) return hit.value;
+
   const rows = db
     .prepare(
       `SELECT day, event, COUNT(*) n FROM job_events
@@ -112,5 +126,7 @@ export function activity(db, limitDays = 30) {
     if (!byDay.has(row.day)) byDay.set(row.day, { day: row.day, appeared: 0, changed: 0, disappeared: 0, reappeared: 0 });
     byDay.get(row.day)[row.event] = row.n;
   }
-  return [...byDay.values()].slice(0, limitDays);
+  const value = [...byDay.values()].slice(0, limitDays);
+  activityCache.set(limitDays, { stamp, value });
+  return value;
 }
