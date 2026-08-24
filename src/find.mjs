@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 5 — run a filter profile from the command line.
+ * Run a filter profile from the command line.
  *
  *   node src/find.mjs                                   # the default profile
  *   node src/find.mjs nyc-entry-level                   # by name, from profiles/
@@ -136,8 +136,8 @@ function parseArgs(argv) {
 /** Resolve a profile argument: a path, a bare name in `profiles/`, or the default. */
 export function loadProfile(nameOrPath) {
   if (!nameOrPath) {
-    const fallback = join(PROFILE_DIR, 'nyc-entry-level.json');
-    if (existsSync(fallback)) return { source: fallback, data: readJson(fallback) };
+    // listProfiles() puts the declared starter first, so the CLI opens on the
+    // same profile the page does for a visitor with no saved search.
     const first = listProfiles()[0];
     if (!first) return { source: null, data: {} };
     return { source: first.path, data: readJson(first.path) };
@@ -153,9 +153,8 @@ export function loadProfile(nameOrPath) {
 
 export function listProfiles() {
   if (!existsSync(PROFILE_DIR)) return [];
-  return readdirSync(PROFILE_DIR)
+  const profiles = readdirSync(PROFILE_DIR)
     .filter((f) => f.endsWith('.json'))
-    .sort()
     .map((f) => {
       const path = join(PROFILE_DIR, f);
       let data = {};
@@ -170,8 +169,25 @@ export function listProfiles() {
         label: data.label ?? null,
         notes: data.notes ?? null,
         owner: ownerOf(data),
+        starter: data.starter === true,
       };
     });
+  return sortProfiles(profiles);
+}
+
+/**
+ * Starters first, then the rest by name.
+ *
+ * The starter is declared (`"starter": true` in the document), not inferred
+ * from where its filename happens to land in a sort. It used to be inferred,
+ * and the day a second shared profile was saved under a name that sorted
+ * earlier, every visitor opened on that one instead — the page looked fine,
+ * nothing failed, and the starter was simply no longer first.
+ */
+export function sortProfiles(profiles) {
+  return [...profiles].sort(
+    (a, b) => Number(Boolean(b.starter)) - Number(Boolean(a.starter)) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+  );
 }
 
 /**
@@ -208,7 +224,9 @@ export const ownedBy = (owner, email) => !owner || owner === String(email ?? '')
 export function profilesVisibleTo(email, profiles = listProfiles()) {
   const mine = [];
   const shared = [];
-  for (const profile of profiles) {
+  // Sorted here as well as in `listProfiles`, so the guarantee holds for any
+  // list handed in, not only the one read from disk.
+  for (const profile of sortProfiles(profiles)) {
     if (!profile.owner) shared.push(profile);
     else if (ownedBy(profile.owner, email)) mine.push(profile);
     // else: someone else's. Not listed, and `/api/profiles/:name` 404s on it.

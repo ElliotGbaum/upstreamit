@@ -1,5 +1,6 @@
 {
   "name": "recent-openings",
+  "starter": true,
   "label": "All recent openings",
   "notes": "The starter profile — what the app opens on for anyone who has not saved a search of their own. It is deliberately nobody's criteria: no keywords, no city, no seniority, no salary floor. All it does is scope the corpus to full-time roles posted in the last 30 days and rank them, so the page opens on a real, ordered search instead of the whole corpus in no particular order. Every unknown is included, so a posting that simply did not publish its employment type or its date is still here — a blank field is not an answer. Change anything and it becomes your search; sign in and it is remembered.",
 

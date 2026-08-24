@@ -18,7 +18,7 @@ import {
   activeCriteria,
   UNKNOWNABLE,
 } from './lib/filter/profile.mjs';
-import { ownerOf, ownedBy, profilesVisibleTo } from './find.mjs';
+import { ownerOf, ownedBy, profilesVisibleTo, sortProfiles, listProfiles } from './find.mjs';
 import {
   compileProfile,
   matchMetro,
@@ -827,6 +827,52 @@ check('salary label: nothing published', salaryLabel({ salary_known: 0 }), null)
   check('visible: a stranger sees only the unowned ones', names('nobody@example.com'), ['starter']);
   check('visible: an owner sees theirs, and theirs is first', names('someone@example.com'), ['hers', 'starter']);
   check('visible: and still not the other owner\'s', names('someone@example.com').includes('his'), false);
+
+  // The starter is declared, not the accident of which filename sorts first.
+  // It was an accident once: a shared profile saved under a name that sorted
+  // before the starter's became what every stranger opened on, with nothing
+  // failing to say so.
+  const byName = (rows) => rows.map((p) => p.name);
+  check(
+    'starter: sorts first regardless of filename',
+    byName(sortProfiles([{ name: 'aaa' }, { name: 'zzz', starter: true }, { name: 'mmm' }])),
+    ['zzz', 'aaa', 'mmm'],
+  );
+  check(
+    'starter: the rest stay in name order',
+    byName(sortProfiles([{ name: 'b' }, { name: 'a' }, { name: 's', starter: true }])),
+    ['s', 'a', 'b'],
+  );
+  const untouched = [{ name: 'b' }, { name: 'a' }];
+  sortProfiles(untouched);
+  check('starter: sorting does not reorder its input', byName(untouched), ['b', 'a']);
+  const withStarter = [
+    { name: 'a-lever-only', owner: null },
+    { name: 'recent-openings', owner: null, starter: true },
+    { name: 'hers', owner: 'someone@example.com' },
+  ];
+  check(
+    'starter: a stranger sees the starter first',
+    byName(profilesVisibleTo('nobody@example.com', withStarter)),
+    ['recent-openings', 'a-lever-only'],
+  );
+  check(
+    'starter: signed out, likewise',
+    byName(profilesVisibleTo(null, withStarter)),
+    ['recent-openings', 'a-lever-only'],
+  );
+  check(
+    'starter: an owner still boots into their own, and the starter comes next',
+    byName(profilesVisibleTo('someone@example.com', withStarter)),
+    ['hers', 'recent-openings', 'a-lever-only'],
+  );
+  // And the shipped directory, which is where this went wrong: the first
+  // profile a stranger sees must be the one whose notes say it is the starter.
+  const shipped = profilesVisibleTo(null);
+  check('starter: the shipped starter is recent-openings', shipped[0]?.name, 'recent-openings');
+  check('starter: and it is flagged as such', shipped[0]?.starter, true);
+  check('starter: listProfiles exposes the flag on every row', listProfiles().every((p) => typeof p.starter === 'boolean'), true);
+  check('starter: exactly one shipped profile is the starter', listProfiles().filter((p) => p.starter).length, 1);
 }
 
 // --------------------------------------------------------------------- done --
