@@ -60,5 +60,7 @@ npm-debug.log*
 # refuses to serve it (see PRIVATE in src/server.mjs).
 app/landing.html
 
-# Personal interview-prep notes. Never part of what this repo publishes.
+# Personal notes: interview prep, and the running list of things to improve.
+# Never part of what this repo publishes.
 RESUME-NOTES.md
+NOTICED.md
