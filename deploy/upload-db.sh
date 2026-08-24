@@ -17,7 +17,7 @@ GZ=$OUT.gz
 REMOTE=/data/jobs.db
 
 [ -f "$SRC" ] || { echo "No $SRC here. Run this from the project root." >&2; exit 1; }
-command -v fly >/dev/null || { echo "flyctl not installed. See DEPLOY.md step 2." >&2; exit 1; }
+command -v fly >/dev/null || { echo "flyctl not installed. See docs/deploy.md." >&2; exit 1; }
 
 echo
 echo "==> 1/4  Compacting $SRC (reads the whole database; a few minutes)"
