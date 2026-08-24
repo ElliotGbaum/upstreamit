@@ -1,16 +1,19 @@
-# Job Finder ATS — container image.
+# UpstreamIt — container image.
 #
 # There is no build step. There is one small install step: the "describe your
 # search" feature pulls in @anthropic-ai/sdk, and everything else the app needs
 # is a Node built-in (SQLite included, as `node:sqlite`).
 #
-# What is deliberately *not* in here is the jobs database. At 3.2 GB it would
-# turn every one-line CSS fix into a 3.2 GB upload, so it lives on a mounted
+# What is deliberately *not* in here is the jobs database. At several gigabytes it
+# would turn every one-line CSS fix into a multi-gigabyte upload, so it lives on a mounted
 # volume at /data and is uploaded once, by hand. See deploy/upload-db.sh.
 
 FROM node:24-slim
 
 ENV NODE_ENV=production
+# node:sqlite still prints an ExperimentalWarning on Node 24. Only that class of
+# warning is silenced; everything else still reaches the logs.
+ENV NODE_OPTIONS=--disable-warning=ExperimentalWarning
 WORKDIR /app
 
 # ca-certificates: the Google sign-in token exchange makes an outbound HTTPS
