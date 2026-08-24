@@ -12,6 +12,15 @@
  * the job is `salary_known = 0` — "we looked and could not tell" — rather than
  * carrying a confidently wrong number into a filter.
  *
+ * **A figure inside the band can still be wrong.** `$125,000–$1,350,000 YEAR`
+ * on an Intake Coordinator is a typo for $135,000, and `€600–€800 YEAR` on an
+ * internship is a monthly stipend; both cleared the $5k–$2M band and sat at the
+ * top of the board. So the band is not the whole test: a published range wider
+ * than 8x is refused whole, and a reading under an interval the source did not
+ * state — a guess — must land under $1M, because on the 2026-08-24 corpus all
+ * 127 guesses above that were wrong and every real figure above it was one the
+ * source itself called annual.
+ *
  * **Rates are static, and that is fine.** 86.5% of the jobs that publish a
  * figure publish it in USD; FX touches 13.5% of 37%, or ~5% of the board. A 10%
  * drift moves a €120k listing by €12k, which does not change whether it clears
@@ -52,7 +61,38 @@ const PER_YEAR = {
 const FLOOR = 5_000;
 const CEILING = 2_000_000;
 
-const plausible = (usd) => usd != null && usd >= FLOOR && usd <= CEILING;
+/**
+ * The ceiling for a figure read under an interval the source did *not* state.
+ *
+ * Reinterpreting is guessing, and the loop below guesses HOUR first because a
+ * mislabelled hourly rate is the commonest lie. That guess is only safe while
+ * the figure is small: `€600–€800 YEAR` on an Italian internship is a monthly
+ * stipend, but €600/hour is $1.36M and cleared the $2M ceiling, so 47 postings,
+ * most of them retail internships, outranked every executive on the board.
+ * ₱45,000 and RM 2,000 monthly salaries went the same way. On the 2026-08-24
+ * corpus, 127 open rows carried a guessed figure over $1M and all 127 were
+ * wrong; the largest guess that was right was $936k, from a $450/hr rate.
+ * Every real figure above $1M was one the source itself called annual — a Mohs
+ * surgeon, managing directors at a restructuring firm — and those keep the $2M
+ * ceiling.
+ */
+const GUESS_CEILING = 1_000_000;
+
+/**
+ * The widest published range believed, top over bottom.
+ *
+ * `$125,000–$1,350,000 YEAR` on an Intake Coordinator (Registered Nurse) was a
+ * typo for $135,000 — the source has since corrected it — and it sat first on
+ * the live board. Both ends were inside the band, so no interval test could
+ * catch it; only the shape of the range could. Measured 2026-08-24
+ * on 87k open rows publishing both ends: 99.8% were within 5x, the 18 between
+ * 5x and 8x were real (quant trading, commission sales, AI labs quoting
+ * `$100k–$800k`), and the 138 above 8x were typos, placeholder maximums, and
+ * test postings.
+ */
+const MAX_SPREAD = 8;
+
+const plausible = (usd, ceiling) => usd != null && usd >= FLOOR && usd <= ceiling;
 
 /**
  * Is the *whole* published range readable under one interval?
@@ -65,14 +105,16 @@ const plausible = (usd) => usd != null && usd >= FLOOR && usd <= CEILING;
  * ordered by pay.
  *
  * A range is only readable when both ends land in the plausible band under the
- * same interval and the bottom is not above the top. When no interval satisfies
- * all of that, the honest answer is the one this file already gives everywhere
- * else: `salary_known = 0`, we looked and could not tell.
+ * same interval, the bottom is not above the top, and the top is not more than
+ * `MAX_SPREAD` times the bottom. The spread test is the same under every
+ * interval, so a range that fails it is refused outright. When no interval
+ * satisfies all of that, the honest answer is the one this file already gives
+ * everywhere else: `salary_known = 0`, we looked and could not tell.
  */
-function readable(lo, hi) {
-  if (lo != null && !plausible(lo)) return false;
-  if (hi != null && !plausible(hi)) return false;
-  if (lo != null && hi != null && lo > hi) return false;
+function readable(lo, hi, ceiling) {
+  if (lo != null && !plausible(lo, ceiling)) return false;
+  if (hi != null && !plausible(hi, ceiling)) return false;
+  if (lo != null && hi != null && (lo > hi || hi > lo * MAX_SPREAD)) return false;
   return lo != null || hi != null;
 }
 
@@ -96,7 +138,7 @@ export function deriveSalary(job) {
     if (!factor) continue;
     const lo = min == null ? null : min * rate * factor;
     const hi = max == null ? null : max * rate * factor;
-    if (!readable(lo, hi)) continue;
+    if (!readable(lo, hi, interval === stated ? CEILING : GUESS_CEILING)) continue;
     const src = interval === stated ? 'as-stated' : `reinterpreted:${stated || 'none'}->${interval}`;
     return {
       salary_min: lo == null ? null : Math.round(lo),

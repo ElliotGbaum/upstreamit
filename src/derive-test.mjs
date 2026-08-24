@@ -146,6 +146,23 @@ check('no figure', sal({ comp_min: null, comp_max: null, comp_currency: null, co
 check('mixed range refused', sal({ comp_min: 200, comp_max: 400000, comp_currency: 'USD', comp_interval: 'YEAR' }), [null, null, 0]);
 check('inverted range refused', sal({ comp_min: 200000, comp_max: 90000, comp_currency: 'USD', comp_interval: 'YEAR' }), [null, null, 0]);
 check('a sane range still reads under the same rule', sal({ comp_min: 60, comp_max: 90, comp_currency: 'USD', comp_interval: 'YEAR' }), [124800, 187200, 1]);
+// Regression: `$125,000–$1,350,000 YEAR` on an Intake Coordinator (Registered
+// Nurse) sat first on the live board. Both ends clear the $5k–$2M band, so the
+// range read as stated; the max was a typo for $135,000, and no interval makes
+// a 10.8x spread sane. 138 open rows carried a max over 8x the min (2026-08-24)
+// and every one was a typo, a placeholder, or a test posting; the widest real
+// ranges — quant trading, commission sales, AI labs — stop at 8x.
+check('typo max ten times min refused', sal({ comp_min: 125000, comp_max: 1350000, comp_currency: 'USD', comp_interval: 'YEAR' }), [null, null, 0]);
+check('8x range still reads', sal({ comp_min: 100000, comp_max: 800000, comp_currency: 'USD', comp_interval: 'YEAR' }), [100000, 800000, 1]);
+// Regression: `€600–€800 YEAR` on an Italian internship — a monthly stipend —
+// read as €600/hour, $1.36M–$1.81M, and 47 open EUR rows read that way, because
+// HOUR is tried before MONTH and both ends cleared the $2M ceiling. A
+// reinterpretation is a guess; all 127 guesses over $1M on the 2026-08-24
+// corpus were wrong, while figures the source itself called annual are real up
+// to $2M.
+check('monthly stipend mislabelled YEAR reads as monthly', sal({ comp_min: 600, comp_max: 800, comp_currency: 'EUR', comp_interval: 'YEAR' }), [7848, 10464, 1]);
+check('stated annual figure keeps the $2M ceiling', sal({ comp_min: 925000, comp_max: 2000000, comp_currency: 'USD', comp_interval: 'YEAR' }), [925000, 2000000, 1]);
+check('stated hourly rate over $1M/yr is believed', sal({ comp_min: 400, comp_max: 600, comp_currency: 'USD', comp_interval: 'HOUR' }), [832000, 1248000, 1]);
 
 // ----------------------------------------------------------------- seniority --
 check('senior title', seniorityFromTitle('Senior Software Engineer')?.level, 'senior');
