@@ -445,6 +445,11 @@ const PAGES = {
   '/signin': 'auth.html',
   '/signup': 'auth.html',
   '/password': 'auth.html',
+  // The same reasoning, for a document rather than a flow. How the corpus is
+  // built is the thing a stranger has to be able to check before they trust a
+  // count on the search page, so it needs an address they can link someone
+  // else to — not a panel that only exists once you are already inside the app.
+  '/methodology': 'methodology.html',
 };
 
 /**
