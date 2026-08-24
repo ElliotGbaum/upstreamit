@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-23T14:34:03.372Z
+Run: 2026-08-24T09:01:50.807Z
 
 ## Sources
 
@@ -10,15 +10,15 @@ Run: 2026-08-23T14:34:03.372Z
 | hf-latmay | greenhouse | fetched | 14233 | 55405 | — |
 | hf-latmay | lever | fetched | 8530 | 61108 | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
-| openroles | ashby | fetched | 3110 | 0 | `7545546` 2026-08-17 |
-| openroles | greenhouse | fetched | 5156 | 1 | `7545546` 2026-08-17 |
-| openroles | lever | fetched | 2140 | 0 | `7545546` 2026-08-17 |
+| openroles | ashby | fetched | 3100 | 0 | `cce5ddd` 2026-08-24 |
+| openroles | greenhouse | fetched | 5137 | 1 | `cce5ddd` 2026-08-24 |
+| openroles | lever | fetched | 2135 | 0 | `cce5ddd` 2026-08-24 |
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 922 | 7 | `faf87c4` 2026-08-23 |
-| jobseek | greenhouse | fetched | 2519 | 22 | `faf87c4` 2026-08-23 |
-| jobseek | lever | fetched | 182 | 2 | `faf87c4` 2026-08-23 |
+| jobseek | ashby | fetched | 922 | 7 | `d5eec47` 2026-08-24 |
+| jobseek | greenhouse | fetched | 2519 | 22 | `d5eec47` 2026-08-24 |
+| jobseek | lever | fetched | 182 | 2 | `d5eec47` 2026-08-24 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -55,11 +55,11 @@ Run: 2026-08-23T14:34:03.372Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5461 | 825 |
-| backfill | 4174 | 107 |
+| hf-latmay | 5461 | 823 |
+| backfill | 4174 | 108 |
 | kalil | 3447 | 30 |
 | feashliaa | 3161 | 5 |
-| openroles | 3110 | 11 |
+| openroles | 3100 | 11 |
 | jobseek | 922 | 9 |
 | outscal | 235 | 10 |
 | cryptojobs | 149 | 0 |
@@ -77,10 +77,10 @@ Run: 2026-08-23T14:34:03.372Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14233 | 4793 |
+| hf-latmay | 14233 | 4792 |
 | feashliaa | 8333 | 171 |
 | kalil | 6028 | 448 |
-| openroles | 5156 | 59 |
+| openroles | 5137 | 59 |
 | jobseek | 2519 | 28 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
@@ -99,7 +99,7 @@ Run: 2026-08-23T14:34:03.372Z
 | hf-latmay | 8530 | 3783 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 133 |
-| openroles | 2140 | 4 |
+| openroles | 2135 | 4 |
 | outscal | 314 | 12 |
 | jobseek | 182 | 0 |
 | cryptojobs | 63 | 0 |
