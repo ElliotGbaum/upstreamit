@@ -1,4 +1,4 @@
-/* Job Finder — the account screens.
+/* UpstreamIt — the account screens.
    Sign in, create an account, change a password. Loaded after app.css and
    sharing its token set, because these are the same tool: the colours and the
    radius both come from there. What this file adds is

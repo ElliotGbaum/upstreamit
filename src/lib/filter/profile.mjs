@@ -43,10 +43,10 @@ export const UNKNOWN_POLICIES = ['include', 'exclude', 'separate'];
  *
  * Served to the UI so the include/exclude/separate controls are generated from
  * this list rather than duplicated in the page — the same rule the metro
- * dropdown follows. `share` is measured over the full 61,213-job corpus, sorted
- * worst-first, and printed next to each control on purpose: `exclude` on salary
- * silently discards 62.8% of the market, and the number is the only thing
- * standing between someone and that choice.
+ * dropdown follows. `share` is measured over the full open corpus (how and when
+ * is noted above `UNKNOWNABLE`), sorted worst-first, and printed next to each
+ * control on purpose: `exclude` on salary silently discards most of the market,
+ * and the number is the only thing standing between someone and that choice.
  *
  * Every criterion whose column can be absent belongs on this list. `degree`,
  * `visa`, `skills` and `job_function` were missing from it and were therefore hard
@@ -62,8 +62,9 @@ export const UNKNOWN_POLICIES = ['include', 'exclude', 'separate'];
  * Nothing defaults to `exclude`. A filter may rule a job out because the posting
  * says something that fails it, never because the posting is silent — silence is
  * the company's omission, not the job's answer, and on every field here the
- * silent share is large: 96.8% on sponsorship, 75.6% on degree, 62.8% on salary,
- * 28.4% on skills, 15.9% on location.
+ * silent share is large — on the Ashby-only corpus it read 96.8% on sponsorship,
+ * 75.6% on degree, 62.8% on salary, 28.4% on skills, 15.9% on location; the
+ * current figures are in `UNKNOWNABLE` below.
  *
  * `metro` used to default to `exclude`, on the theory that a location filter
  * admitting unplaceable jobs is not a location filter. Measured on the shipped
@@ -241,8 +242,8 @@ export function blankProfile() {
     // Description keywords used to score without gating, on a measurement that
     // said 93.2% of jobs match at least one of a typical list — a gate that
     // removes 7% of the corpus is not a gate. That number does not hold for a
-    // real list: the shipped profile's five terms are in 35.8% of the 61,213
-    // open descriptions, against 29.5% of titles for its twelve title terms.
+    // real list: measured at 61k open jobs, the shipped profile's five terms were
+    // in 35.8% of descriptions, against 29.5% of titles for its twelve title terms.
     // The two lists are comparable filters, so both of them gate, and
     // `description_match: 'all'` is how you tighten this one.
     title_keywords: [],

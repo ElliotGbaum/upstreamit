@@ -1,8 +1,9 @@
 /**
  * Workplace type: onsite | hybrid | remote | unknown.
  *
- * The load-bearing fact, measured across the 61,213 Ashby jobs — the only ones
- * that carry a `workplaceType` enum at all:
+ * The load-bearing fact, measured in mid-August 2026 across the 61,213 Ashby
+ * jobs then in the corpus — Ashby's are the only ones that carry a
+ * `workplaceType` enum at all:
  *
  *   OnSite  19,859   isRemote=0
  *   Remote  16,495   isRemote=1

@@ -1,5 +1,5 @@
 /**
- * Job Finder — the local app.
+ * UpstreamIt — the local app.
  *
  * The whole page is a view over one object: `profile`. Every control reads from
  * it and writes back to it, and any change re-posts it to `/api/search`. That
@@ -10,9 +10,10 @@
  *
  * The other rule: **every control carries a count**, and the count is
  * leave-one-out — how many jobs you would get if you also ticked this box, with
- * the rest of your filters still applied. With 61,213 jobs, a user who picks
- * four criteria blind and lands on zero results has no way to tell which one
- * was too narrow. The counts are what make it a tool instead of a guessing game.
+ * the rest of your filters still applied. With hundreds of thousands of jobs, a
+ * user who picks four criteria blind and lands on zero results has no way to
+ * tell which one was too narrow. The counts are what make it a tool instead of
+ * a guessing game.
  */
 
 import { account } from './account.js';
@@ -1311,8 +1312,8 @@ async function renderDetail(card, row) {
   const desc = document.createElement('div');
   desc.className = 'desc';
   // Plain text, never the ATS's HTML: this page renders untrusted third-party
-  // markup from 4,297 different companies, and `textContent` is the one way to
-  // be sure none of it executes.
+  // markup from thousands of different companies, and `textContent` is the one
+  // way to be sure none of it executes.
   desc.textContent = job.description_text ?? '(no description)';
   detail.append(desc);
 }

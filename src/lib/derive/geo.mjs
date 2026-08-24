@@ -4,10 +4,11 @@
  *
  * Scope discipline — this file holds only what the swept data actually contains,
  * plus obvious neighbours. It is not a world gazetteer, and it does not need to
- * be: 9,107 distinct location fragments appear across 61,213 jobs, and the top
- * 500 cover 71% of them. The long tail is handled by falling back to the city
- * name itself as its own metro id, so an unlisted city is still filterable —
- * it just doesn't get merged with its neighbours.
+ * be: measured at 61k jobs (the Ashby-only corpus), 9,107 distinct location
+ * fragments appeared and the top 500 covered 71% of them. The long tail is
+ * handled by falling back to the city name itself as its own metro id, so an
+ * unlisted city is still filterable — it just doesn't get merged with its
+ * neighbours.
  *
  * `metro_aliases` in the database is the authority at query time. This file is
  * the seed that builds it, which means a wrong grouping is fixed by editing one

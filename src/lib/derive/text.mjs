@@ -97,8 +97,9 @@ export function termPattern(term) {
 /**
  * Compile many terms into one alternation.
  *
- * One pass over a 5 KB description instead of one pass per term: at 61,213 jobs
- * × ~200 skill terms that is the difference between seconds and minutes.
+ * One pass over a 5 KB description instead of one pass per term: already at 61k
+ * jobs × ~200 skill terms that was the difference between seconds and minutes,
+ * and the corpus is several times that size now.
  * Longest-first so `machine learning` wins over `learning`.
  */
 export function termRegex(terms, flags = 'g') {

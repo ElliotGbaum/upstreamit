@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 4 — normalization.
+ * Normalization.
  *
  *   node src/derive.mjs                  # derive every job, rebuild everything
  *   node src/derive.mjs --only-new       # just the jobs a sweep added since last time
@@ -10,8 +10,9 @@
  * Turns the raw columns the sweep stored into the canonical ones filters read.
  * Nothing here touches the network: derivation is a pure function of the swept
  * data, which is what makes it safe to re-run after editing a metro alias or a
- * title rule. Re-deriving all 61,213 jobs takes well under a minute, so improving
- * a rule never means re-sweeping 4,297 boards.
+ * title rule. Re-deriving the whole corpus is minutes of local CPU (about 50 s
+ * at 61k jobs, when the corpus was Ashby only), so improving a rule never means
+ * re-sweeping twelve thousand boards.
  *
  * Writes, in order: the `d_*` columns on `jobs`, the `job_metros` and
  * `job_skills` join tables, the `metros` / `metro_aliases` registry built from
@@ -200,7 +201,7 @@ async function main() {
   });
 
   // ------------------------------------------------------------ company names --
-  // Ashby's posting API returns no company name, so all 4,297 boards landed
+  // Ashby's posting API returns no company name, so every Ashby board lands
   // nameless and every result would read `notion` instead of `Notion`. The slug
   // is the only signal available without hitting the rate-limited GraphQL host,
   // so it is title-cased and marked `name_source = 'slug'` — visibly a guess,
