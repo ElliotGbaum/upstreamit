@@ -30,8 +30,9 @@ const UNKNOWN = 'unknown';
  * Compile a keyword list once per query rather than once per job.
  *
  * `hasTerm` builds a RegExp on every call, which is fine for the derive pass
- * (one call per job per rule) and not fine here (13 keywords × 61,213 titles =
- * 800k compilations, measured at 336 ms versus 40 ms cached).
+ * (one call per job per rule) and not fine here (13 keywords × 61k titles =
+ * 800k compilations, measured at 336 ms versus 40 ms cached — and the corpus is
+ * several times that size now).
  */
 export function compileTerms(terms) {
   return [...new Set((terms ?? []).map((t) => fold(t)).filter(Boolean))].map((term) => ({

@@ -1,5 +1,5 @@
 /**
- * Job Finder — the account layer, in the browser.
+ * UpstreamIt — the account layer, in the browser.
  *
  * Everything in this file is additive. The page it decorates works with no
  * session at all: the corpus, the filters, the leave-one-out counts, the
@@ -14,9 +14,9 @@
  *
  * The other rule this file follows is the page's existing one: **nothing is
  * ever inserted as HTML.** Job titles, company names and a user's own notes are
- * all set with `textContent`. The descriptions on this page come from 4,297
- * different companies and the notes come from whoever is typing; neither gets
- * to execute.
+ * all set with `textContent`. The descriptions on this page come from thousands
+ * of different companies and the notes come from whoever is typing; neither
+ * gets to execute.
  */
 
 

@@ -10,7 +10,7 @@
  *
  * A job legitimately belongs to several metros, so the output is a set. That is
  * also why `job_metros` is a join table: facet counts become an index seek
- * instead of a JSON scan across 61,213 rows.
+ * instead of a JSON scan across every row in the corpus.
  *
  * The parser is deliberately conservative. An unrecognised fragment yields no
  * metro rather than a guess — it lands in the unmatched report instead, where

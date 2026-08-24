@@ -5,7 +5,7 @@
  * Everything here reads `descriptionPlain`, which is present on 100% of jobs and
  * averages ~5 KB — so all of it runs in one pass per job over pre-folded text,
  * with the term lists compiled to single alternations at module load. Compiling
- * per job instead costs minutes across 61,213 rows.
+ * per job instead cost minutes at 61k rows, and the corpus is several times that.
  */
 
 import { fold, termRegex } from './text.mjs';

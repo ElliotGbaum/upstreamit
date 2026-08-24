@@ -8,8 +8,9 @@
  * much a listing actually told us).
  *
  * Pure function of its inputs — no database, no clock beyond the `now` passed
- * in. That is what makes re-deriving 61,213 jobs after a table edit a
- * seconds-long operation with no network and no ambiguity about what changed.
+ * in. That is what makes re-deriving the whole corpus after a table edit a
+ * matter of minutes (under one at 61k jobs) with no network and no ambiguity
+ * about what changed.
  */
 
 import { deriveLocation, deriveRemoteScope } from './location.mjs';

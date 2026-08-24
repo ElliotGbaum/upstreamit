@@ -1,5 +1,5 @@
 /**
- * Job Finder — the account screens.
+ * UpstreamIt — the account screens.
  *
  * Sign in, create an account, change a password: three modes of one form, at
  * three addresses (`/signin`, `/signup`, `/password`), all rendering auth.html.

@@ -1,5 +1,5 @@
 /**
- * Phase 5 — the filter engine.
+ * The filter engine.
  *
  * One profile in, a ranked list plus live facet counts out. Shared verbatim by
  * the CLI (`src/find.mjs`), the local app (`src/server.mjs`) and the daily diff
@@ -14,12 +14,14 @@
  * expressed twice (as FTS for SQL and as word-boundary regex for ranking) with
  * two different notions of what a word is.
  *
- * Loading the 20 hot columns for all 61,213 open jobs takes 388 ms and ~190 MB
- * once, and every query after that runs in 74–160 ms with all nine facets
- * computed in the same pass. One matcher, one definition of a word boundary, and
- * the same code the derive pass is regression-tested against. The cold 296 MB of
- * descriptions stays in SQLite and is read only for the rows that survived — 453
- * of them for the shipped profile.
+ * Loading the 20 hot columns for every open job took 388 ms and ~190 MB once,
+ * measured at 61k jobs, and every query after that ran in 74–160 ms with all
+ * nine facets computed in the same pass. One matcher, one definition of a word
+ * boundary, and the same code the derive pass is regression-tested against. The
+ * cold descriptions (296 MB at the same measurement) stay in SQLite and are read
+ * only for the rows that survived — 453 of them for the shipped profile. The
+ * corpus has grown several-fold since and the index grows with it, in memory and
+ * in load time alike.
  *
  * The index is cached and invalidated on the derive generation, so a re-derive
  * is picked up without restarting the server.
@@ -404,11 +406,11 @@ export function search(db, rawProfile, opts = {}) {
 /**
  * One posting per company + title.
  *
- * 3,049 company+title pairs account for 10,164 of the 61,213 open jobs — 16.6%
- * of the corpus, and it is one role posted once per city rather than 113
- * distinct openings. LinkedIn and Indeed both drown in this and neither offers
- * a way out; CareerBuilder's retired `ExcludeNational` is the only prior art in
- * the entire survey.
+ * Measured at 61k open jobs, 3,049 company+title pairs accounted for 10,164 of
+ * them — 16.6% of the corpus, and it is one role posted once per city rather
+ * than 113 distinct openings. LinkedIn and Indeed both drown in this and
+ * neither offers a way out; CareerBuilder's retired `ExcludeNational` is the
+ * only prior art in the entire survey.
  *
  * The copies are folded into the survivor rather than dropped, because the
  * thing that differs between them is usually the location and that is
@@ -1068,12 +1070,12 @@ function descriptionIndex(db, profile, warnings) {
  * Open jobs with no description text at all — the rows the gate must answer
  * `unknown` for rather than `no`.
  *
- * It is empty on today's corpus: all 61,213 open jobs carry a body. It is still
- * computed, because "there are none right now" is not a property the sweep
- * guarantees, and the alternative is a filter that quietly drops every job whose
- * description failed to arrive. One scan, 180 ms warm, cached on the same
- * generation key as the index and only ever run for a profile that sets
- * description keywords.
+ * It has been empty every time it was checked — every open job carried a body.
+ * It is still computed, because "there are none right now" is not a property
+ * the sweep guarantees, and the alternative is a filter that quietly drops
+ * every job whose description failed to arrive. One scan, 180 ms warm, cached
+ * on the same generation key as the index and only ever run for a profile that
+ * sets description keywords.
  */
 let missingDescriptionCache = { generation: null, ids: null };
 function missingDescriptions(db) {
