@@ -1,0 +1,28 @@
+# Run the test suite on every push and pull request.
+#
+# deploy.yml also runs the tests, but only on pushes to main that touch what
+# the image ships. This one runs everywhere, so a branch or a PR gets a
+# verdict before it reaches main, and the badge in the README has something
+# to report. Every test is self-contained — no network, no API key, no
+# jobs.db — so this costs about a minute.
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm test

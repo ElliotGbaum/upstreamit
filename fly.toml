@@ -1,11 +1,12 @@
-# Fly.io deployment for Job Finder ATS.
+# Fly.io deployment for UpstreamIt.
 #
 # One machine, always on, with one volume at /data holding the three things that
 # have to outlive a deploy: the jobs database, the accounts database, and the
 # profile files.
 #
-# CHANGE `app` BELOW to something unique before the first deploy — app names are
-# global across all of Fly, so "job-finder-ats" is very likely taken.
+# `app` is the name of the deployed instance (https://job-finder-ats.fly.dev).
+# App names are global across all of Fly, so a fork has to pick its own before
+# its first deploy — see docs/deploy.md.
 
 app = "job-finder-ats"
 primary_region = "ewr"   # Newark. `fly platform regions` lists the rest.
