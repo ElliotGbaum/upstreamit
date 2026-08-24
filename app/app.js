@@ -676,10 +676,20 @@ function render() {
   drawJobs($('results'), last.results, 'Nothing matches yet', 'Loosen a criterion — the counts beside each control say how many jobs it would add back.');
   drawMore();
 
-  $('footer').textContent =
+  // `replaceChildren`, not `textContent`: the last clause is a link now. The
+  // footer is the one line on the page that describes the pipeline, so it is
+  // where a reader who wants the rest of it goes looking — and the sentence it
+  // already ended on was a claim about the pipeline that the linked page is the
+  // evidence for.
+  const how = document.createElement('a');
+  how.href = '/methodology';
+  how.textContent = 'how this corpus is built';
+  $('footer').replaceChildren(
     `${fmt(meta?.open)} open jobs from ${fmt(meta?.boards_live)} live boards · ` +
     `swept ${stamp(meta?.last_sweep)} · derived ${stamp(meta?.last_derive)} · ` +
-    `filters read derived columns only, so improving a rule is a re-derive, never a re-sweep`;
+    `filters read derived columns only, so improving a rule is a re-derive, never a re-sweep · `,
+    how,
+  );
   syncBadges();
 }
 
