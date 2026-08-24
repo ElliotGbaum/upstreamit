@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6 — the local app. Phase 7 — optional accounts.
+ * The local app, and optional accounts.
  *
  *   node src/server.mjs                  # http://localhost:7799
  *   node src/server.mjs --port=8080
@@ -18,7 +18,7 @@
  * anonymous. What an account adds is *memory* — your filters when you come
  * back, the jobs you starred, and what you did about them — and that part is
  * all additive, served from a second database (`data/users.db`) by
- * `src/lib/users/`. Delete that file and this is the Phase 6 server again.
+ * `src/lib/users/`. Delete that file and this is the anonymous server again.
  *
  * The exception is `POST /api/interpret`, which requires one. It is the only
  * route here that spends real money — an API call on somebody's key, every time
@@ -28,10 +28,10 @@
  * account touches stays additive, including the search that route produces.
  *
  * **Binds to 127.0.0.1 unless told otherwise.** The database holds a full copy
- * of 61,213 job descriptions and the API will happily serve any of them; that
- * is fine on a laptop and not fine on a café network, so exposing it is an
- * explicit flag rather than a default. Accounts raise the stakes of that flag
- * rather than lowering them — see the warning printed at startup.
+ * of every job description in the corpus and the API will happily serve any of
+ * them; that is fine on a laptop and not fine on a café network, so exposing
+ * it is an explicit flag rather than a default. Accounts raise the stakes of
+ * that flag rather than lowering them — see the warning printed at startup.
  *
  * The one piece of shared state here is profile *files*. `PUT /api/profiles/:name`
  * writes `profiles/<name>.json`, which is why the name is checked against a
@@ -131,8 +131,18 @@ const isLoopback = (host) => host === '127.0.0.1' || host === 'localhost' || hos
  */
 export function createApp(db, { accounts = null, sharedProfileWrites = true } = {}) {
   return async function handle(req, res) {
+    securityHeaders(req, res);
+
     const url = new URL(req.url, 'http://localhost');
-    const path = decodeURIComponent(url.pathname);
+    let path;
+    try {
+      path = decodeURIComponent(url.pathname);
+    } catch {
+      // `/%E0` is not a path. Left uncaught, the URIError rejects this async
+      // handler and Node treats that as fatal: one request took the whole
+      // process down.
+      return json(res, 400, { error: 'malformed path' });
+    }
 
     if (redirectFromWww(req, res, url)) return;
 
@@ -144,6 +154,56 @@ export function createApp(db, { accounts = null, sharedProfileWrites = true } = 
       json(res, 500, { error: err.message });
     }
   };
+}
+
+/**
+ * What the pages are allowed to load, as an inventory rather than a wish.
+ *
+ * Same-origin scripts, styles and fetches; the two Google Fonts hosts; images
+ * from here or inlined as `data:`. Nothing in `app/` uses an inline `<script>`,
+ * an inline `<style>` or a `style=""` attribute — the one `innerHTML` in app.js
+ * builds class-only markup — so the policy carries no `'unsafe-inline'`, which
+ * is the clause that would let a script smuggled into a job description run.
+ * Google sign-in is a top-level navigation to accounts.google.com and back
+ * (users/routes.mjs), which no directive governs, so it needs no source here;
+ * the sign-in form itself submits over fetch, so `form-action` stays at 'self'.
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ');
+
+/**
+ * The headers every response carries, whatever route produced it.
+ *
+ * Set on `res` before any route runs, so a JSON error, a 304, a redirect and a
+ * document all get the same set without each handler having to remember them:
+ * Node merges headers set this way with whatever a route later hands to
+ * `writeHead`. The policy goes out on every response rather than only on HTML
+ * for the same reason — a browser applies it only to something it renders as
+ * a document, it costs a few hundred bytes on a JSON body, and deciding "is
+ * this a document" up here would mean duplicating the routing below.
+ *
+ * HSTS only when the request actually arrived over TLS — on Fly that is the
+ * `x-forwarded-proto` the proxy adds, which `isSecureRequest` reads — and never
+ * on plain `http://localhost`, where a year-long "this host is https-only"
+ * would break the local server in every browser that had seen it.
+ */
+function securityHeaders(req, res) {
+  res.setHeader('x-content-type-options', 'nosniff');
+  res.setHeader('x-frame-options', 'DENY');
+  res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
+  res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('content-security-policy', CONTENT_SECURITY_POLICY);
+  if (isSecureRequest(req)) res.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains');
 }
 
 /**
