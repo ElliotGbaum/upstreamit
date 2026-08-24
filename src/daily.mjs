@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6 — the daily run.
+ * The daily run.
  *
  *   node src/daily.mjs                       # the whole pipeline, then the diff
  *   node src/daily.mjs --report-only         # skip the pipeline, just re-report
@@ -40,14 +40,15 @@ const HISTORY = join(ROOT, 'data', 'daily-history.jsonl');
 /**
  * The ATSes the daily run maintains, in order.
  *
- * Both are verified and swept every day rather than alternating. A full
- * Greenhouse content sweep moves ~2.7 GB, which would be a real reason to
- * alternate — except that `sweep.mjs` now sends `If-None-Match` and an
- * unchanged board answers 304 with a zero-byte body, so the second and later
- * runs of the day cost almost nothing. If that ever stops being true, splitting
- * these across days is the lever.
+ * All three are verified and swept every day rather than alternating. Ashby
+ * and Greenhouse honour `If-None-Match`, so an unchanged board answers 304
+ * with a zero-byte body and a repeat run costs almost nothing in transfer.
+ * Lever ignores it and sends every board in full — about 930 MB and two
+ * minutes a night, measured at 2,611 boards — which is the price of not
+ * serving a third of the corpus days stale. If that ever stops being
+ * affordable, splitting the ATSes across days is the lever.
  */
-const DAILY_ATSES = ['ashby', 'greenhouse'];
+const DAILY_ATSES = ['ashby', 'greenhouse', 'lever'];
 
 // The `key` is what `--skip-verify` / `--skip-sweep` match on, so the per-ATS
 // stages deliberately share one — skipping a phase skips it for every ATS,
