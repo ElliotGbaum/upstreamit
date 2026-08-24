@@ -11,8 +11,8 @@
  * the precedence every other config in this project already uses: environment
  * first, file second, dormant when neither is there. So `.env` is the laptop
  * convenience — one file, survives closing the terminal — and the deployed copy
- * keeps working exactly as DEPLOY.md describes, where `fly secrets set` puts the
- * key in the real environment and no `.env` is shipped at all.
+ * keeps working exactly as docs/deploy.md describes, where `fly secrets set`
+ * puts the key in the real environment and no `.env` is shipped at all.
  *
  * The path is resolved from this file rather than the working directory, so
  * `node src/server.mjs` finds the same `.env` whether it was started from the

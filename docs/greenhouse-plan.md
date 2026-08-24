@@ -1,19 +1,14 @@
-# Greenhouse — the second ATS
+# Greenhouse plan
 
-Everything measured, decided, and still open about adding Greenhouse alongside Ashby,
-plus the ATS filter that has to land with it.
-
-Written 2026-08-22. Every number below was probed live against the real API on that
-date, not read off documentation. The probe commands are in the appendix so any of it
-can be re-run when it goes stale.
+The plan and live measurements for adding Greenhouse as the second ATS alongside Ashby, together with the ATS filter that had to land in the same change. Written 2026-08-22; every number below was probed live against the Greenhouse board API on that date rather than read from documentation, and the probe commands are in the appendix so any of it can be re-run when it goes stale. File and line references are as of that date. Greenhouse and Lever were both built afterwards; the as-built numbers are in [design-notes.md](./design-notes.md) and the current corpus counts are on the site.
 
 ---
 
 ## The decision
 
-**Greenhouse is next.** Not Lever, not SmartRecruiters.
+**Greenhouse next.** Not Lever, not SmartRecruiters.
 
-| | **Greenhouse** | Lever | Ashby (today) |
+| | **Greenhouse** | Lever | Ashby (at the time) |
 | --- | --- | --- | --- |
 | Slugs already on disk | **15,197** | 8,721 | 7,951 |
 | Live rate, sampled | **50.8%** (122/240) | 27.5% (55/200) | 54.0% (4,297/7,951) |
@@ -45,10 +40,10 @@ stride (deterministic, reproducible), at concurrency 10, no auth, honest User-Ag
 | B | 120 | — | 626 | field fill rates, content escaping, location shapes |
 | C | 160 | 96 (60.0%) | 1,140 | payload bytes, `employment`, `metadata`, pay shape |
 
-**Liveness is 50.8% and 60.0% on two different subsets** — about two standard errors
-apart at these sample sizes, so plan against a range of **7,700 ± 800 live boards**, and
-treat step 0 (a real `--sample=1000` probe run) as the number that settles it. Do not
-quote 7,700 as if it were counted.
+**Liveness came out at 50.8% and 60.0% on two different subsets** — about two standard
+errors apart at these sample sizes — so the plan is against a range of **7,700 ± 800
+live boards**, with step 0 (a real `--sample=1000` probe run) as the number that
+settles it. 7,700 is a projection, not a count.
 
 Zero 429s, zero 5xx, zero timeouts across all three runs at concurrency 10.
 
@@ -77,7 +72,8 @@ Everything else confirmed live:
 Hosts and redirects, checked:
 
 - `boards.greenhouse.io/<slug>` → **301** → `job-boards.greenhouse.io/<slug>`.
-  `job-boards.greenhouse.io` is the canonical human-facing host; use it in `boardUrl()`.
+  `job-boards.greenhouse.io` is the canonical human-facing host; `boardUrl()` should
+  use it.
 - A board with its own careers site then **302**s onward to the company
   (`job-boards.greenhouse.io/stripe` → `stripe.com/jobs/search`). Expected, not an error.
 - **There is no EU API mirror.** `boards-api.eu.greenhouse.io` does not resolve;
@@ -86,7 +82,7 @@ Hosts and redirects, checked:
   the same `boards-api.greenhouse.io`. `normalize.mjs` already carries the
   `boards.eu.greenhouse.io` *board-URL* patterns, which is correct and unrelated.
 
-### Conditional GET works — and we already store the ETag we never send
+### Conditional GET works, and the stored ETag was never being sent
 
 ```
 GET  /v1/boards/stripe/jobs                         → 200, ETag: W/"027b1d56…"
@@ -95,12 +91,12 @@ GET  /v1/boards/stripe/jobs  If-None-Match: W/"…"   → 304, zero bytes
 
 Ashby does this too (verified against `ramp`: `W/"job-board:e150b520…"` → 304).
 
-`companies.last_etag` is **written on every sweep and never read back**
+`companies.last_etag` was **written on every sweep and never read back**
 (`src/lib/db.mjs:148,157,171`; `src/sweep.mjs:135`). At Ashby's scale that was a
 missed optimization. At Greenhouse's scale it is the difference between a ~1.2 GB
 daily re-sweep and one that transfers almost nothing. See step 6.
 
-One plumbing consequence: `getJson` in `src/lib/http.mjs` treats every non-2xx as
+One plumbing consequence: `getJson` in `src/lib/http.mjs` treated every non-2xx as
 `ok:false` with `error:'HTTP 304'`. A 304 is an **answer** — "nothing changed" — not a
 failure, and needs its own branch, the same way 404 already means "dead, never retry".
 
@@ -150,14 +146,14 @@ include_ai_disclaimer, ai_opt_out_request_url, employment
 
 ## The seven gotchas
 
-Each one measured, each one would otherwise cost a debugging cycle.
+Each one measured; each one would otherwise cost a debugging cycle.
 
 ### 1. `content` is HTML-entity-escaped — decode exactly once
 
 The payload contains `&lt;h2&gt;Who we are&lt;/h2&gt;`, not `<h2>`. **626 of 626** jobs
 in run B were escaped; **zero** arrived as raw HTML. Ashby's `descriptionHtml` is raw,
-so the two adapters must not share a parser — this is already flagged in `PROJECT.md`
-and is now confirmed universal rather than anecdotal.
+so the two adapters must not share a parser — this was already flagged in the project
+notes and is now confirmed universal rather than anecdotal.
 
 Decode **once**, never in a loop until stable:
 
@@ -169,7 +165,7 @@ Decode **once**, never in a loop until stable:
 
 ### 2. There is no `descriptionPlain`
 
-Ashby handed us plaintext. Greenhouse gives only `content`. The adapter has to produce
+Ashby supplies plaintext. Greenhouse gives only `content`. The adapter has to produce
 the plaintext itself, and four things read it: the description keyword gate (FTS5), and
 the skills, degree and visa derivations. A weak strip — one that leaves `</p>` glued to
 the next sentence, or drops `<li>` boundaries — degrades all four silently.
@@ -178,7 +174,7 @@ Minimum viable `htmlToText`: decode once → drop `<script>`/`<style>` bodies �
 `<br>`, `</p>`, `</li>`, `</h1-6>`, `</div>`, `</tr>` to newlines → strip remaining tags
 → decode entities in the surviving text → collapse 3+ newlines to 2.
 
-Put it in `src/lib/adapters/html.mjs`, not inside the Greenhouse adapter — Rippling,
+It belongs in `src/lib/adapters/html.mjs`, not inside the Greenhouse adapter — Rippling,
 Breezy and every future HTML-only ATS need the identical function, and a second copy is
 how the two drift.
 
@@ -209,10 +205,10 @@ it is how the difference becomes visible instead of silently averaged.
 An `employment` key appears in the union of keys, and is populated on **0 of 1,140**
 jobs. There is no `employment_type` in the Greenhouse board API.
 
-Consequence: `employment_type` is NULL for every Greenhouse row. Today that criterion
-is listed in `UNKNOWNABLE` at **`share: 0.0`** — the one criterion where nothing is ever
-unknown. After this sweep it is roughly **62% unknown corpus-wide** (~100k of ~161k).
-See "the shares go stale" below.
+Consequence: `employment_type` is NULL for every Greenhouse row. At the time of writing
+that criterion was listed in `UNKNOWNABLE` at **`share: 0.0`** — the one criterion where
+nothing is ever unknown. After this sweep it is roughly **62% unknown corpus-wide**
+(~100k of ~161k). See "the measured shares go stale" below.
 
 A partial fallback exists in `metadata` (32.8% of jobs carry custom fields, and
 `Employment Type` / `Job Type` are among the observed names) — but those are per-board
@@ -242,7 +238,7 @@ Same class of bug as Ashby's lowercase-only `includeCompensation=true`, which re
   facet.
 - The array holds **several ranges per job**, and they are not all base salary. Observed
   titles include `Bonus Range`, `Zone 1 (National Average)`, `Remote Pay Range`, `Hourly
-  Pay Range`, and job-title-shaped ones (`Director Of Marketing`). Pick like Ashby's
+  Pay Range`, and job-title-shaped ones (`Director Of Marketing`). Pick the way the Ashby
   adapter picks `compensationType === 'Salary'` from `summaryComponents` — except there
   is no type field here, so it has to be a title heuristic: skip anything matching
   `/bonus|equity|commission|sign[- ]on/i`, prefer the first survivor.
@@ -276,9 +272,9 @@ already splits on `,` `|` `/` `;` `or` `and` and then matches each token against
 known city/region/country tables, discarding what it cannot place. "Austin, Texas,
 United States" yields the Austin metro plus the US country from three tokens; "New York
 or Boston" yields two metros. The conservative design handles both without being told
-which case it is in. Worth knowing anyway, because `PROJECT.md` records
-"`location.name` can pack several cities into one string" as a Greenhouse gotcha and
-that phrasing invites someone to write a comma-splitter that breaks the common case.
+which case it is in. Worth recording anyway, because the project notes describe
+"`location.name` can pack several cities into one string" as a Greenhouse gotcha, and
+that phrasing invites a comma-splitter that breaks the common case.
 
 The **union** rule from the Ashby adapter still applies and still earns its keep: put
 `location.name`, every `offices[].name`, and every `offices[].location` into
@@ -297,7 +293,7 @@ raw string; do not surface it as a filter.
 
 ---
 
-## What Greenhouse gives us that Ashby does not
+## What Greenhouse provides that Ashby does not
 
 1. **`updated_at`, on 100% of jobs.** Real change detection instead of `hashJob`'s
    content fingerprint. The hash stays — it is the cross-ATS mechanism and it catches
@@ -305,11 +301,11 @@ raw string; do not surface it as a filter.
    Greenhouse rows, which makes "what actually changed today" answerable rather than
    inferred.
 2. **`company_name` on every job.** Ashby requires the rate-limited GraphQL endpoint
-   (concurrency 2, backoff) to learn display names, which is why the app still reads
-   `Mistral.Ai` and `Silnahealth.Com` — the Phase 6 "real company display names" item.
-   Greenhouse rows arrive with correct names for free, and `/v1/boards/<slug>` gives the
-   board name in one more cheap call.
-3. **Conditional GET that we can actually exploit** (both ATSes support it; only
+   (concurrency 2, backoff) to learn display names, which is why the app at the time
+   still read `Mistral.Ai` and `Silnahealth.Com` — the Phase 6 "real company display
+   names" item. Greenhouse rows arrive with correct names for free, and
+   `/v1/boards/<slug>` gives the board name in one more cheap call.
+3. **Conditional GET that can actually be exploited** (both ATSes support it; only
    Greenhouse's scale forces the issue).
 4. **~2× the live boards** off a slug list already collected and never verified.
 
@@ -329,12 +325,12 @@ raw string; do not surface it as a filter.
 Ships in the same change. Half the value of a second ATS is being able to see which one
 a job came from, and the workplace regression above is invisible without it.
 
-(`app/app.js` line numbers are deliberately omitted — the file is being edited
+(`app/app.js` line numbers are deliberately omitted — the file was being edited
 concurrently and grew 35 lines mid-research. Anchor on the symbols instead.)
 
-The groundwork is already there: `jobs.ats TEXT NOT NULL` with
+The groundwork was already there: `jobs.ats TEXT NOT NULL` with
 `idx_jobs_ats ON jobs(ats, is_open)` (`src/lib/schema.mjs:153,223`), `ATS_KEYS` already
-lists 20 ids in display order (`src/lib/schema.mjs:25`), and the facet system is
+listing 20 ids in display order (`src/lib/schema.mjs:25`), and a facet system that is
 table-driven by design.
 
 | File | Change |
@@ -351,7 +347,7 @@ table-driven by design.
 | `app/app.js` — the panel/badge map | `'ats': { badge: 'n-ats', fields: ['ats'] }` |
 | `src/filter-test.mjs` | cases: empty list inactive, match, no, and a facet leave-one-out |
 
-~60 lines. Two design notes worth writing down before someone re-litigates them:
+~60 lines. Two design decisions, recorded so they are not re-litigated:
 
 **It is the first criterion that can never be unknown.** Every job has an `ats` — it is
 `NOT NULL` and the adapter sets it literally. So `ats` does **not** join `UNKNOWNABLE`
@@ -361,9 +357,9 @@ published evidence, and here the evidence is always present.
 
 **It is a real criterion, not a display badge.** Putting it in `CRITERIA` (rather than
 filtering the row set before evaluation) is what makes the leave-one-out facet counts
-work — "how many more jobs would I get if I also allowed Greenhouse" is the same
-set-size question every other facet answers, and short-circuiting it would make the ATS
-counts the only ones in the UI that lie.
+work — "how many more jobs would this profile get if it also allowed Greenhouse" is the
+same set-size question every other facet answers, and short-circuiting it would make the
+ATS counts the only ones in the UI that lie.
 
 ---
 
@@ -376,7 +372,7 @@ rendered next to each unknown-policy control, measured over the 61,213-job all-A
 corpus. Those percentages are the only thing standing between a user and silently
 discarding most of the market. Every one of them becomes wrong:
 
-| Criterion | Today (Ashby only) | After Greenhouse, projected |
+| Criterion | Before (Ashby only) | After Greenhouse, projected |
 | --- | --- | --- |
 | `employment_type` | 0.0% | **~62%** — Greenhouse publishes none |
 | `workplace` | 1.1% | rises; and `hybrid` stops appearing on ~60% of the corpus |
@@ -388,7 +384,7 @@ Same for the prose: the header comment in `src/lib/derive/workplace.mjs` quotes 
 `OnSite 19,859 / Remote 16,495 / Hybrid 15,932 / null 8,927` breakdown that will read as
 current and be a year out of date.
 
-**Re-measure after the first full sweep and derive, and update both.** Add it to the
+**Re-measure after the first full sweep and derive, and update both.** It is in the
 acceptance checks below so it cannot be forgotten — a stale 0.0% next to "job type" is
 worse than no number, because it reads as measured.
 
@@ -399,17 +395,17 @@ worse than no number, because it reads as measured.
 Found by grep; all small, all have to move for the second ATS to be a first-class
 citizen rather than a bolt-on.
 
-| Location | Today | Needs |
+| Location | At the time | Needs |
 | --- | --- | --- |
 | `src/probe-ashby.mjs` | whole file: `POSTING_API` const, `ashby.json`/`ashby-verified.json`/`ashby-live.txt` paths, 15 mentions | generalize → `src/probe-boards.mjs --ats=<x>` driven by `adapter.probeUrl(slug)` |
 | `src/lib/filter/index.mjs:647` | `last_sweep: Number(meta.last_sweep_ashby ?? 0)` | per-ATS map — `sweep.mjs` already writes `last_sweep_<ats>` |
 | `src/daily.mjs:42-43` | `script: 'probe-ashby.mjs'`, `args: ['--ats=ashby']` | loop over configured ATSes |
 | `src/stats.mjs:19` | `const ats = process.argv[2] ?? 'ashby'` | fine as a default; document it |
 | `package.json` | `sweep`, `verify`, `verify:all`, `refresh` all say ashby | add `sweep:greenhouse`, `verify:greenhouse`; make `refresh` loop |
-| `src/lib/adapters/index.mjs` | registry already lists 18 ids | **17 of them have no file** — `loadAdapter` catches and returns null, so this is inert, but `availableAdapters()` currently returns `['ashby']` and will return `['ashby','greenhouse']` |
+| `src/lib/adapters/index.mjs` | registry already lists 18 ids | **17 of them have no file** — `loadAdapter` catches and returns null, so this is inert, but `availableAdapters()` returned `['ashby']` and will return `['ashby','greenhouse']` |
 
 Note also: `src/lib/db.mjs` is detected by `file(1)` as `data`, not text — it contains a
-byte that makes `grep` treat it as binary (`grep -a` works). Unrelated to this work,
+byte that makes `grep` treat it as binary (`grep -a` works). Unrelated to this work;
 worth a look sometime.
 
 ---
@@ -472,9 +468,9 @@ node src/stats.mjs greenhouse
 ```
 
 Then re-measure every `share` in `UNKNOWNABLE` and update the prose numbers in
-`workplace.mjs`, `profile.mjs` and `PROJECT.md`.
+`workplace.mjs`, `profile.mjs` and the project notes.
 
-### Step 6 — conditional GET (do it now, not later)
+### Step 6 — conditional GET (now, not later)
 
 Send `If-None-Match: companies.last_etag` on every board fetch; treat 304 as "unchanged,
 skip the upsert, still mark the board swept". Needs:
@@ -488,18 +484,20 @@ skip the upsert, still mark the board swept". Needs:
 Turns the daily re-sweep from ~1.2 GB into approximately nothing on unchanged boards,
 and applies to Ashby unchanged. **Caveat to verify before trusting it:** a 304 means the
 *response body* is unchanged, so a board whose ETag is stable is assumed to have no new
-jobs. That is exactly what we want, but it means a bug in Greenhouse's ETag would look
+jobs. That is the intended behaviour, but it means a bug in Greenhouse's ETag would look
 like a board that stopped hiring. Sanity-check by forcing a full re-fetch weekly
 (`--no-conditional`) and diffing counts for the first month.
 
 ### Step 7 — docs
 
-`PROJECT.md`: a "Phase 8 — Greenhouse, as built" section, the corrected corpus numbers,
-and move Greenhouse out of "Next:". `README.md`: the new commands.
+Project notes: a "Phase 8 — Greenhouse, as built" section, the corrected corpus numbers,
+and move Greenhouse out of "Next:". README: the new commands.
 
 ---
 
 ## Acceptance checks
+
+As written in the plan; the as-built results are in [design-notes.md](./design-notes.md).
 
 - [ ] `node src/probe-boards.mjs --ats=greenhouse --sample=300` reports a live rate in
       the 45–65% band. Far outside it means the slug list or the probe is wrong.
@@ -544,8 +542,8 @@ descriptions inline). The clear #3.
 
 **Rippling** — `api.rippling.com/platform/api/ats/v1/board/<slug>/jobs`. Confirmed live,
 single JSON array, no auth, no pagination, 223 KB for its own board. Adapter is easy.
-**We have zero slugs.** That is a discovery problem, not an adapter problem, and
-discovery is the expensive half.
+**There are zero slugs on disk for it.** That is a discovery problem, not an adapter
+problem, and discovery is the expensive half.
 
 **Breezy** — `<slug>.breezy.hr/json`. Confirmed live, clean array. Same zero-slug
 problem.
@@ -562,17 +560,17 @@ those apart. Not worth adapting until a correct identifier scheme is found.
 returns the account name with an **empty `jobs` array** for real accounts (`gitlab`,
 `veriff`). Needs a different endpoint; not free.
 
-**Workday / iCIMS / Paylocity / BambooHR — different project.** 44,558 slugs collected
+**Workday / iCIMS / Paylocity / BambooHR — a different project.** 44,558 slugs collected
 across the four (`workday` 12,884, `bamboohr` 11,316, `paylocity` 10,252, `icims`
 10,106), and not one is a single unauthenticated GET returning JSON. Workday is POST +
 tenant/site pairs + pagination; iCIMS is HTML. Real work, not this work.
 
 ---
 
-## Open questions
+## Open questions at the time of writing
 
-1. **Do we verify all 15,197 slugs, or sweep the unverified list directly?** Verifying
-   is ~15k HEADs (cheap, minutes) and halves the sweep. Verify.
+1. **Verify all 15,197 slugs, or sweep the unverified list directly?** Verifying
+   is ~15k HEADs (cheap, minutes) and halves the sweep. Decision: verify.
 2. **Concurrency for an hour-long sweep.** 10 was clean for minutes. Start at 8, watch
    for 429s, and add the `Retry-After` handling `http.mjs` already has.
 3. **Does the daily run sweep both ATSes every day, or alternate?** With conditional GET
@@ -583,7 +581,7 @@ tenant/site pairs + pagination; iCIMS is HTML. Real work, not this work.
    board for better location strings on the 61.6% of office entries that lack one.
 6. **Should `boardUrl` prefer `job-boards.greenhouse.io/<slug>` or `absolute_url`?**
    `absolute_url` is what the employer wants clicked and often lands on their own site;
-   the Greenhouse-hosted page is more uniform. Currently planned: `url` = `absolute_url`,
+   the Greenhouse-hosted page is more uniform. As planned: `url` = `absolute_url`,
    `apply_url` falls back to the hosted page.
 
 ---

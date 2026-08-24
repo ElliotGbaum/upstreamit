@@ -177,7 +177,7 @@
       "name": "tjwenger/job_scraper",
       "repo": "tjwenger/job_scraper",
       "branch": "main",
-      "license": "see repo",
+      "license": "MIT",
       "upstreamSchedule": "none — hand-maintained Python literal.",
       "notes": "74 hand-curated slugs scraped out of a Python list literal. Small, but skews toward well-known companies the bulk sources oddly lack (vercel, mercury, snyk, temporal, wiz).",
       "enabled": true,

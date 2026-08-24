@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6 — automation setup.
+ * Automation setup.
  *
  *   node src/schedule.mjs                     # write both artifacts, print the how-to
  *   node src/schedule.mjs --at=08:15          # local time for the launchd job
@@ -8,11 +8,11 @@
  *   node src/schedule.mjs --install           # load it (macOS only, asks first)
  *   node src/schedule.mjs --uninstall
  *
- * PROJECT.md left the choice of runner open between macOS `launchd`, GitHub
- * Actions in your own repo, and a scheduled cloud agent. This writes the first
- * two and installs nothing unless asked — a background job that starts running
- * because a script was executed once is the kind of surprise this project
- * should not have.
+ * docs/design-notes.md left the choice of runner open between macOS `launchd`,
+ * GitHub Actions in your own repo, and a scheduled cloud agent. This writes the
+ * first two and installs nothing unless asked — a background job that starts
+ * running because a script was executed once is the kind of surprise this
+ * project should not have.
  *
  * **The two runners are not alternatives any more. They split the work.**
  * They used to be a pick-one, and for a while both were switched on: each ran
@@ -132,10 +132,11 @@ function plist({ hour, minute }) {
  * `--skip-sync` is the other half of the split: syncing here is what used to
  * fight with the workflow.
  *
- * Both interpolated paths are quoted, and that is not decoration: this project
- * lives in `~/Job Finder ATS`, so an unquoted `${ROOT}/src/daily.mjs` reaches
- * node as the three arguments `.../Job`, `Finder` and `ATS/src/daily.mjs`, and
- * the job fails every morning with a confusing "Cannot find module .../Job".
+ * Both interpolated paths are quoted, and that is not decoration: a checkout
+ * path containing spaces (`~/My Projects/upstreamit`, say) turns an unquoted
+ * `${ROOT}/src/daily.mjs` into two arguments, `.../My` and
+ * `Projects/upstreamit/src/daily.mjs`, and the job fails every morning with a
+ * confusing "Cannot find module .../My".
  */
 function wrapper() {
   return `#!/bin/sh
