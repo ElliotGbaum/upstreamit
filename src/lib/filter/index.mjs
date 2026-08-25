@@ -107,7 +107,7 @@ function corpusStamp(db, key) {
 
 /**
  * Identify a connection for caching. `DatabaseSync#location()` only exists on
- * newer Node builds, and this has to keep working on the 22.5 floor the project
+ * newer Node builds, and this has to keep working on the 22.13 floor the project
  * declares, so an unnamed connection falls back to a single shared slot — which
  * is correct for every caller here, all of which open exactly one database.
  */

@@ -651,7 +651,7 @@ async function main() {
     );
     console.log(
       accounts
-        ? `  accounts on · optional · ${accounts.googleEnabled() ? 'password or Google' : 'password only — see README for Google sign-in'}\n`
+        ? `  accounts on · optional · ${accounts.googleEnabled() ? 'password or Google' : 'password only — see docs/app-and-accounts.md for Google sign-in'}\n`
         : '  accounts off — --no-accounts\n',
     );
     if (!loopback) {

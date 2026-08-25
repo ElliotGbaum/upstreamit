@@ -9,8 +9,8 @@
 
 -- Counts change with every daily sweep; these are from 2026-08-24.
 SELECT count(*) FROM jobs;                     -- 343,173 rows, closed ones included
-SELECT count(*) FROM jobs WHERE is_open = 1;   -- 337,925 open jobs
-SELECT count(*) FROM companies;                -- 15,207
+SELECT count(*) FROM jobs WHERE is_open = 1;   -- 337,888 open jobs
+SELECT count(*) FROM companies;                -- 15,265
 
 -- ─── Look at actual jobs ──────────────────────────────────────────────────
 
