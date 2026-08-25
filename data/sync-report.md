@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-24T09:01:50.807Z
+Run: 2026-08-25T08:57:25.398Z
 
 ## Sources
 
@@ -16,9 +16,9 @@ Run: 2026-08-24T09:01:50.807Z
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 922 | 7 | `d5eec47` 2026-08-24 |
-| jobseek | greenhouse | fetched | 2519 | 22 | `d5eec47` 2026-08-24 |
-| jobseek | lever | fetched | 182 | 2 | `d5eec47` 2026-08-24 |
+| jobseek | ashby | fetched | 922 | 7 | `76abf5f` 2026-08-25 |
+| jobseek | greenhouse | fetched | 2519 | 22 | `76abf5f` 2026-08-25 |
+| jobseek | lever | fetched | 182 | 2 | `76abf5f` 2026-08-25 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -28,9 +28,9 @@ Run: 2026-08-24T09:01:50.807Z
 | feashliaa | paylocity | fetched | 10252 | 0 | `d7825a7` 2026-06-17 |
 | jobsync | ashby | fetched | 120 | 0 | `a055138` 2026-04-14 |
 | tjwenger | ashby | fetched | 75 | 0 | `413fb49` 2026-07-02 |
-| cryptojobs | ashby | fetched | 149 | 215 | `a28da17` 2026-08-03 |
-| cryptojobs | greenhouse | fetched | 107 | 257 | `a28da17` 2026-08-03 |
-| cryptojobs | lever | fetched | 63 | 302 | `a28da17` 2026-08-03 |
+| cryptojobs | ashby | fetched | 150 | 215 | `0e9e8d2` 2026-08-24 |
+| cryptojobs | greenhouse | fetched | 107 | 258 | `0e9e8d2` 2026-08-24 |
+| cryptojobs | lever | fetched | 63 | 303 | `0e9e8d2` 2026-08-24 |
 | outscal | ashby | fetched | 235 | 5925 | `47cdbb7` 2026-04-22 |
 | outscal | greenhouse | fetched | 642 | 5385 | `47cdbb7` 2026-04-22 |
 | outscal | lever | fetched | 314 | 5823 | `47cdbb7` 2026-04-22 |
@@ -62,7 +62,7 @@ Run: 2026-08-24T09:01:50.807Z
 | openroles | 3100 | 11 |
 | jobseek | 922 | 9 |
 | outscal | 235 | 10 |
-| cryptojobs | 149 | 0 |
+| cryptojobs | 150 | 0 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
