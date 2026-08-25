@@ -10,7 +10,7 @@ Everything up to Phase 7 was measured on the **Ashby-only corpus** — 61,213 op
 4,297 boards in mid-August 2026. Phases 8 and 9 (2026-08-22) added Greenhouse and Lever
 and took the corpus to 337,487 open jobs. The live counts are on the site; on 2026-08-24
 they read 337,925 open jobs, 15,207 companies known, 12,138 live boards, 24,337 metros
-and 665 tests.
+and 680 tests.
 
 Companion documents: [pipeline](./pipeline.md), [sources](./sources.md),
 [filtering](./filtering.md), [app and accounts](./app-and-accounts.md),
@@ -823,7 +823,7 @@ section was measured against the 61,213-job Ashby-only corpus.
 | Index build (once, cached) | **388 ms**, ~190 MB for the 20 hot columns × 61,213 rows |
 | The shipped profile | **221** matches + **232** worth a look |
 | Same profile without the age cap and title exclusions | **328** + **419** — the funnel above |
-| Tests | **176** — 82 derivation, 94 filter — no database, no network (665 by 2026-08-24) |
+| Tests | **176** — 82 derivation, 94 filter — no database, no network (680 by 2026-08-24) |
 
 ### The shape of it
 

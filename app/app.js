@@ -2035,7 +2035,7 @@ async function boot() {
   }
 
   $('corpus').textContent =
-    `${fmt(meta.open)} jobs · ${fmt(meta.boards_live)} companies`;
+    `${fmt(meta.open)} jobs · ${fmt(meta.boards_live)} live boards`;
 
   // The sort menu is generated from what the engine says it can sort by, not
   // from a list kept here — the same rule as the metro dropdown and the unknown

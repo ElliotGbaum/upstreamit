@@ -32,12 +32,12 @@ Measured 2026-08-24; the live counts are on the site.
 
 | | |
 | --- | --- |
-| Open jobs | **337,925**, each with its full description, from **12,138 live boards** |
-| Companies known | 15,207 (a board with no openings this month is kept — it will hire again) |
+| Open jobs | **337,888**, each with its full description, from **11,635 live boards** |
+| Companies known | 15,265 (a board with no openings this month is kept — it will hire again) |
 | ATSes | Ashby, Greenhouse, Lever — with Workday, BambooHR, Paylocity and iCIMS slugs collected but not yet swept |
 | Metros | 24,337, built from the location strings actually observed |
 | A full filter run | a few seconds over the whole corpus, every facet counted, in memory |
-| Tests | **665** — derivation, filter, adapters, accounts, AI interpret — no database, no network, ~1 s |
+| Tests | **680** — derivation, filter, adapters, accounts, AI interpret — no database, no network, ~1 s |
 | Dependencies | one (`@anthropic-ai/sdk`, for the optional "describe your search"). Everything else is Node built-ins, including SQLite |
 
 ## How it works
@@ -45,7 +45,7 @@ Measured 2026-08-24; the live counts are on the site.
 ```mermaid
 flowchart LR
   A[11 public slug sources] -->|sync| B[Slug store<br/>data/slugs/]
-  B -->|verify: live / empty / dead| C[Live boards]
+  B -->|verify: real board / 404| C[Live boards]
   C -->|sweep, daily<br/>ETag-conditional| D[(jobs.db<br/>SQLite + FTS5)]
   D -->|derive: prose → columns| D
   D -->|in-memory index| E[Filter engine<br/>match / no / unknown]
@@ -53,14 +53,16 @@ flowchart LR
   E --> G["What's new since yesterday"]
 ```
 
-Six stages, each a separate program writing to one SQLite database, each re-runnable on
-its own:
+Six stages, each a separate program and each re-runnable on its own — the first two
+maintain the slug store under `data/slugs/`, the next two write one SQLite database, the
+last two read it:
 
-1. **Collect** — merge company slugs from eleven public datasets and a web-archive
+1. **Collect** — merge company slugs from ten public datasets and a web-archive
    harvest, with provenance per slug. Upstream changes are detected with ETags, so a
    no-change poll transfers nothing. → [`docs/sources.md`](docs/sources.md)
-2. **Verify** — ask each ATS whether the slug is a real board. Live, empty and dead are
-   recorded separately, with dates. About half of collected slugs are dead.
+2. **Verify** — ask each ATS whether the slug is a real board. Live and dead are recorded
+   separately, with dates; a live board with no openings is marked empty by the sweep.
+   About half of collected slugs are dead.
 3. **Sweep** — pull every open posting from every live board, daily. Ashby and Greenhouse
    honour conditional GET; Lever does not, and the code says so. Every posting is stored
    with a content hash and every observation goes into an event log, which is what makes
@@ -100,11 +102,11 @@ can apply, never one applied for you.
 
 **Built-ins over dependencies.** `node:sqlite` with FTS5 for the corpus, `node:crypto`
 scrypt for passwords, built-in `fetch` with conditional requests for the sweep. There is
-no build step and no framework; the app is three HTML pages and plain ES modules.
+no build step and no framework; the app is three served HTML pages and plain ES modules.
 
 **One writer per file.** The daily run is split between GitHub Actions (owns the slug
-store, commits it) and a laptop launchd job (owns the 4.5 GB database, uploads it to the
-host). Before the split both ran the whole pipeline and fought over the same files every
+store, commits it) and a laptop launchd job (owns the 3.5 GB database, which is re-uploaded
+to the host by hand with `deploy/upload-db.sh`). Before the split both ran the whole pipeline and fought over the same files every
 morning. → [`docs/automation.md`](docs/automation.md)
 
 ## Describe your search
@@ -126,20 +128,20 @@ on login and signup. Accounts live in their own SQLite file, separate from the c
 
 ## Running it locally
 
-Node 24 (22.5 or later works — `node:sqlite` is the floor).
+Node 24 (22.13 or later works — the release where `node:sqlite` stopped needing a flag).
 
 ```bash
 npm install
 cp .env.example .env            # optional: add an Anthropic key for "describe your search"
 
 npm run sync                    # pull the eleven slug sources → data/slugs/
-npm run verify                  # probe each slug: live / empty / dead
+npm run verify                  # probe slugs not yet resolved: real board / 404
 npm run sweep                   # fetch every live board → data/jobs.db (hours, first time)
 npm run derive                  # prose → columns
 
 npm run serve                   # http://localhost:7799
 npm run find                    # the same search, in the terminal
-npm test                        # 665 checks, ~1 s
+npm test                        # 680 checks, ~1 s
 ```
 
 To try it without a multi-hour sweep, pull one ATS with a cap:
@@ -153,7 +155,7 @@ To try it without a multi-hour sweep, pull one ATS with a cap:
 
 One Fly.io machine with a persistent volume for the database, accounts and profiles.
 Pushing to `main` runs the tests and deploys the code; the database is uploaded
-separately with `./deploy/upload-db.sh` because a 4.5 GB file does not belong in a
+separately with `./deploy/upload-db.sh` because a 3.5 GB file does not belong in a
 container image. → [`docs/deploy.md`](docs/deploy.md)
 
 ## Layout
@@ -166,8 +168,8 @@ src/
   derive.mjs          run the derivation pass                  lib/users/      accounts, sessions, Google
   find.mjs            run a profile from the terminal          lib/interpret.mjs  "describe your search"
   server.mjs          the web app and its JSON API             lib/db.mjs, schema.mjs
-  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 665 checks
-app/                  three HTML pages, plain ES modules, no build
+  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 680 checks
+app/                  three served HTML pages (landing.html is kept, not routed), plain ES modules, no build
 profiles/             filter profiles — portable JSON, read by the app, the CLI and the daily run
 data/slugs/           the slug store (tracked; refreshed nightly by CI)
 docs/                 design notes, measurements, dead ends

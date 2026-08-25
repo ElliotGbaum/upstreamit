@@ -25,7 +25,7 @@ npm run sweep          # fetch every live board into data/jobs.db (ashby, greenh
 npm run derive         # normalize into the d_* columns the filters read
 npm run derive:new     # derive only the jobs a sweep has added since the last pass
 npm run refresh        # sync → verify → sweep → derive
-npm test               # 665 checks, about a second, no database and no network
+npm test               # 680 checks, about a second, no database and no network
 ```
 
 Per-ATS variants: `npm run verify:ashby`, `verify:greenhouse`, `verify:lever`, `sweep:ashby`, `sweep:greenhouse`, `sweep:lever`.
@@ -41,7 +41,7 @@ npm run vacuum         # checkpoint the WAL and VACUUM data/jobs.db (stop the se
 npm run progress       # static server for progress/index.html on :7788, separate from the app
 ```
 
-The test count is 665: 127 derivation, 206 filter, 133 adapter, 92 account and 107 interpret checks, run by `npm test` in that order.
+The test count is 680: 132 derivation, 216 filter, 133 adapter, 92 account and 107 interpret checks, run by `npm test` in that order.
 
 ## Sync
 

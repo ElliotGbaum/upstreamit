@@ -18,8 +18,8 @@ npm run daily -- --limit=25 --quiet --db=<path>
 | stage | what runs |
 | --- | --- |
 | Sync slugs | `sync-slugs.mjs` — pull every upstream company list, dedupe, write `data/slugs/` |
-| Verify new ashby slugs · Verify new greenhouse slugs | `probe-boards.mjs --ats=<ats> --only-unknown` |
-| Sweep ashby boards · Sweep greenhouse boards | `sweep.mjs --ats=<ats>` |
+| Verify new ashby / greenhouse / lever slugs | `probe-boards.mjs --ats=<ats> --only-unknown`, once per ATS |
+| Sweep ashby / greenhouse / lever boards | `sweep.mjs --ats=<ats>`, once per ATS |
 | Normalize | `derive.mjs --only-new` |
 
 The daily ATS list (`DAILY_ATSES`) is **Ashby, Greenhouse and Lever**; Lever was added on 2026-08-24, having previously been swept only by `npm run sweep`. All three are verified and swept every day rather than alternating: a full Greenhouse content sweep moves ~2.7 GB, which would be a real reason to alternate, except that the sweeper sends `If-None-Match` and an unchanged board answers 304 with a zero-byte body, so repeat runs cost almost nothing in transfer. Lever ignores `If-None-Match` and sends every board in full — about 930 MB and two minutes a night at 2,611 boards — which is the price of not serving a third of the corpus days stale. If that ever stops being true, splitting the ATSes across days is the lever. Sweep behaviour, conditional GET and per-ATS timings are in [pipeline.md](./pipeline.md).
