@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-25T08:57:25.398Z
+Run: 2026-08-26T08:59:36.194Z
 
 ## Sources
 
@@ -16,9 +16,9 @@ Run: 2026-08-25T08:57:25.398Z
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 922 | 7 | `76abf5f` 2026-08-25 |
-| jobseek | greenhouse | fetched | 2519 | 22 | `76abf5f` 2026-08-25 |
-| jobseek | lever | fetched | 182 | 2 | `76abf5f` 2026-08-25 |
+| jobseek | ashby | fetched | 922 | 7 | `cefaff6` 2026-08-26 |
+| jobseek | greenhouse | fetched | 2519 | 22 | `cefaff6` 2026-08-26 |
+| jobseek | lever | fetched | 182 | 2 | `cefaff6` 2026-08-26 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -36,7 +36,7 @@ Run: 2026-08-25T08:57:25.398Z
 | outscal | lever | fetched | 314 | 5823 | `47cdbb7` 2026-04-22 |
 | openjobsdata | ashby | fetched | 71 | 0 | `66774fc` 2026-08-06 |
 | openjobsdata | greenhouse | fetched | 263 | 0 | `66774fc` 2026-08-06 |
-| openjobsdata | lever | fetched | 11 | 0 | `66774fc` 2026-08-06 |
+| openjobsdata | lever | fetched | 11 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
