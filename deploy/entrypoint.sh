@@ -18,6 +18,21 @@ fi
 rm -rf /app/profiles
 ln -s /data/profiles /app/profiles
 
+# ---------------------------------------------------------- database swap --
+# `deploy/upload-db.sh` never touches the live file. It unpacks the new
+# database beside it as jobs.db.new, verifies it there, and restarts; the swap
+# happens here, at boot, because this is the one moment nothing has the old
+# file open. That matters more than it looks: the server runs the database in
+# WAL mode, so `jobs.db-wal` holds pages that belong to the *old* file, and
+# SQLite would replay them into whatever file is called `jobs.db` when it next
+# opens it. Renaming under a running server is how a good upload becomes a
+# corrupt database. Here the log goes with the file it belongs to.
+if [ -f "$DB.new" ]; then
+  echo "  swapping in $DB.new ($(du -h "$DB.new" | cut -f1))"
+  rm -f "$DB" "$DB-wal" "$DB-shm" "$DB.new-wal" "$DB.new-shm"
+  mv "$DB.new" "$DB"
+fi
+
 # -------------------------------------------------------------- database ----
 # The jobs database is uploaded by hand, once, and it is not here on the very
 # first boot. Idle instead of exiting: a crash-looping machine cannot be reached

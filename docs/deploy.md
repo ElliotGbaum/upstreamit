@@ -15,7 +15,7 @@ exactly as they are.
 | Piece | Where it ends up | Why |
 |---|---|---|
 | The code (`src/`, `app/`) | Inside a ~5 MB container image | Small, so deploys take seconds |
-| `data/jobs.db` (about 3.3 GB) | On a mounted disk (a Fly "volume") at `/data` | Too big for the image; uploaded once by script |
+| `data/jobs.db` (about 8.4 GB since Workday landed on 2026-08-27; 3.3 GB before it) | On a mounted disk (a Fly "volume") at `/data` | Too big for the image; uploaded once by script |
 | `data/users.db` (accounts) | Same volume | Must survive deploys, or people get logged out |
 | `profiles/*.json` | Same volume, seeded from the image on first boot | So a profile saved through the UI is not wiped by the next deploy |
 
@@ -28,7 +28,8 @@ database yet (see step 6).
 Running cost: the original deployment was estimated at roughly **$11–13/month** on a
 2 GB machine (about $10–11 for the machine, about $0.90 for a 6 GB volume). The
 machine has since been raised to a 4 GB `shared-cpu-2x` — `fly.toml` explains why —
-so expect somewhat more. Prices change; check fly.io/pricing.
+and the volume to 30 GB on 2026-08-27 (about $4.50 a month at $0.15/GB; step 5 says
+why that much), so expect somewhat more. Prices change; check fly.io/pricing.
 
 ---
 
@@ -121,12 +122,17 @@ turns out optimistic.
 ## Step 5 — Create the disk
 
 ```
-fly volumes create jobdata --size 6 --region ewr --app <your-app-name>
+fly volumes create jobdata --size 30 --region ewr --app <your-app-name>
 ```
 
 `jobdata` must match the `source = "jobdata"` line in `fly.toml`, and the region must
-match `primary_region`. 6 GB holds the ~3.3 GB database plus the compressed copy during
-upload, with room to grow. It can be enlarged later with `fly volumes extend`.
+match `primary_region`. The size is three databases' worth, not one: the upload
+script (step 7) keeps the old database serving until the new one has been unpacked
+beside it and verified, so at the peak the volume holds the live database, the
+compressed upload and the unpacked copy at once — about 19 GB at the 8.4 GB the
+database reached when Workday landed on 2026-08-27. The volume was 6 GB while the
+database was 3.3 GB. It can be enlarged later, without a restart, with
+`fly volumes extend <volume id> -s <GB>`; it cannot be shrunk.
 
 It will ask for confirmation. Say yes.
 
@@ -156,27 +162,45 @@ fly logs
 ./deploy/upload-db.sh
 ```
 
-The script is fully non-interactive and does four things:
+The script is fully non-interactive and does five things:
 
 1. `VACUUM INTO` a compact copy at `data/jobs-deploy.db`. The working `data/jobs.db`
    is never modified or write-locked.
-2. `gzip -1` it (roughly 3.3 GB → 865 MB).
-3. `fly sftp put` the archive to `/data/jobs.db.gz` on the volume.
-4. Unpack it on the machine and restart.
+2. `gzip -1` it (roughly a quarter of the size: 8.4 GB → about 2.2 GB).
+3. `fly sftp put` the archive to `/data/jobs.db.new.gz` on the volume — *beside* the
+   live database, which keeps serving — and check its sha256 against the local copy.
+4. Unpack it there and verify it with `deploy/verify-db.mjs` (uploaded alongside, since
+   the image has no `sqlite3`): `PRAGMA quick_check`, and the byte size and open-job
+   count must equal the local copy's. Anything off and the new file is deleted; the
+   live site never sees it.
+5. `fly apps restart`. The swap itself happens in `deploy/entrypoint.sh` at boot,
+   when nothing has the old file open: it deletes `jobs.db` and its write-ahead log
+   and renames `jobs.db.new` into place. The site is down for the restart only.
 
 **Step 3 is the long one.** Upload speed is whatever the local connection gives —
 think 15 minutes per GB on a 10 Mbps upload. Start it and go do something else.
 
-On a re-upload (a database already on the volume) the script first deletes the old
-file and restarts the machine into its idle branch. This is deliberate: the volume
-cannot hold two ~3.3 GB databases at once, and deleting a file the running server still
-has open does not free the space. The site is down for the unpack only, about a minute.
+The swap is done at boot and not by renaming under the running server for a reason
+that is easy to miss: the server keeps the database in WAL mode, so `jobs.db-wal`
+holds pages that belong to the *old* file, and SQLite would replay them into
+whichever file is called `jobs.db` when it next opens it. The entrypoint deletes the
+log together with the file it belongs to. Because the swap lives in the image, the
+script first checks that the deployed entrypoint knows about `jobs.db.new` and refuses
+to start the upload if the image predates it — push `main` (or `fly deploy`) first.
+
+The three checks exist because both ways an upload fails leave a file that looks
+fine: `fly sftp put` has cut a transfer short without saying so, and
+`fly ssh console -C` does not reliably pass a failing `gunzip` back. A truncated
+database still opens; it just has fewer jobs in it.
 
 The script finishes with `fly apps restart` and prints the last few log lines. If it
 has to be done by hand instead, the equivalent is:
 
 ```
-fly ssh console -C "gunzip -f /data/jobs.db.gz"
+fly sftp put data/jobs-deploy.db.gz /data/jobs.db.new.gz
+fly sftp put deploy/verify-db.mjs /data/verify-db.mjs
+fly ssh console -C "gzip -d /data/jobs.db.new.gz"
+fly ssh console -C "node /data/verify-db.mjs /data/jobs.db.new"   # must print "quick_check":"ok"
 fly apps restart
 fly logs
 ```
@@ -332,7 +356,7 @@ profile writes are refused when the server is not on localhost.
 |---|---|
 | `fly logs` shows "No jobs database" | Step 7 did not finish. Re-run it. |
 | Machine keeps restarting | `fly logs` for the real error. Usually out of memory during the index build — `fly.toml` already asks for 4 GB; if it is still short, raise `memory` in the `[[vm]]` block (or `fly scale memory 8192`). |
-| Site loads but has no jobs | The upload was cut short. Re-run step 7. |
+| Site loads but has no jobs | The upload was cut short and the checks in step 7 were bypassed. Re-run step 7. |
 | SFTP disconnects mid-upload | Re-run `./deploy/upload-db.sh`; the upload starts over. |
 | "volume not found" on deploy | Volume region must match `primary_region` in `fly.toml`. |
 | `fly deploy` rejects `auto_stop_machines = "off"` | Older flyctl. Change it to `false` in `fly.toml`. |
