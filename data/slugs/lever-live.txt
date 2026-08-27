@@ -31,6 +31,7 @@ actriv
 acumenllc
 add3
 additionwealth
+adeptid
 adhoclabs
 adidevelopments
 adjarabet
@@ -161,6 +162,7 @@ appointy
 appsamurai
 appzen
 apryse
+aptamino
 aqemia.com
 aquabyte
 aquarium
@@ -369,6 +371,7 @@ calentipartners.com
 caliza-financial-technologies
 callan
 calstart
+calyptus
 cambiumnetworks
 campusworksinc
 canarytechnologies
@@ -855,6 +858,7 @@ futo-org
 futurenow
 futureof-life
 fwgsolutions
+gabbwireless
 gagezero
 galatea
 galatea-associates
@@ -876,6 +880,7 @@ genome-medical
 genovatech
 genuinehealth
 geocomply-2
+germanamerican
 gess
 get-vocal-pbc
 getcircuit
@@ -984,6 +989,7 @@ hawaiianhost
 hawkemedia
 hawthorne-health
 hayeslocums
+haywardtyler
 hcvt
 headlight.health
 headroyce
@@ -1194,6 +1200,7 @@ kixie
 kkcompany
 klearnow
 klivvr
+klscott
 knix
 knownwell
 knrtherapy
@@ -1246,6 +1253,7 @@ leadspace
 leantaas
 ledger
 legacyrestorationllc
+lemnis
 lendbuzz
 lessen
 level99
@@ -1353,6 +1361,7 @@ mangolanguage
 manifest
 manifestmedex
 mantisinnovation
+mantra
 maple-finance
 maquettevirtuelle
 marcopolo
@@ -1426,6 +1435,7 @@ mightyid
 milhouseinc
 milltownpartners
 milocredit
+mimic
 mimsoftware
 mindbloom
 minders
@@ -1466,6 +1476,7 @@ moonsong-labs
 moorecolson
 morningbrew
 morningconsult
+moroch
 mosaic-2
 mothernewyork
 mothership
@@ -1604,6 +1615,7 @@ orijin
 orum
 osaro
 osedea
+osmoses
 otilumionics
 ottertune
 ou-education-services
@@ -1619,6 +1631,7 @@ overmind
 owletcare
 oxylabs
 p3vetpartners
+paceline
 pachama
 pacific-environment
 pacificoenergy
@@ -1633,6 +1646,7 @@ paradigmrehab
 paralleldomain
 parallelwireless
 paramedicservices
+parametrix
 paramobility
 parcelvision
 parnalllaw
@@ -1904,6 +1918,7 @@ rendernetworks
 renegade
 renofi
 replate
+replimune
 reply
 representus
 repurposeglobal
@@ -2045,6 +2060,7 @@ shopreli
 showcaseidx
 showpo-2
 shyftlabs
+sibros
 sideinc
 siepe
 sierraclub
@@ -2067,6 +2083,7 @@ sitetracker
 skello
 skillcloudhcm
 skillerszone
+skillsalliance
 skima
 skinny-dipped
 skio

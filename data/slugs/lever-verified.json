@@ -1,11 +1,11 @@
 {
   "ats": "lever",
-  "generated_at": "2026-08-22T19:49:56.371Z",
-  "probed": 8721,
-  "partial": false,
+  "generated_at": "2026-08-25T12:15:08.241Z",
+  "probed": 17,
+  "partial": true,
   "counts": {
-    "exists": 2611,
-    "dead": 6110,
+    "exists": 17,
+    "dead": 0,
     "error": 0
   },
   "companies": {
@@ -613,6 +613,10 @@
     "adeptailabs": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "adeptid": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "adhawk": {
       "status": "dead",
@@ -2151,6 +2155,10 @@
     "apt-edge": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "aptamino": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "aptible": {
       "status": "dead",
@@ -5246,6 +5254,10 @@
     "calyptia": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "calyptus": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "calyxcontainers": {
       "status": "dead",
@@ -12550,6 +12562,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "gabbwireless": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "gabi": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -12828,6 +12844,10 @@
     "geotab": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "germanamerican": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "gess": {
       "status": "exists",
@@ -14297,6 +14317,10 @@
     "haystack": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "haywardtyler": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "hazelanalytics": {
       "status": "dead",
@@ -17523,6 +17547,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "klscott": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "klubworks": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -18306,6 +18334,10 @@
     "legitimatetech": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "lemnis": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "lemonade": {
       "status": "dead",
@@ -19696,6 +19728,10 @@
       "checked_at": "2026-08-22T19:49:56.371Z",
       "name": "Mantis Innovation"
     },
+    "mantra": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "manty": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -20668,6 +20704,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "mimic": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "mimir": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -21187,6 +21227,10 @@
     "morningconsult": {
       "status": "exists",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "moroch": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "mos": {
       "status": "dead",
@@ -23357,6 +23401,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "osmoses": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "osnational": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -23608,6 +23656,10 @@
       "checked_at": "2026-08-22T19:49:56.371Z",
       "name": "P3 Veterinary Partners"
     },
+    "paceline": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "pacerpro": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -23795,6 +23847,10 @@
       "status": "exists",
       "checked_at": "2026-08-22T19:49:56.371Z",
       "name": "Paramedic Services of Illinois"
+    },
+    "parametrix": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "paramobility": {
       "status": "exists",
@@ -27230,6 +27286,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "replimune": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "replit": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -29278,6 +29338,10 @@
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
     },
+    "sibros": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
+    },
     "sidebench": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
@@ -29629,6 +29693,10 @@
     "skilljar": {
       "status": "dead",
       "checked_at": "2026-08-22T19:49:56.371Z"
+    },
+    "skillsalliance": {
+      "status": "exists",
+      "checked_at": "2026-08-25T12:15:08.241Z"
     },
     "skillshare": {
       "status": "dead",
