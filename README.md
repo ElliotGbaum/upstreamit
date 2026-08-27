@@ -125,10 +125,12 @@ key is configured.
 
 Accounts are optional, and everything the app does works signed out. An account adds
 memory: your saved filter sets, starred jobs, application status, and curated lists.
-A ★ and a × sit on every result — keep this one, or never show me this one again. A
-starred job ranks where it always did, marked; a hidden one is subtracted from every
-later search before anything is counted, and the results line says how many it held
-back and links to the list that brings them back.
+A ★, a ✓ and a × sit on every result — keep this one, I applied to this one, or never
+show me this one again. A starred job ranks where it always did, marked; an applied one
+is filed under Applied with the date on it; and both an applied and a hidden job are
+subtracted from every later search before anything is counted, so a board cannot keep
+offering back a job you have already answered. The results line says how many each
+answer held back and links to the screen that has the way out of it.
 Email + password (scrypt) or Google sign-in; `HttpOnly` `SameSite=Lax` sessions; CSRF
 checks on every write; rate limits on login and signup. Accounts live in their own SQLite
 file, separate from the corpus.
