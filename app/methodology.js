@@ -84,6 +84,16 @@ try {
     $('s-derived').textContent = day(meta.last_derive);
     $('statline').hidden = false;
 
+    // How far the company read has got, as a share of open jobs — the unit the
+    // filter works in — and the same share the other way up for the silent
+    // table. Both left as the printed dash on a server that has never run it.
+    if (typeof meta.jobs_with_sector === 'number' && meta.open) {
+      const share = meta.jobs_with_sector / meta.open;
+      $('s-sector-jobs').textContent = `${(share * 100).toFixed(1)}%`;
+      $('s-sector-boards').textContent = fmt(meta.sectors_read);
+      $('s-sector-silent').textContent = `${((1 - share) * 100).toFixed(1)}%`;
+    }
+
     // The list of ATSes is filled in where the sentence about it is, not in the
     // stat row: it is a claim the prose makes, so it should be the corpus that
     // answers it. The written-out fallback in the HTML is today's answer, so the

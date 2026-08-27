@@ -227,6 +227,10 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .opt .n{color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:11.5px;font-family:var(--mono)}
 .opt.zero .lbl,.opt.zero .n{opacity:.42}
 .opt.on{background:var(--accent-soft)}
+/* An exclusion list lights its ticked rows in the negative tint the ×-chips
+   already use, so "not finance" never reads as "only finance" a panel up. */
+.options.neg .opt.on{background:var(--err-soft)}
+.options.neg .opt input{accent-color:var(--err)}
 /* The one row that is not an option: it acts on the rows under it, so it is
    marked off from them by weight and a full-strength rule rather than by a
    background — a tint here would read as "selected", which is the one thing
@@ -347,6 +351,13 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .job .co{font-size:13px;line-height:1.4;font-weight:400}
 .job .co b{color:color-mix(in srgb,var(--ink-2) 80%,var(--ink));font-weight:500}
 .job .co .dept{color:var(--ink-3)}
+/* What the company does, under who it is. The sector sits a step above the
+   sentence in ink so a list of two hundred cards can be scanned by industry
+   without reading the sentences; the sentence is there for when one is worth
+   reading. One line, clipped: a card is a row, not a profile. */
+.job .about{color:var(--ink-3);font-size:12.5px;line-height:1.45;margin-top:2px;
+            overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.job .about .sector{color:var(--ink-2);font-weight:500}
 .job .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .job .why{color:var(--ink-3);font-size:11.5px;margin-top:6px;font-family:var(--mono)}
 /* `.score` is the saved view's right-hand column now — status and a date. The

@@ -148,10 +148,11 @@ npm run sync                    # pull the eleven slug sources → data/slugs/
 npm run verify                  # probe slugs not yet resolved: real board / 404
 npm run sweep                   # fetch every live board → data/jobs.db (hours, first time)
 npm run derive                  # prose → columns
+npm run enrich                  # what each company does, one model call per company
 
 npm run serve                   # http://localhost:7799
 npm run find                    # the same search, in the terminal
-npm test                        # 771 checks, ~1 s
+npm test                        # 931 checks, ~1 s
 ```
 
 To try it without a multi-hour sweep, pull one ATS with a cap:
@@ -178,7 +179,7 @@ src/
   derive.mjs          run the derivation pass                  lib/users/      accounts, sessions, Google
   find.mjs            run a profile from the terminal          lib/interpret.mjs  "describe your search"
   server.mjs          the web app and its JSON API             lib/db.mjs, schema.mjs
-  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 771 checks
+  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 931 checks
 app/                  three served HTML pages (landing.html is kept, not routed), plain ES modules, no build
 profiles/             filter profiles: portable JSON, read by the app, the CLI and the daily run
 data/slugs/           the slug store (tracked; refreshed nightly by CI)

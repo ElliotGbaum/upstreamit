@@ -417,6 +417,17 @@ const drawCompanySize = optionList('company-size-options', 'company_size', {
   ordered: true,
   universe: () => meta?.company_sizes ?? [],
 });
+// What the company does. Two lists over one universe and one set of counts:
+// the same leave-one-out number reads as "how many you would get" on the
+// include list and "how many you would lose" on the exclude list, which is
+// the number each tick needs. The universe is served, not kept here, so the
+// panel and the model's vocabulary cannot disagree.
+const drawSectors = optionList('sector-options', 'sectors', { cap: 40, universe: () => meta?.sectors ?? [] });
+const drawSectorExclusions = optionList('sector-exclude-options', 'exclude_sectors', {
+  cap: 40,
+  universe: () => meta?.sectors ?? [],
+});
+const sectorLabel = (id) => (meta?.sectors ?? []).find((s) => s.value === id)?.label ?? id;
 const drawDegree = optionList('degree-options', 'degree', {
   ordered: true,
   universe: () => DEGREE_LEVELS.map((d) => ({ value: d.value, label: d.label })),
@@ -657,6 +668,8 @@ function drawFacets() {
   drawRemoteScope(facets.remote_scope ?? []);
   drawCompanies(facets.company ?? []);
   drawCompanySize(facets.company_size ?? []);
+  drawSectors(facets.sector ?? []);
+  drawSectorExclusions(facets.sector ?? []);
   drawDegree(facets.degree ?? []);
 
   drawToggle('visa-sponsors', 'visa-sponsors-count', profile.requires_visa_sponsorship, facetCount(facets.visa, 'sponsors'));
@@ -934,6 +947,24 @@ function jobCard(row, i) {
     company.append(dept);
   }
   main.append(heading, company);
+
+  // What the company does, when it has been read. Nothing at all otherwise:
+  // an "unknown" here would be a claim about the company, and the absence of
+  // a sentence is not one. `other` is a real answer for the filter and a
+  // useless word on a card, so the sentence stands alone for those.
+  if (row.company_blurb || (row.sector && row.sector !== 'other')) {
+    const about = document.createElement('div');
+    about.className = 'about';
+    if (row.sector && row.sector !== 'other') {
+      const tag = document.createElement('span');
+      tag.className = 'sector';
+      tag.textContent = sectorLabel(row.sector);
+      about.append(tag);
+    }
+    if (row.company_blurb) about.append(about.childElementCount ? ' · ' : '', row.company_blurb);
+    about.title = row.company_blurb ?? '';
+    main.append(about);
+  }
 
   const metaRow = document.createElement('div');
   metaRow.className = 'meta';
@@ -1349,6 +1380,14 @@ async function renderDetail(card, row) {
     ['listing quality', job.d_quality],
     ['board', job.board_url ?? job.company_slug],
     ['company name', `${job.company_display ?? ''} (${job.name_source ?? '?'})`],
+    ['website', job.website],
+    // The audit trail for the one derived fact that came from a model rather
+    // than a rule: which model, how sure, and when — or that nobody has asked
+    // it yet, which is a different statement from "unsure".
+    ['sector', job.sector
+      ? `${sectorLabel(job.sector)} — ${job.sector_src ?? ''}`
+      : job.sector_at ? `unsure — ${job.sector_src ?? 'read'}` : 'not read yet'],
+    ['about', job.company_blurb],
   ];
   for (const [key, value] of facts) {
     if (value == null || value === '') continue;
@@ -1403,6 +1442,7 @@ const PANELS = {
   'job-function': { badge: 'n-job-function', fields: ['job_functions'] },
   skills: { badge: 'n-skills', fields: ['skills', 'exclude_skills'] },
   company: { badge: 'n-company', fields: ['companies', 'company_size'] },
+  sector: { badge: 'n-sector', fields: ['sectors', 'exclude_sectors'] },
   requirements: {
     badge: 'n-requirements',
     fields: ['degree', 'requires_visa_sponsorship', 'exclude_visa_refusal', 'exclude_clearance'],

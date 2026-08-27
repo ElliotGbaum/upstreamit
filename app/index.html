@@ -268,6 +268,24 @@
       </div>
     </section>
 
+    <!-- What the company does, as distinct from what the job is. The one
+         panel on the rail drawn from a model's reading rather than a rule's:
+         one call per company over its own postings, stored once, inherited by
+         every job on the board. The second list is the half people actually
+         want — "not finance" — and it can only ever drop a company we know
+         is one. See src/lib/enrich.mjs. -->
+    <section class="card" data-panel="sector">
+      <h3>Sector <span class="badge" id="n-sector">0</span><span class="caret">▾</span></h3>
+      <div class="body">
+        <div class="hint">What the <b>company</b> does — its industry, not the job's department. Read off
+          each company's own postings, one sentence and one bucket per company; the sentence is on every card.</div>
+        <div class="options" id="sector-options"></div>
+        <div class="hint">…or rule sectors out. This drops companies <b>known</b> to be in one; a company
+          nobody has read yet stays in.</div>
+        <div class="options neg" id="sector-exclude-options"></div>
+      </div>
+    </section>
+
     <section class="card collapsed" data-panel="skills">
       <h3>Skills <span class="badge" id="n-skills">0</span><span class="caret">▾</span></h3>
       <div class="body">

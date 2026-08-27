@@ -99,7 +99,7 @@
     <h2 id="pipeline">The pipeline</h2>
 
     <p>
-      Six stages. Each is a separate program writing to one SQLite database, and each can be
+      Seven stages. Each is a separate program writing to one SQLite database, and each can be
       re-run on its own, so improving a rule about how a job title maps to a seniority band
       re-runs stage four over data already on disk instead of re-crawling eleven thousand
       boards.
@@ -131,18 +131,25 @@
         <span class="n">4</span>
         <div>
           <b>Derive.</b> Turn free text into columns a filter can reason about.
-          <span class="t">Location, salary, seniority, workplace, skills, degree, clearance, sponsorship.</span>
+          <span class="t">Location, salary, seniority, workplace, skills, degree, clearance, sponsorship. No network, no model.</span>
         </div>
       </li>
       <li>
         <span class="n">5</span>
+        <div>
+          <b>Read the company.</b> One model call per company over its own postings.
+          <span class="t">What it does, in a sentence and one of thirty sectors. The only stage that reads anything but an ATS.</span>
+        </div>
+      </li>
+      <li>
+        <span class="n">6</span>
         <div>
           <b>Filter.</b> Run your criteria over those columns, in memory.
           <span class="t">Every criterion returns match, no, <em>or unknown</em>.</span>
         </div>
       </li>
       <li>
-        <span class="n">6</span>
+        <span class="n">7</span>
         <div>
           <b>Rank and show.</b> Order what survived, and say why each one is there.
           <span class="t">Output: the page, and a link straight to the company's own posting.</span>
@@ -250,6 +257,42 @@
     </table>
 
     <!-- ------------------------------------------------------------------ -->
+    <h2 id="company">What the company does</h2>
+
+    <p>
+      A posting says what the job is. It does not say what the company is, and that is the
+      thing most people look up before they apply: a data engineer at a bank and a data
+      engineer at a payments startup are the same posting and different careers. No ATS has
+      a field for it, so it is read the way a person would read it — from the "about us"
+      paragraph nearly every description carries, and from the list of roles the company has
+      open, which says what kind of organisation this is even when the prose does not.
+    </p>
+
+    <p>
+      That reading is done by a language model, once per <b>company</b> rather than once per
+      job, and stored on the company: a one-sentence description and one of thirty sectors
+      (fintech, healthcare providers, developer tools, defense, …). Every job on the board
+      inherits its company's answer. It is the one column in the corpus that came from a model
+      rather than a rule, and the detail pane says so on every job: which model, how sure it
+      was, and when.
+    </p>
+
+    <p class="callout">
+      <b>Unsure is stored as unknown, not as a guess.</b> The model is asked how confident it
+      is, and a low answer is thrown away. A company it could not place is treated exactly like
+      a company nobody has read yet: unknown, kept in every search by default. So is
+      <em>"something else"</em>, unless you ask for it by name.
+    </p>
+
+    <p>
+      The sector filter has two halves and the second is the useful one. "Not finance" drops a
+      company the model <b>read as</b> a bank; it does not drop the one whose postings never
+      said, because that one has not been shown to be a bank. Right now the sector is known for
+      <b id="s-sector-jobs">—</b> of open jobs across <b id="s-sector-boards">—</b> live boards;
+      the rest are unknown and stay in.
+    </p>
+
+    <!-- ------------------------------------------------------------------ -->
     <h2 id="unknowns">When a posting says nothing</h2>
 
     <p class="callout big">
@@ -274,6 +317,7 @@
         <tr><td>Seniority</td><td class="pct">24.9%</td><td><b>Shown separately</b> in a "worth a look" list beside the confirmed matches. Too many to drop, too many to mix in.</td></tr>
         <tr><td>Location</td><td class="pct">15.9%</td><td><b>Dropped</b>, the one deliberate exception. A job with no parseable location is not plausibly in your city, and keeping them would swamp any location filter. It is still a switch you can flip.</td></tr>
         <tr><td>Workplace, employment type, date posted</td><td class="pct">≤ 1.1%</td><td><b>Kept.</b> Small enough not to matter either way.</td></tr>
+        <tr><td>Company sector</td><td class="pct" id="s-sector-silent">—</td><td><b>Kept.</b> The share of open jobs at companies nobody has read yet, or that the model would not commit on. Excluding a sector only ever removes a company the model placed in it.</td></tr>
       </tbody>
     </table>
 
@@ -347,6 +391,12 @@
         offers "roles this company has open here", which is a proxy, and labels it as one.
       </li>
       <li>
+        The sector is a model's reading of the company's own words, not a registry lookup.
+        A staffing agency's board is the agency; a job aggregator's board is the aggregator,
+        whoever the roles are really for. The detail pane names the model and its confidence
+        so a wrong one can be traced rather than trusted.
+      </li>
+      <li>
         It cannot tell you a posting is genuinely open, only that the company still publishes
         it. That is the strongest evidence available without asking the recruiter, and
         postings do linger.
@@ -368,7 +418,7 @@
     <p>
       The four figures at the top of this page are read from the corpus as it loads. The rest
       come from the reports each stage writes on every run, and the derivation and filtering
-      rules behind them are covered by <b>771</b> checks that need no database and no network.
+      rules behind them are covered by <b>931</b> checks that need no database and no network.
       Where a figure here is a snapshot rather than a live read, it says so.
     </p>
 
