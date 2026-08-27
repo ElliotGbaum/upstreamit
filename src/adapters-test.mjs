@@ -28,6 +28,13 @@ import {
   buildHtml as buildLeverHtml,
   employmentType as leverEmploymentType,
 } from './lib/adapters/lever.mjs';
+import {
+  mapJob as mapWorkdayJob,
+  parseSlug as parseWorkdaySlug,
+  nativeIdFromPath,
+  employmentType as workdayEmploymentType,
+  companyNameFromUrl,
+} from './lib/adapters/workday.mjs';
 
 let passed = 0;
 const failures = [];
@@ -449,6 +456,188 @@ const leverRow = (overrides = {}) => ({
   check('lv: a row with no id is dropped', mapLeverJob(leverRow({ id: undefined }), 'x'), null);
   check('lv: a row with no title is dropped', mapLeverJob(leverRow({ text: '   ' }), 'x'), null);
   check('lv: a non-object is dropped', mapLeverJob(null, 'x'), null);
+}
+
+// ================================================================ workday ==
+//
+// The only adapter here whose descriptions cost a request each, which makes two
+// of its behaviours load-bearing in a way no other adapter's are: a job id that
+// can be built from the *list* row alone (or nothing can ever be skipped), and
+// an unhydrated job that leaves `description_text` absent rather than null (or
+// every skipped job blanks its own stored description on the next sweep).
+//
+// Fixtures are real shapes from `canadiansolar.wd5` and `aareon.wd103`,
+// captured 2026-08-26.
+
+// A list row: no description, no dates that mean anything, and an externalPath
+// that carries the only stable identifier.
+const wdRow = (over = {}) => ({
+  title: 'IT Engineer',
+  externalPath: '/job/Jeffersonville-IN/IT-Engineer_10001263-1',
+  locationsText: 'Jeffersonville, IN',
+  postedOn: 'Posted Today',
+  bulletFields: ['10001263'],
+  ...over,
+});
+
+const wdDetail = (over = {}) => ({
+  id: 'ed2cacaf0ddf10016294bf52d08b0000',
+  title: 'IT Engineer',
+  jobDescription: '<p>Build things.</p><ul><li>SQL</li><li>Python</li></ul>',
+  location: 'Jeffersonville, IN',
+  startDate: '2026-08-26',
+  timeType: 'Full time',
+  remoteType: 'On-Site',
+  jobReqId: '10001263',
+  jobPostingId: 'IT-Engineer_10001263-1',
+  country: { descriptor: 'United States of America', alpha2Code: 'US' },
+  externalUrl:
+    'https://canadiansolar.wd5.myworkdayjobs.com/CanadianSolar/job/Jeffersonville-IN/IT-Engineer_10001263-1',
+  ...over,
+});
+
+const WD_SLUG = 'canadiansolar|wd5|canadiansolar';
+
+// --- the slug is three fields ----------------------------------------------
+{
+  check('wd: a well-formed slug parses', parseWorkdaySlug(WD_SLUG), {
+    tenant: 'canadiansolar', dc: 'wd5', site: 'canadiansolar',
+  });
+  check('wd: a three-digit datacenter parses', parseWorkdaySlug('aareon|wd103|aareon'), {
+    tenant: 'aareon', dc: 'wd103', site: 'aareon',
+  });
+  check('wd: an underscored site parses', parseWorkdaySlug('piramal|wd3|piramal_external_careers')?.site, 'piramal_external_careers');
+
+  // 6,055 of 12,884 collected slugs look like this: the upstream parser put the
+  // datacenter where the tenant belongs and the tenant is simply not in the
+  // string. Rejecting them here is what makes them *dead* rather than *error*,
+  // so they leave the live list instead of being retried every night forever.
+  check('wd: a datacenter in the tenant field is rejected', parseWorkdaySlug('wd102|wd1|accenturecareers'), null);
+  check('wd: ...regardless of digits', parseWorkdaySlug('wd1|wd1|riministreet'), null);
+  check('wd: a two-field slug is rejected', parseWorkdaySlug('canadiansolar|wd5'), null);
+  check('wd: a bare slug is rejected', parseWorkdaySlug('canadiansolar'), null);
+  check('wd: a non-datacenter middle field is rejected', parseWorkdaySlug('a|b|c'), null);
+  check('wd: an empty field is rejected', parseWorkdaySlug('canadiansolar||canadiansolar'), null);
+  check('wd: a non-string is rejected', parseWorkdaySlug(null), null);
+  // A slug is third-party text. A path traversal in the site field would be
+  // pasted straight into a URL.
+  check('wd: a traversal in the site is rejected', parseWorkdaySlug('x|wd1|../../etc'), null);
+}
+
+// --- the id has to come off the list row -----------------------------------
+{
+  // This is the whole reason an incremental sweep is possible: `jobPostingId`
+  // is the last path segment, so a job already in the database is recognisable
+  // before spending a request on its detail.
+  check('wd: the native id is the last path segment', nativeIdFromPath('/job/Jeffersonville-IN/IT-Engineer_10001263-1'), 'IT-Engineer_10001263-1');
+  check('wd: it matches the detail jobPostingId', nativeIdFromPath(wdRow().externalPath), wdDetail().jobPostingId);
+  // `jobReqId` is shared by a posting opened in two locations; only the
+  // `-1`-suffixed id tells them apart.
+  check('wd: two locations of one req get different ids',
+    nativeIdFromPath('/job/Mesquite-TX/IT-Engineer_10001263') !== nativeIdFromPath('/job/Jeffersonville-IN/IT-Engineer_10001263-1'), true);
+  check('wd: a percent-encoded segment decodes', nativeIdFromPath('/job/Berlin/Ingenieur%20A_JR1'), 'Ingenieur A_JR1');
+  check('wd: no path yields no id', nativeIdFromPath(undefined), null);
+}
+
+// --- employment type -------------------------------------------------------
+{
+  check('wd: Full time maps', workdayEmploymentType('Full time'), 'FullTime');
+  check('wd: Part time maps', workdayEmploymentType('Part time'), 'PartTime');
+  check('wd: spelling variants map', workdayEmploymentType('full-time'), 'FullTime');
+  // Never guessed into the enum. An unrecognised value is unknown, not FullTime.
+  check('wd: an unknown value is null', workdayEmploymentType('Seasonal'), null);
+  check('wd: absent is null', workdayEmploymentType(undefined), null);
+}
+
+// --- a hydrated job --------------------------------------------------------
+{
+  const job = mapWorkdayJob(wdRow(), wdDetail(), WD_SLUG);
+  check('wd: ats', job.ats, 'workday');
+  check('wd: id is ats:slug:posting', job.id, `workday:${WD_SLUG}:IT-Engineer_10001263-1`);
+  check('wd: title', job.title, 'IT Engineer');
+  check('wd: employment type comes from timeType', job.employment_type, 'FullTime');
+  // Verbatim. `deriveWorkplace` lowercases and maps 'on-site'; synthesizing
+  // 'onsite' here would be the adapter deciding what the enum means.
+  check('wd: remoteType passes through unchanged', job.raw_workplace, 'On-Site');
+  check('wd: raw_remote is not invented', job.raw_remote, null);
+  check('wd: country', job.country, 'United States of America');
+  check('wd: startDate becomes posted_at', job.posted_at, Date.parse('2026-08-26'));
+  check('wd: the canonical externalUrl is preferred', job.url, wdDetail().externalUrl);
+  // Real markup, not an escaped string like Greenhouse's — so `htmlToText`
+  // alone, with no decode pass in front of it. A paragraph is a double break
+  // and a list item a single one; see `html.mjs`.
+  check('wd: description is markup, flattened', job.description_text, 'Build things.\n\nSQL\nPython');
+  // No pay range anywhere in this API; the salary derivation reads the prose.
+  check('wd: compensation is not invented', [job.comp_min, job.comp_max, job.comp_currency], [null, null, null]);
+}
+
+// --- an unhydrated job (its description is already stored) -----------------
+{
+  const job = mapWorkdayJob(wdRow(), null, WD_SLUG);
+  // The distinction the whole incremental sweep rests on. `null` would mean
+  // "read it, there was nothing"; `upsertBoard` coalesces only over absent.
+  check('wd: an unhydrated job omits description_text entirely', 'description_text' in job, false);
+  check('wd: ...and it is not null', job.description_text, undefined);
+  // Everything the list row can answer is still answered.
+  check('wd: the id still resolves without a detail', job.id, `workday:${WD_SLUG}:IT-Engineer_10001263-1`);
+  check('wd: the title falls back to the list row', job.title, 'IT Engineer');
+  check('wd: the location falls back to locationsText', job.location_raw, 'Jeffersonville, IN');
+  // The list only says "Posted Today", which is relative to the read. Null here
+  // means upsertBoard keeps the date it already stored.
+  check('wd: posted_at is null rather than today', job.posted_at, null);
+  check('wd: a url is still constructed', job.url, 'https://canadiansolar.wd5.myworkdayjobs.com/canadiansolar/job/Jeffersonville-IN/IT-Engineer_10001263-1');
+  check('wd: what the list cannot know stays null', [job.employment_type, job.raw_workplace, job.country], [null, null, null]);
+}
+
+// --- the company name has to be worked out from a URL ----------------------
+{
+  const u = (seg) => `https://x.wd5.myworkdayjobs.com/${seg}/job/City/Title_JR1`;
+  // The casing in the site segment is the only word-boundary information
+  // Workday gives; the slug is lowercase either way.
+  check('wd: camel case becomes words', companyNameFromUrl(u('CanadianSolar')), 'Canadian Solar');
+  check('wd: two words', companyNameFromUrl(u('RiminiStreet')), 'Rimini Street');
+  check('wd: a single word is left alone', companyNameFromUrl(u('Aareon')), 'Aareon');
+  // An acronym is one word, not one letter per word.
+  check('wd: an acronym stays whole', companyNameFromUrl(u('BOFCorp')), 'BOF Corp');
+  // "Careers" names the site, not the company.
+  check('wd: a Careers suffix is dropped', companyNameFromUrl(u('AdventistHealthCareers')), 'Adventist Health');
+  check('wd: an External Careers suffix is dropped', companyNameFromUrl(u('KeringExternalCareers')), 'Kering');
+
+  // The important negative. Without casing there are no boundaries, and
+  // "Adventisthealthcare" is worse than saying nothing — the UI falls back to
+  // the slug and the row stays honest.
+  check('wd: an all-lowercase segment yields nothing', companyNameFromUrl(u('adventisthealthcare')), null);
+  check('wd: ...even a plausible one', companyNameFromUrl(u('catalyte')), null);
+  check('wd: a non-workday url yields nothing', companyNameFromUrl('https://jobs.ashbyhq.com/ramp'), null);
+  check('wd: absent yields nothing', companyNameFromUrl(undefined), null);
+}
+
+// --- locations -------------------------------------------------------------
+{
+  // "3 Locations" is a count, not a place. Storing it would have the metro
+  // deriver trying to geocode the digit 3.
+  const many = mapWorkdayJob(wdRow({ locationsText: '3 Locations' }), wdDetail(), WD_SLUG);
+  check('wd: a location count is kept out of locations_all', many.locations_all, ['Jeffersonville, IN']);
+
+  const multi = mapWorkdayJob(
+    wdRow(),
+    wdDetail({ additionalLocations: [{ descriptor: 'Mesquite, TX' }, { descriptor: 'Mainz' }] }),
+    WD_SLUG,
+  );
+  check('wd: additionalLocations join the union', multi.locations_all, ['Jeffersonville, IN', 'Mesquite, TX', 'Mainz']);
+  check('wd: the primary stays the primary', multi.location_raw, 'Jeffersonville, IN');
+
+  // One board publishes a drilling rig where a city goes. Stored verbatim so
+  // the deriver fails to place it — an unknown metro, never a wrong one.
+  const rig = mapWorkdayJob(wdRow({ locationsText: 'Noble Endeavor' }), null, WD_SLUG);
+  check('wd: a location that is not a place is stored verbatim', rig.location_raw, 'Noble Endeavor');
+}
+
+// --- rows that should be dropped -------------------------------------------
+{
+  check('wd: a row with no externalPath is dropped', mapWorkdayJob(wdRow({ externalPath: undefined }), wdDetail(), WD_SLUG), null);
+  check('wd: a row with no title is dropped', mapWorkdayJob(wdRow({ title: '  ' }), null, WD_SLUG), null);
+  check('wd: a non-object is dropped', mapWorkdayJob(null, null, WD_SLUG), null);
 }
 
 // -------------------------------------------------------------------------- //

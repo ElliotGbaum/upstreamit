@@ -362,7 +362,7 @@ const drawExSkillChips = chipList('exskill-input', 'exskill-chips', 'exclude_ski
 // Labels come from the adapter registry rather than the raw column, so the
 // panel reads "Ashby / Greenhouse" and not "ashby / greenhouse". The universe is
 // whatever `corpusMeta.ats` reports — an ATS with no swept jobs draws no row.
-const ATS_LABELS = { ashby: 'Ashby', greenhouse: 'Greenhouse', lever: 'Lever' };
+const ATS_LABELS = { ashby: 'Ashby', greenhouse: 'Greenhouse', lever: 'Lever', workday: 'Workday' };
 const atsLabel = (id) => ATS_LABELS[id] ?? id;
 const drawAts = optionList('ats-options', 'ats', {
   selectAll: 'All boards',

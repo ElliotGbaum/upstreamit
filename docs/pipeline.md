@@ -127,13 +127,14 @@ node src/sweep.mjs --ats=greenhouse --no-conditional   # ignore stored ETags
 
 The sweeper reads its slug list from `data/slugs/<ats>-live.txt` when that exists, otherwise from `data/slugs/<ats>.txt`, otherwise from whatever the database already knows is live. Writes go through batched transactions: one transaction per board would fsync thousands of times, and one for the whole sweep would hold a write lock for minutes and lose everything on a crash.
 
-Every adapter fetches an entire board in one response, with full descriptions and no pagination:
+Three of the four adapters fetch an entire board in one response, with full descriptions and no pagination. Workday is the exception, and the row below is the short version of why the sweeper grew a second mode:
 
 | ATS | Endpoint |
 | --- | --- |
 | Ashby | `GET api.ashbyhq.com/posting-api/job-board/<slug>?includeCompensation=true` |
 | Greenhouse | `GET boards-api.greenhouse.io/v1/boards/<slug>/jobs?content=true&pay_transparency=true` |
 | Lever | `GET api.lever.co/v0/postings/<slug>?mode=json` |
+| Workday | `POST <tenant>.<dc>.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs` — 20 rows a page, no descriptions — then `GET …<externalPath>` per job |
 
 Measured full sweeps, from the `sweeps` table:
 
@@ -152,6 +153,24 @@ Ashby and Greenhouse honour `If-None-Match`, and the sweeper sends the ETag it s
 **Lever is the exception.** It sends an ETag on every response and then ignores the `If-None-Match` sent back: replaying a freshly issued ETag against `solidcore` returned `200` and all 2.9 MB, with the same ETag echoed. The header is still sent, since it costs nothing and would start working the day Lever implements it, but a Lever sweep is budgeted for full transfer every night. The first full Lever sweep moved 931 MB and reported 0 unchanged boards, which is that header being ignored showing up in the totals. It is still the fastest of the three.
 
 The one failure mode conditional GET can hide: a `304` says the *response body* is unchanged, so a board with a broken ETag would look like a company that stopped hiring. `--no-conditional` is meant to be run weekly with the counts diffed.
+
+### Workday: the board that costs one request per job
+
+Workday breaks three assumptions the other three adapters share, and each one changes what the sweeper has to do.
+
+**A board is not one slug.** It is a tenant, a datacenter and a site — `canadiansolar|wd5|canadiansolar` — because Workday shards customers across datacenters and the datacenter is part of the hostname, so it cannot be inferred. The pipe is part of the identifier, which `normalizeSlug` already allowed for.
+
+**The listing carries no prose, and pages 20 at a time.** `limit: 21` is a `400`, so there is no page size to tune. Descriptions live one `GET` further on, per job. A 1,242-job board — the largest observed — is 63 list requests plus 1,242 detail requests.
+
+**There are no ETags at all**, so the conditional-GET saving that makes the Greenhouse sweep affordable is simply unavailable.
+
+Taken together, a first Workday backfill costs roughly one request per job across the whole corpus. What makes the *daily* sweep affordable instead is that `jobPostingId` is the last segment of the listing's `externalPath`, so a job's id can be built from the list row alone, without spending its detail request. An adapter that declares `hydrates` is handed the set of jobs on that board whose descriptions the database already holds (`sweep.mjs`, `describedStmt`) and skips a request for each one, so a steady-state sweep pays only for genuinely new postings plus the list pages.
+
+Two pieces of plumbing make that safe rather than lossy. `upsertBoard` now **keeps the stored description** for a job that arrives without one, because an adapter returning no description is saying "I did not read one", never "this posting no longer has one" — and a detail fetch that simply failed is indistinguishable from a deliberate skip at that layer. A description that was read and found empty is stored as empty, like any other edit. And `hashJob` takes the stored description length for a job whose prose was not re-read, because hashing it as zero-length would differ from yesterday's hash and mark the job `changed` on every sweep forever.
+
+The trade being made, stated plainly: a posting whose prose is edited while its title, location, type and req id all stay the same is not noticed until it closes and reappears. `--no-conditional` forces a full re-read of every description and is the weekly check that this has not drifted — the same flag, and the same discipline, that the ETag caveat above already asks for.
+
+**A retired board answers `422`, not `404`.** Its human-facing page answers `500`. `probe-boards.mjs` HEADs a URL for every other ATS, which cannot work against a POST endpoint, so an adapter may now answer the existence question itself through `probeSlug()`; Workday is the only one that does. The contract is unchanged: `dead` only for "this board does not exist", `error` for everything else, so a bad ten minutes cannot retire live boards.
 
 ### Change detection without `updatedAt`
 
