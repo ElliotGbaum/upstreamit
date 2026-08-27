@@ -47,6 +47,7 @@
     "verify:lever": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever --only-unknown",
     "sweep:lever": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=lever",
     "verify:workday": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=workday --only-unknown",
-    "sweep:workday": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=workday"
+    "sweep:workday": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=workday",
+    "repair:workday": "node --disable-warning=ExperimentalWarning src/repair-workday-slugs.mjs"
   }
 }
