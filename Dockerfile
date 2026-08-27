@@ -13,7 +13,12 @@ FROM node:24-slim
 ENV NODE_ENV=production
 # node:sqlite still prints an ExperimentalWarning on Node 24. Only that class of
 # warning is silenced; everything else still reaches the logs.
-ENV NODE_OPTIONS=--disable-warning=ExperimentalWarning
+# The heap ceiling is raised because V8 sets its default from the machine's
+# RAM — 2,150 MB on the 4 GB machine — and the filter index alone retains about
+# 1,040 MB at a million jobs (measured 2026-08-27). That fits, but the corpus
+# grows every night; 3 GB leaves the ceiling above any size the machine could
+# actually hold rather than below it. See docs/deploy.md, "Memory".
+ENV NODE_OPTIONS="--disable-warning=ExperimentalWarning --max-old-space-size=3072"
 WORKDIR /app
 
 # ca-certificates: the Google sign-in token exchange makes an outbound HTTPS

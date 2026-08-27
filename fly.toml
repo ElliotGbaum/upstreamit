@@ -44,11 +44,18 @@ primary_region = "ewr"   # Newark. `fly platform regions` lists the rest.
   destination = "/data"
 
 # 4 GB, and it has to be shared-cpu-2x to get there: Fly caps shared-cpu-1x at
-# 2 GB, and 2 GB is not enough. The index retains ~427 MB, but *building* it
-# holds the raw SQLite rows and the built objects alive at the same time, which
-# peaked at ~1.5 GB RSS in testing and OOM-killed the 2 GB machine on first
-# boot ("Ineffective mark-compacts near heap limit").
+# 2 GB, and 2 GB is not enough. At 339k jobs the index retained ~427 MB but
+# *building* it peaked at ~1.5 GB RSS and OOM-killed the 2 GB machine on first
+# boot ("Ineffective mark-compacts near heap limit"). At 996k jobs, after
+# Workday landed on 2026-08-27, the index retains ~1,040 MB of heap and the
+# process sits at ~1.6 GB RSS; the Dockerfile raises Node's heap ceiling to
+# match. docs/deploy.md has the measurements.
 [[vm]]
   cpu_kind = "shared"
   cpus = 2
   memory = "4gb"
+
+# A little swap, so that a memory spike — the corpus outgrowing the projection
+# above, or a burst of facet-heavy searches — degrades into a slow minute
+# rather than an OOM kill and a cold restart.
+swap_size_mb = 1024

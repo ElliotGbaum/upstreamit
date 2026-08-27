@@ -113,11 +113,29 @@ way held every raw row and every built row alive at once, which is the entire re
 building a 450 MB index took 1.7 GB. The retained figure came down because `url` and
 `apply_url` left the index for the page that actually renders them.
 
-Why it matters beyond tidiness: the corpus is on its way to roughly a million jobs as
-Workday lands. Scaled linearly, the old build would have wanted ~5 GB of RSS and been
-OOM-killed on this machine; the new one wants ~2.6 GB and fits with room over. Watch
-`fly logs` on the first boot after a large sweep and raise `memory` if that projection
-turns out optimistic.
+Why it matters beyond tidiness: the corpus was on its way to roughly a million jobs as
+Workday landed. Scaled linearly, the old build would have wanted ~5 GB of RSS and been
+OOM-killed on this machine; the new one was projected at ~2.6 GB.
+
+Measured on 2026-08-27, with Workday in and 996,065 jobs (967,277 open) in the
+database, the projection was pessimistic:
+
+| | 339k jobs (2026-08-26) | 996k jobs (2026-08-27) |
+| --- | --- | --- |
+| Retained heap once built | 387 MB | **1,040 MB** |
+| RSS with the index warm | — | **1,640 MB** |
+| Build time (laptop) | 3,266 ms | 9,700 ms |
+| A keyword search | — | 150–250 ms |
+
+Two ceilings matter on the machine, and RAM is only one of them. V8 sets Node's heap
+limit from physical memory — **2,150 MB** on the 4 GB machine (`node -p
+v8.getHeapStatistics().heap_size_limit`) — and a process that reaches it dies with
+"heap out of memory" while the machine still has a gigabyte free. The `Dockerfile`
+therefore sets `--max-old-space-size=3072` in `NODE_OPTIONS`, so the heap ceiling sits
+above anything the machine could hold rather than below it, and `fly.toml` adds 1 GB of
+swap so an excursion past that degrades into a slow minute instead of an OOM kill.
+Watch `fly logs` on the first boot after a large sweep; the line to look for is
+`… open jobs · … boards · … index warm in N ms`.
 
 ## Step 5 — Create the disk
 
