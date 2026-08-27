@@ -53,7 +53,7 @@ export const ACTED_ON = new Set(['applied', 'interviewing', 'offer', 'rejected']
 /** Profile and list names become URL segments and are shown verbatim. */
 export const SAFE_NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
 
-export const USERS_SCHEMA_VERSION = 2;
+export const USERS_SCHEMA_VERSION = 3;
 
 /** How long a session cookie stays valid without being used. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -110,6 +110,28 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user    ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
+-- A long-lived read token, for a program rather than a browser.
+--
+-- Separate from the sessions table because the two have different lifetimes
+-- and different blast radii, and collapsing them would give either one the
+-- wrong half. A session expires in 30 days and can do anything the account can
+-- do; a sync token never expires on its own and can only read. Handing a
+-- spreadsheet a session cookie would mean handing it the password endpoint.
+--
+-- Only the SHA-256 is stored, for the same reason sessions does it: this table
+-- leaking must not let anyone read anything. There is deliberately no sliding
+-- expiry -- a scheduled job that stops working after a month of quiet is a job
+-- that breaks on the one week nobody is watching it. Revocation is the delete.
+CREATE TABLE IF NOT EXISTS sync_tokens (
+  token_hash   TEXT PRIMARY KEY,
+  user_id      TEXT NOT NULL,
+  label        TEXT,                  -- 'google-sheet', so a revoke can aim
+  created_at   INTEGER NOT NULL,
+  last_used_at INTEGER,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_sync_tokens_user ON sync_tokens(user_id);
 
 -- Short-lived OAuth handshake state: one row per sign-in attempt, carrying the
 -- CSRF state token and the PKCE verifier. In the database rather than a cookie

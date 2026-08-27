@@ -29,6 +29,9 @@ import {
   deleteUser,
   destroyAllSessions,
   identitiesFor,
+  createSyncToken,
+  listSyncTokens,
+  revokeSyncTokens,
 } from './lib/users/store.mjs';
 import { MIN_PASSWORD_LENGTH } from './lib/users/auth.mjs';
 
@@ -106,6 +109,59 @@ async function main() {
     return;
   }
 
+  // A token for a program: the Google Sheet script, a cron job, anything that
+  // has to read the saved list without a browser. Printed once and never again,
+  // because only its hash is kept.
+  if (args['sync-token']) {
+    const user = findByEmail(db, args['sync-token']);
+    if (!user) fail(`No account for ${args['sync-token']}`);
+    const label = args.label ?? 'google-sheet';
+    const { token } = createSyncToken(db, user.id, { label });
+    console.log(`
+  Sync token for ${user.email}  [${label}]
+
+    ${token}
+
+  Copy it now — it is stored only as a hash, so this is the one time it
+  is readable. Paste it into the sheet's script under SYNC_TOKEN.
+
+  It can read the saved list and nothing else: it cannot sign in, cannot
+  change anything, and cannot reach any other part of the account.
+
+  Revoke with:  node src/accounts.mjs --revoke-sync=${user.email}
+`);
+    return;
+  }
+
+  if (args['sync-tokens']) {
+    const user = findByEmail(db, args['sync-tokens']);
+    if (!user) fail(`No account for ${args['sync-tokens']}`);
+    const rows = listSyncTokens(db, user.id);
+    if (!rows.length) {
+      console.log(`\n  No sync tokens on ${user.email}.\n`);
+      return;
+    }
+    console.log(`\n  ${rows.length} sync token${rows.length === 1 ? '' : 's'} on ${user.email}\n`);
+    for (const row of rows) {
+      // "never" is the interesting reading: a token minted and never used means
+      // the script on the other end is not running.
+      console.log(
+        `  ${(row.label ?? '—').padEnd(20)} created ${stamp(row.created_at)}  ` +
+          `last used ${row.last_used_at ? stamp(row.last_used_at) : 'never'}`,
+      );
+    }
+    console.log('');
+    return;
+  }
+
+  if (args['revoke-sync']) {
+    const user = findByEmail(db, args['revoke-sync']);
+    if (!user) fail(`No account for ${args['revoke-sync']}`);
+    const gone = revokeSyncTokens(db, user.id, args.label ?? null);
+    console.log(`\n  Revoked ${gone} sync token${gone === 1 ? '' : 's'} on ${user.email}.\n`);
+    return;
+  }
+
   if (args.delete) {
     const user = findByEmail(db, args.delete);
     if (!user) fail(`No account for ${args.delete}`);
@@ -131,6 +187,9 @@ async function main() {
   node src/accounts.mjs --passwd=<email>          set a password (prompted, not echoed)
   node src/accounts.mjs --sessions=<email>        sign that account out everywhere
   node src/accounts.mjs --delete=<email>          delete it and everything it holds
+  node src/accounts.mjs --sync-token=<email>     mint a read token for a script (shown once)
+  node src/accounts.mjs --sync-tokens=<email>    what tokens exist, and when each was last used
+  node src/accounts.mjs --revoke-sync=<email>    revoke them all (add --label= to aim)
   node src/accounts.mjs --db=<path>               a users database somewhere else
 `);
 }
