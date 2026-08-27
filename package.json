@@ -34,7 +34,7 @@
     "accounts": "node --disable-warning=ExperimentalWarning src/accounts.mjs",
     "daily": "node --disable-warning=ExperimentalWarning src/daily.mjs",
     "schedule": "node --disable-warning=ExperimentalWarning src/schedule.mjs",
-    "test": "node --disable-warning=ExperimentalWarning src/derive-test.mjs && node --disable-warning=ExperimentalWarning src/filter-test.mjs && node --disable-warning=ExperimentalWarning src/adapters-test.mjs && node --disable-warning=ExperimentalWarning src/db-test.mjs && node --disable-warning=ExperimentalWarning src/users-test.mjs && node --disable-warning=ExperimentalWarning src/interpret-test.mjs",
+    "test": "node --disable-warning=ExperimentalWarning src/derive-test.mjs && node --disable-warning=ExperimentalWarning src/filter-test.mjs && node --disable-warning=ExperimentalWarning src/adapters-test.mjs && node --disable-warning=ExperimentalWarning src/db-test.mjs && node --disable-warning=ExperimentalWarning src/users-test.mjs && node --disable-warning=ExperimentalWarning src/sheet-sync-test.mjs && node --disable-warning=ExperimentalWarning src/interpret-test.mjs",
     "stats": "node --disable-warning=ExperimentalWarning src/stats.mjs",
     "progress": "node --disable-warning=ExperimentalWarning src/progress-server.mjs",
     "refresh": "npm run sync && npm run verify && npm run sweep && npm run derive",
