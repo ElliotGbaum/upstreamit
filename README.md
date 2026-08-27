@@ -28,14 +28,14 @@ data, and deciding what to do when a posting says nothing about something you fi
 
 ## By the numbers
 
-Measured 2026-08-24; the live counts are on the site.
+Measured 2026-08-27, the day Workday landed; the live counts are on the site.
 
 | | |
 | --- | --- |
-| Open jobs | 337,888, each with its full description, from 11,635 live boards |
-| Companies known | 15,265 (a board with no openings this month is kept; it will hire again) |
-| ATSes | Ashby, Greenhouse and Lever, swept daily. A Workday adapter landed 2026-08-26 and its first backfill of ~6,800 boards is under way; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
-| Metros | 24,337, built from the location strings actually observed |
+| Open jobs | 967,277, each with its full description, from 16,441 live boards |
+| Companies known | 21,029 (a board with no openings this month is kept; it will hire again) |
+| ATSes | Ashby, Greenhouse, Lever and Workday, swept daily. Workday's first backfill, overnight on 2026-08-26, brought 627,436 jobs from 5,747 boards and made it two thirds of the corpus; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
+| Metros | 54,017, built from the location strings actually observed |
 | A full filter run | a few seconds over the whole corpus, every facet counted, in memory |
 | Tests | 795, covering derivation, filter, adapters, the store, accounts and AI interpret. No database, no network, ~1 s |
 | Dependencies | one (`@anthropic-ai/sdk`, for the optional "describe your search"). Everything else is Node built-ins, including SQLite |
