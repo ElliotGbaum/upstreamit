@@ -119,6 +119,30 @@ OOM-killed on this machine; the new one wants ~2.6 GB and fits with room over. W
 `fly logs` on the first boot after a large sweep and raise `memory` if that projection
 turns out optimistic.
 
+### One thread
+
+The server is a single Node process, and Node runs JavaScript on one thread. A search
+is a pass over every open job in the index, and that pass holds the thread for as long
+as it takes — about a second on this machine at 337k jobs, three times that at a
+million. Everything anyone asks of the site in that second used to wait for it: a ★, a
+×, the next page, a sign-in. Measured on the live site, a trivial request fired 150 ms
+into a search took 0.7–1.5 s instead of 90 ms.
+
+`searchYielding` in `lib/filter/index.mjs` is what the server runs now. It is the same
+search with its two full passes — the scan of the index and the scoring of the
+survivors — running in strides of `YIELD_EVERY` jobs and handing the thread back between
+strides, so a request that lands mid-search is answered within one stride rather than at
+the end. The ordering of the survivors still runs in one piece; measured on a laptop over
+997k jobs, the longest block dropped from 0.7–1.4 s (the whole search) to 90–160 ms with
+the total unchanged. The command line and the daily run still use the synchronous
+`search`; they have nothing else to do while they wait.
+
+What this does not cover: the machine itself being busy. Uploading and verifying a new
+database over SSH (Step 7) runs `gunzip` and `sha256sum` on the same two shared cores
+and saturates the same volume, and Fly's p95 response time went to 44 s during the
+2026-08-27 upload. Do that at an hour nobody is looking, or prefix the heavy commands
+with `nice -n 19`.
+
 ## Step 5 — Create the disk
 
 ```
