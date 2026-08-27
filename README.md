@@ -9,7 +9,7 @@ index of them. It collects the public APIs of three applicant tracking systems �
 Greenhouse and Lever — sweeps every live board daily, turns the free-text postings into
 columns a filter can reason about, and ranks them against criteria you write once.
 
-**Live: [job-finder-ats.fly.dev](https://job-finder-ats.fly.dev)** · [How it works, on the site](https://job-finder-ats.fly.dev/methodology)
+**Live: [upstreamit.io](https://upstreamit.io)** · [How it works, on the site](https://upstreamit.io/methodology)
 
 ![The UpstreamIt search page](docs/screenshots/app.png)
 

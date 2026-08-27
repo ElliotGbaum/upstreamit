@@ -4,7 +4,11 @@
 # have to outlive a deploy: the jobs database, the accounts database, and the
 # profile files.
 #
-# `app` is the name of the deployed instance (https://job-finder-ats.fly.dev).
+# `app` is the Fly app name, which is no longer the address anyone types: the
+# site is served at https://upstreamit.io. `job-finder-ats` is the name this app
+# was created under, Fly gives every app `<name>.fly.dev` from it, and renaming
+# means creating a new app, so it stays.
+#
 # App names are global across all of Fly, so a fork has to pick its own before
 # its first deploy — see docs/deploy.md.
 

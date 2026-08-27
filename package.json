@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Job search engine that reads companies’ own ATS hiring APIs (Ashby, Greenhouse, Lever), normalizes 330k+ open postings into filterable columns, and never excludes a job for what its posting does not say.",
-  "homepage": "https://job-finder-ats.fly.dev",
+  "homepage": "https://upstreamit.io",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ElliotGbaum/upstreamit.git"
