@@ -65,7 +65,7 @@ import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { openDb } from './lib/db.mjs';
 import {
-  search,
+  searchYielding,
   corpusMeta,
   getJob,
   getIndex,
@@ -369,10 +369,10 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
     if (body.since) {
       const since = body.changed ? changedSince(db, body.since) : newSince(db, body.since);
       opts.restrictTo = since.ids;
-      const result = search(db, body.profile ?? {}, opts);
+      const result = await searchYielding(db, body.profile ?? {}, opts);
       return json(res, 200, { ...result, since: { from: since.from, latest: since.latest, pool: since.ids.size } });
     }
-    return json(res, 200, search(db, body.profile ?? {}, opts));
+    return json(res, 200, await searchYielding(db, body.profile ?? {}, opts));
   }
 
   // ----------------------------------------------------------- interpret --

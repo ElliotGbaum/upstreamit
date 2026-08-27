@@ -27,6 +27,7 @@
  * is picked up without restarting the server.
  */
 
+import { setImmediate as pause } from 'node:timers/promises';
 import { openDb } from '../db.mjs';
 import { fold } from '../derive/text.mjs';
 import { GUESSED_ONSITE } from '../derive/workplace.mjs';
@@ -275,6 +276,67 @@ export function invalidateIndex() {
  *   already did this".
  */
 export function search(db, rawProfile, opts = {}) {
+  const run = prepare(db, rawProfile, opts);
+  scan(run, 0, run.index.jobs.length);
+  gather(run);
+  score(run, 0, run.candidates.length);
+  return rank(run);
+}
+
+/**
+ * How many jobs a yielding search scans before handing the event loop back.
+ *
+ * About 4 ms of scanning on a laptop and perhaps three times that on the
+ * deployed machine. Smaller buys nothing a person could notice and costs a
+ * trip through the event loop per stride.
+ */
+export const YIELD_EVERY = 8192;
+
+/**
+ * The same search, handing the event loop back between strides.
+ *
+ * The server is one thread. A pass over 337k jobs holds it for a second or
+ * more — three times that once the corpus is a million — and everything anyone
+ * asks of the site in that second waits behind it: a ★, a ×, the next page,
+ * a sign-in. Measured on the live site, a trivial request fired 150 ms into a
+ * search took 0.7–1.5 s instead of 90 ms. The two passes that touch every
+ * row — the scan of the index, and the scoring of what survived — run in
+ * strides of `YIELD_EVERY` jobs here, with the event loop's turn between
+ * strides, so a request that arrives mid-search is answered within one. What
+ * still runs in one piece is the free-text query before the scan and the
+ * ordering after the scores; measured over 997k jobs on a laptop, the longest
+ * block dropped from 0.7–1.4 s (the whole search) to 90–160 ms, and the total
+ * did not move. The answer is identical to `search`'s: the strides are only
+ * where the loops pause.
+ *
+ * `search` stays synchronous for the command line and the daily run, which
+ * have nothing else to do while they wait.
+ *
+ * @param {number} [opts.yieldEvery] override the stride; the tests set it to 1.
+ */
+export async function searchYielding(db, rawProfile, opts = {}) {
+  const run = prepare(db, rawProfile, opts);
+  const stride = opts.yieldEvery ?? YIELD_EVERY;
+  await strided(run.index.jobs.length, stride, (from, to) => scan(run, from, to));
+  gather(run);
+  await strided(run.candidates.length, stride, (from, to) => score(run, from, to));
+  return rank(run);
+}
+
+/** `step` over `[0, n)` in strides, with the event loop's turn between them. */
+async function strided(n, stride, step) {
+  for (let at = 0; at < n; at += stride) {
+    if (at) await pause();
+    step(at, Math.min(at + stride, n));
+  }
+}
+
+/**
+ * Everything a search does before it looks at a job: normalise the profile,
+ * compile it, run the free-text and exclusion queries in FTS. Returns the
+ * state the scan accumulates into and `finish` reads back.
+ */
+function prepare(db, rawProfile, opts) {
   const started = Date.now();
   const { profile, warnings } = normalizeProfile(rawProfile);
   const index = getIndex(db);
@@ -329,7 +391,39 @@ export function search(db, rawProfile, opts = {}) {
   // loop and 337,000 of them.
   const verdict = { titleHits: null, failures: 0, failedKey: null, bucket: null, unknownOn: null };
 
-  for (const job of index.jobs) {
+  return {
+    db,
+    opts,
+    started,
+    profile,
+    warnings,
+    index,
+    c,
+    descriptionLimit,
+    textField,
+    textSpec,
+    ftsIds,
+    excludedIds,
+    restrictTo,
+    excluded,
+    inRows,
+    asideRows,
+    facets,
+    verdict,
+    scanned,
+    titleGated,
+    hidden,
+  };
+}
+
+/** The pass over the index — jobs `from` up to but not including `to`. */
+function scan(run, from, to) {
+  const { jobs } = run.index;
+  const { profile, c, restrictTo, ftsIds, excludedIds, excluded, facets, inRows, asideRows, verdict } = run;
+  let { scanned, titleGated, hidden } = run;
+
+  for (let i = from; i < to; i++) {
+    const job = jobs[i];
     if (restrictTo && !restrictTo.has(job.id)) continue;
     if (ftsIds && !ftsIds.has(job.id)) continue;
     if (excludedIds && excludedIds.has(job.id)) continue;
@@ -382,6 +476,18 @@ export function search(db, rawProfile, opts = {}) {
     });
   }
 
+  run.scanned = scanned;
+  run.titleGated = titleGated;
+  run.hidden = hidden;
+}
+
+/**
+ * Between the scan and the ranking: which description keywords each survivor
+ * hit. Bounded by the result set, not the corpus, and by `descriptionLimit`.
+ */
+function gather(run) {
+  const { db, profile, warnings, inRows, asideRows, descriptionLimit } = run;
+
   // ------------------------------------------------- description keywords --
   // The gate already ran, in FTS, before the loop above — see
   // `descriptionIndex`. This second pass is only about *which* keywords hit, and
@@ -389,6 +495,7 @@ export function search(db, rawProfile, opts = {}) {
   // the descriptions of the survivors, so it is bounded by the result set rather
   // than by the corpus.
   const candidates = [...inRows, ...asideRows];
+  run.candidates = candidates;
   let descriptionsRead = 0;
   if (profile.description_keywords.length) {
     if (candidates.length > descriptionLimit) {
@@ -404,7 +511,14 @@ export function search(db, rawProfile, opts = {}) {
     }
   }
 
-  for (const row of candidates) {
+  run.descriptionsRead = descriptionsRead;
+}
+
+/** The score for every survivor — candidates `from` up to but not including `to`. */
+function score(run, from, to) {
+  const { profile, candidates, textField, textSpec } = run;
+  for (let i = from; i < to; i++) {
+    const row = candidates[i];
     row.textHit = textField ? textField(row.job.id) : null;
     const scored = scoreJob(row.job, profile, {
       titleHits: row.titleHits,
@@ -416,6 +530,12 @@ export function search(db, rawProfile, opts = {}) {
     row.parts = scored.parts;
     row.why = explain({ descHits: row.descHits ?? [] });
   }
+}
+
+/** Everything after the scores: ordering, collapsing, paging, the links. */
+function rank(run) {
+  const { db, opts, started, profile, warnings, index, inRows, asideRows, facets } = run;
+  const { scanned, titleGated, hidden, descriptionsRead } = run;
 
   const matched = inRows.length;
   const limit = opts.limit ?? profile.limit;

@@ -19,7 +19,8 @@
  * `search()` is exercised here too, for the one thing the filter tests cannot
  * see: `url` and `apply_url` left the in-memory index on 2026-08-26 and are
  * read from SQLite for the rows on the page, so a result row must still carry
- * both.
+ * both. And `searchYielding` — the one the server runs — must actually hand
+ * the event loop back mid-scan, or every other request waits for the search.
  *
  * Uses a throwaway file in the OS temp directory, like `users-test.mjs`, so it
  * never sees `data/jobs.db` and leaves nothing behind.
@@ -30,7 +31,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openDb, upsertBoard, hashJob } from './lib/db.mjs';
 import { blankJob, jobId } from './lib/schema.mjs';
-import { search, getIndex, invalidateIndex } from './lib/filter/index.mjs';
+import { search, searchYielding, getIndex, invalidateIndex } from './lib/filter/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -230,6 +231,25 @@ try {
     const workplace = (opts) =>
       search(db, {}, opts).facets?.workplace?.find((r) => r.value === 'unknown')?.count ?? 0;
     check('applied: the facet counts drop with it', workplace({ excludeApplied: new Set([ID]) }), 1);
+  }
+
+  // --------------------------------------------------- yielding the loop --
+  // The deployed server is one thread, and a pass over the whole corpus holds
+  // it for a second or more — so a ★ pressed while anyone's search is running
+  // waited for that search to finish. `searchYielding` is the same search
+  // handing the event loop back between strides. The stride is set to one job
+  // because two jobs is the whole corpus here; the immediate is queued before
+  // the search starts, so a search that never yields answers before it runs.
+  {
+    let turned = false;
+    setImmediate(() => {
+      turned = true;
+    });
+    const yielded = await searchYielding(db, {}, { facets: false, yieldEvery: 1 });
+    check('yielding: the event loop turns while a search runs', turned, true);
+    const plain = search(db, {}, { facets: false });
+    const seen = (r) => ({ ids: r.results.map((x) => x.id), total: r.total, funnel: r.funnel });
+    check('yielding: the answer is the plain search\'s answer', seen(yielded), seen(plain));
   }
 
   // ---------------------------------------------------------- disappearance --
