@@ -406,6 +406,7 @@ function prepare(db, rawProfile, opts) {
     excludedIds,
     restrictTo,
     excluded,
+    excludedApplied,
     inRows,
     asideRows,
     facets,
@@ -413,14 +414,15 @@ function prepare(db, rawProfile, opts) {
     scanned,
     titleGated,
     hidden,
+    applied,
   };
 }
 
 /** The pass over the index — jobs `from` up to but not including `to`. */
 function scan(run, from, to) {
   const { jobs } = run.index;
-  const { profile, c, restrictTo, ftsIds, excludedIds, excluded, facets, inRows, asideRows, verdict } = run;
-  let { scanned, titleGated, hidden } = run;
+  const { profile, c, restrictTo, ftsIds, excludedIds, excluded, excludedApplied, facets, inRows, asideRows, verdict } = run;
+  let { scanned, titleGated, hidden, applied } = run;
 
   for (let i = from; i < to; i++) {
     const job = jobs[i];
@@ -479,6 +481,7 @@ function scan(run, from, to) {
   run.scanned = scanned;
   run.titleGated = titleGated;
   run.hidden = hidden;
+  run.applied = applied;
 }
 
 /**
@@ -535,7 +538,7 @@ function score(run, from, to) {
 /** Everything after the scores: ordering, collapsing, paging, the links. */
 function rank(run) {
   const { db, opts, started, profile, warnings, index, inRows, asideRows, facets } = run;
-  const { scanned, titleGated, hidden, descriptionsRead } = run;
+  const { scanned, titleGated, hidden, applied, descriptionsRead } = run;
 
   const matched = inRows.length;
   const limit = opts.limit ?? profile.limit;
