@@ -47,7 +47,17 @@ export {
 } from './profile.mjs';
 export { COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES } from '../schema.mjs';
 
-/** Columns the filter reads. Everything else stays on disk. */
+/**
+ * Columns the filter reads. Everything else stays on disk.
+ *
+ * `url` and `apply_url` are deliberately **not** here, though they were until
+ * the corpus outgrew the machine. Measured over 339,145 open jobs they averaged
+ * 133 characters a row — the largest string cost in the index and more than
+ * title, company and the JSON columns put together — and no criterion, ranker
+ * or facet has ever read them. They are needed by exactly one caller, `present`,
+ * for the ~50 rows on the page, which is the same argument that already keeps
+ * descriptions in SQLite. `linkFor` fetches them for those rows instead.
+ */
 const HOT_COLUMNS = `
   j.id, j.ats, j.title, j.title_norm, j.company_name, j.company_slug, j.employment_type,
   j.d_workplace, j.d_workplace_src, j.d_remote_scope, j.d_metros, j.d_countries,
@@ -56,7 +66,7 @@ const HOT_COLUMNS = `
   j.d_min_years, j.d_max_years, j.d_years_known,
   j.d_seniority, j.d_job_function, j.d_skills,
   j.d_visa, j.d_clearance, j.d_degree, j.d_age_days, j.d_quality,
-  j.posted_at, j.first_seen, j.last_seen, j.url, j.apply_url, j.department
+  j.posted_at, j.first_seen, j.last_seen, j.department
 `;
 
 const cache = new Map(); // db path -> index
@@ -133,20 +143,41 @@ export function getIndex(db, { force = false } = {}) {
   if (!force && hit && hit.generation === generation) return hit;
 
   const started = Date.now();
-  const rows = db.prepare(`SELECT ${HOT_COLUMNS} FROM jobs j WHERE j.is_open = 1`).all();
 
   // Open roles per company, counted here rather than queried per search.
   // It is the company-size proxy, and it is also what makes that filter honest
   // about its own units: this is a count of postings in *this* corpus on *this*
   // sweep, which is why it is recomputed with the index and never cached beyond
   // the generation key.
+  //
+  // Counted in SQL rather than by a first pass over the rows, because the rows
+  // are no longer all in memory at once to make a pass over. See below.
   const openRoles = new Map();
-  for (const r of rows) openRoles.set(r.company_slug, (openRoles.get(r.company_slug) ?? 0) + 1);
+  for (const r of db
+    .prepare('SELECT company_slug, COUNT(*) AS n FROM jobs WHERE is_open = 1 GROUP BY company_slug')
+    .iterate()) {
+    openRoles.set(r.company_slug, r.n);
+  }
 
-  const jobs = new Array(rows.length);
+  /**
+   * Streamed, not `.all()`.
+   *
+   * `.all()` materialises every open row as a JavaScript object, and the loop
+   * below then builds a second object from each one — so both representations
+   * of the entire corpus are alive at the same time and the garbage collector
+   * cannot touch the first until the last is built. That is the whole reason
+   * building a 427 MB index peaked at ~1.5 GB RSS and OOM-killed a 2 GB
+   * machine. `.iterate()` hands over one row at a time, so each raw row becomes
+   * garbage as soon as its index entry exists and the peak collapses to roughly
+   * the size of the finished index.
+   *
+   * The cost is that the row count is no longer known up front, so `jobs` is
+   * grown by `push` instead of pre-allocated. That is a far cheaper thing to pay
+   * for than headroom.
+   */
+  const jobs = [];
   const byId = new Map();
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
+  for (const r of db.prepare(`SELECT ${HOT_COLUMNS} FROM jobs j WHERE j.is_open = 1`).iterate()) {
     const job = {
       id: r.id,
       ats: r.ats,
@@ -190,10 +221,8 @@ export function getIndex(db, { force = false } = {}) {
       posted_at: r.posted_at,
       first_seen: r.first_seen,
       last_seen: r.last_seen,
-      url: r.url,
-      apply_url: r.apply_url,
     };
-    jobs[i] = job;
+    jobs.push(job);
     byId.set(job.id, job);
   }
 
@@ -375,13 +404,22 @@ export function search(db, rawProfile, opts = {}) {
   const total = collapsing ? shown.length : matched;
   const asideTotal = collapsing ? shownAside.length : asideRows.length;
 
+  // The two links per row, read from SQLite for the rows actually being
+  // returned. They are not in the in-memory index — see `HOT_COLUMNS` — and
+  // this is one indexed lookup over ~100 primary keys, against holding 133
+  // characters a row for every job in the corpus on the chance one is shown.
+  const links = linkFor(db, [
+    ...shown.slice(offset, offset + limit),
+    ...shownAside.slice(0, limit),
+  ]);
+
   return {
     profile,
     warnings,
     total,
     aside_total: asideTotal,
-    results: shown.slice(offset, offset + limit).map(present),
-    aside: shownAside.slice(0, limit).map(present),
+    results: shown.slice(offset, offset + limit).map(present(links)),
+    aside: shownAside.slice(0, limit).map(present(links)),
     facets: facets ? finishFacets(facets, db, profile) : null,
     funnel: {
       open_jobs: index.jobs.length,
@@ -440,9 +478,36 @@ function collapse(rows) {
   return kept;
 }
 
-/** The wire shape. Deliberately flat — the UI and the CLI both render this. */
-function present(row) {
+/**
+ * The two links for a set of rows, keyed by job id.
+ *
+ * Chunked because SQLite's parameter limit is finite and a caller could in
+ * principle ask for a large page; 400 keeps every statement well inside it.
+ */
+function linkFor(db, rows) {
+  const ids = [...new Set(rows.map((row) => row.job.id))];
+  const links = new Map();
+  for (let i = 0; i < ids.length; i += 400) {
+    const chunk = ids.slice(i, i + 400);
+    const holes = chunk.map(() => '?').join(',');
+    for (const r of db
+      .prepare(`SELECT id, url, apply_url FROM jobs WHERE id IN (${holes})`)
+      .iterate(...chunk)) {
+      links.set(r.id, r);
+    }
+  }
+  return links;
+}
+
+/**
+ * The wire shape. Deliberately flat — the UI and the CLI both render this.
+ *
+ * Curried over the link map because `url` and `apply_url` no longer live on the
+ * indexed row; everything else here still comes straight off it.
+ */
+const present = (links) => (row) => {
   const j = row.job;
+  const link = links?.get(j.id);
   return {
     id: j.id,
     // Which board this posting was swept from. A row that says where it came
@@ -455,8 +520,8 @@ function present(row) {
     company_open_roles: j.company_open_roles,
     company_size: j.company_size,
     department: j.department,
-    url: j.url,
-    apply_url: j.apply_url,
+    url: link?.url ?? null,
+    apply_url: link?.apply_url ?? null,
     workplace: j.workplace,
     workplace_guessed: j.workplace_guessed,
     remote_scope: j.remote_scope,
@@ -498,7 +563,7 @@ function present(row) {
     duplicate_metros: row.duplicateMetros ? [...row.duplicateMetros] : undefined,
     unknown_on: row.unknownOn ?? [],
   };
-}
+};
 
 // ------------------------------------------------------------------ facets --
 

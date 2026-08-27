@@ -91,9 +91,32 @@ app = "<your-app-name>"
 While you are in there: `primary_region = "ewr"` is Newark, a good default for the US
 East Coast. `fly platform regions` lists the others. The `[[vm]]` block at the bottom
 asks for a `shared-cpu-2x` machine with 4 GB of memory — leave it. The filter engine
-builds a ~427 MB in-memory index at boot, and *building* it peaked at ~1.5 GB RSS in
-testing; a 2 GB machine was OOM-killed on first boot ("Ineffective mark-compacts near
-heap limit"), and Fly caps `shared-cpu-1x` at 2 GB.
+builds its index in memory at boot, and that is what sizes this machine; a 2 GB one was
+OOM-killed on first boot ("Ineffective mark-compacts near heap limit"), and Fly caps
+`shared-cpu-1x` at 2 GB.
+
+The index used to cost far more to build than to hold, which is what made 4 GB
+necessary. Measured over the same 339,145-job corpus on 2026-08-26, before and after
+the two changes in `lib/filter/index.mjs`:
+
+| | Before | After |
+| --- | --- | --- |
+| Peak heap while building | 1,129 MB | **394 MB** |
+| Peak RSS | 1,705 MB | **880 MB** |
+| Retained once built | 450 MB | **387 MB** |
+| Build time | 3,205 ms | 3,266 ms |
+
+Two independent changes. The peak came down because the index is now streamed out of
+SQLite a row at a time (`.iterate()`) instead of being read whole (`.all()`) — the old
+way held every raw row and every built row alive at once, which is the entire reason
+building a 450 MB index took 1.7 GB. The retained figure came down because `url` and
+`apply_url` left the index for the page that actually renders them.
+
+Why it matters beyond tidiness: the corpus is on its way to roughly a million jobs as
+Workday lands. Scaled linearly, the old build would have wanted ~5 GB of RSS and been
+OOM-killed on this machine; the new one wants ~2.6 GB and fits with room over. Watch
+`fly logs` on the first boot after a large sweep and raise `memory` if that projection
+turns out optimistic.
 
 ## Step 5 — Create the disk
 
