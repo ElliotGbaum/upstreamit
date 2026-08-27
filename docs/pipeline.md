@@ -107,7 +107,7 @@ Measured mid-August 2026, before the sweep was extended past Ashby:
 | **ashby** | **7,951** | **4,297** (54.0%) | yes |
 | **greenhouse** | **15,197** | **8,272** (54.4%) | yes |
 | **lever** | **8,721** | **2,611** (29.9%) | yes |
-| workday | 12,884 (6,834 distinct boards; see the repair note below) | probing since 2026-08-26 | adapter landed 2026-08-26 |
+| **workday** | 12,884 (6,834 distinct boards; see the repair note below) | **5,747** (84.1% of the distinct boards; verified 2026-08-26) | yes, since 2026-08-27 |
 | bamboohr | 11,316 | not yet probed | — |
 | paylocity | 10,252 | not yet probed | — |
 | icims | 10,106 | not yet probed | — |
@@ -166,6 +166,8 @@ Workday breaks three assumptions the other three adapters share, and each one ch
 **There are no ETags at all**, so the conditional-GET saving that makes the Greenhouse sweep affordable is simply unavailable.
 
 Taken together, a first Workday backfill costs roughly one request per job across the whole corpus. What makes the *daily* sweep affordable instead is that `jobPostingId` is the last segment of the listing's `externalPath`, so a job's id can be built from the list row alone, without spending its detail request. An adapter that declares `hydrates` is handed the set of jobs on that board whose descriptions the database already holds (`sweep.mjs`, `describedStmt`) and skips a request for each one, so a steady-state sweep pays only for genuinely new postings plus the list pages.
+
+Measured on 2026-08-27, fifteen hours after the backfill. The backfill itself ran 5h45m over 5,747 boards with 318 board errors, nearly all `429`s. The repeat run covered 5,057 boards in 1h58m before it was stopped, and the rate is the interesting number: about 150,000 requests in 118 minutes is ~21 a second, which is the ceiling `workday.mjs` measured for the limiter, so the sweep was running as fast as Workday allows for its whole length. Most of those requests were details rather than list pages. It found 113,186 jobs the backfill had not: 97,006 of them on 220 boards that had answered `429` the night before (Airbus, CVS Health, JLL and PwC among them — the biggest boards are the ones exposed to throttling longest), and about 16,000 genuinely new postings on the rest, which is the day's churn. A steady day is therefore ~37,000 list pages plus one detail request per new posting, around 40 minutes at the ceiling. Sixty boards now hold exactly 2,000 jobs, which is `MAX_PAGES` (100 pages of 20) rather than the truth — the cap was set when the largest board observed had 1,242 postings, and the boards recovered that night (CVS Health, Circle K, O'Reilly) are much bigger than that. The largest tenants are truncated there, and raising the cap costs list pages only.
 
 Two pieces of plumbing make that safe rather than lossy. `upsertBoard` now **keeps the stored description** for a job that arrives without one, because an adapter returning no description is saying "I did not read one", never "this posting no longer has one" — and a detail fetch that simply failed is indistinguishable from a deliberate skip at that layer. A description that was read and found empty is stored as empty, like any other edit. And `hashJob` takes the stored description length for a job whose prose was not re-read, because hashing it as zero-length would differ from yesterday's hash and mark the job `changed` on every sweep forever.
 

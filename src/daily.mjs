@@ -40,15 +40,29 @@ const HISTORY = join(ROOT, 'data', 'daily-history.jsonl');
 /**
  * The ATSes the daily run maintains, in order.
  *
- * All three are verified and swept every day rather than alternating. Ashby
+ * All four are verified and swept every day rather than alternating. Ashby
  * and Greenhouse honour `If-None-Match`, so an unchanged board answers 304
  * with a zero-byte body and a repeat run costs almost nothing in transfer.
  * Lever ignores it and sends every board in full — about 930 MB and two
  * minutes a night, measured at 2,611 boards — which is the price of not
- * serving a third of the corpus days stale. If that ever stops being
- * affordable, splitting the ATSes across days is the lever.
+ * serving a third of the corpus days stale.
+ *
+ * Workday, added 2026-08-27, is the expensive one and the one that most
+ * needs to be daily: it is two thirds of the corpus. Its first backfill cost
+ * one request per job and ran 5h45m, but a repeat run pays only for the list
+ * pages plus a detail request per *new* posting, because the adapter
+ * declares `hydrates` and the sweeper hands it the jobs whose descriptions
+ * are already stored. The first repeat run, fifteen hours after the
+ * backfill, ran at Workday's measured ceiling of ~22 requests a second for
+ * 1h58m and covered 5,057 of the 5,747 boards before it was stopped. Most
+ * of those requests were details, not list pages: it recovered 220 boards,
+ * 97,006 jobs, that had answered 429 during the backfill, and found some
+ * 16,000 genuinely new postings on the rest. A day's churn alone is about
+ * 37,000 list pages plus a detail request per new posting, which at that
+ * ceiling is around 40 minutes. If that ever stops being affordable,
+ * splitting the ATSes across days is the lever.
  */
-const DAILY_ATSES = ['ashby', 'greenhouse', 'lever'];
+const DAILY_ATSES = ['ashby', 'greenhouse', 'lever', 'workday'];
 
 // The `key` is what `--skip-verify` / `--skip-sweep` match on, so the per-ATS
 // stages deliberately share one — skipping a phase skips it for every ATS,
