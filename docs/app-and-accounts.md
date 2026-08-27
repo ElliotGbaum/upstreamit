@@ -77,11 +77,14 @@ A blank value counts as no value at every level. `.env.example` ships with an em
 Optional, and one thing is behind them. Signed out, the app is the app: every job, every filter, every leave-one-out count, every description and every apply link. No nag, no reduced mode, and — with the one exception above — no gate. An anonymous visitor is not a degraded user; they are the default. Everything else an account touches is purely *memory*:
 
 - **Filters, kept.** The working filter document is saved as it changes and restored on return, so a search that took ten minutes to build is still there tomorrow. Named profiles save to the account too, alongside the shared `profiles/*.json` files — the same JSON document either way, listed together in the profile menu.
-- **Starred jobs.** A ★ on every result. Signed out it goes to the sign-in screen rather than disappearing, because a control that vanishes teaches nobody what an account is for.
+- **Starred jobs.** A ★ on every result. It changes nothing about the search — a starred job ranks exactly where it always did, with the star filled in so the list tells you which ones are yours — and everything starred is listed under Saved. Signed out it goes to the sign-in screen rather than disappearing, because a control that vanishes teaches nobody what an account is for.
+- **Hidden jobs.** A × beside the star, and the one thing an account changes about what a search *returns*. Pressing it takes the row off the list at once, leaving a line naming the job and an Undo, and from the next search on that posting is gone: the account hands the engine a set of ids and the engine subtracts them before it counts anything ([filtering.md](./filtering.md) covers why that is a set of ids and not a criterion). The Hidden tab in the saved view lists them and brings any of them back.
 - **What was done about them.** Each saved job carries a status — saved / applied / interviewing / offer / rejected — and a private note.
 - **Curated lists.** Any number of named buckets ("dream jobs", "apply this week"), orthogonal to status, because "apply this week" and "applied" answer different questions.
 
-The saved view is *not* a filtered view of the corpus. It shows everything starred, including postings the board has since pulled — tagged `no longer listed`, or `not in this corpus` if the database was rebuilt underneath it. Each saved row carries a snapshot of the title, company and URL taken at save time, so "did I ever apply to this" keeps answering after the posting is gone, which is the whole point of writing it down.
+The saved view is *not* a filtered view of the corpus. It shows everything starred, including postings the board has since pulled — tagged `no longer listed`, or `not in this corpus` if the database was rebuilt underneath it. Each saved row carries a snapshot of the title, company and URL taken at save time, so "did I ever apply to this" keeps answering after the posting is gone, which is the whole point of writing it down. The hidden list is drawn the same way, and there the snapshot is not a nicety: a hidden job is missing from every search by construction, so that row is the only copy of its title the screen will ever have.
+
+**A hidden search still says so.** The results line counts the matches it held back — `1,973 matching · 1 hidden by you` — and the count links to the list. It is the same rule the duplicate fold follows: a result set that quietly shrinks is indistinguishable from a filter that went wrong, and the count is of jobs matching *these* filters, not of everything ever hidden. Hiding and starring are independent, because being rejected from a job you applied to is exactly when you want it out of your results and still in your history.
 
 Accounts live in a **second** database, `data/users.db`, and that split is deliberate: `data/jobs.db` is disposable — delete it, re-sweep, re-derive, nothing of value is lost — and it must never contain a password hash, a session token or someone's list of jobs they applied to. An account is the opposite of disposable. Delete `users.db` and the server is the one that existed before accounts. Every query against it lives in `src/lib/users/store.mjs`; the HTTP layer (`routes.mjs`) does parsing, authorization and serialization and nothing else, which is what lets `src/users-test.mjs` drive the store without a socket.
 
@@ -91,7 +94,7 @@ Administration happens from the machine the database is on:
 npm run accounts -- --list               # every account, with what it holds and how it signs in
 npm run accounts -- --passwd=<email>     # set a password (prompted with echo off, never a flag)
 npm run accounts -- --sessions=<email>   # sign that account out everywhere
-npm run accounts -- --delete=<email>     # the account, its saved jobs, lists and profiles
+npm run accounts -- --delete=<email>     # the account, its saved and hidden jobs, lists and profiles
 npm run accounts -- --db=<path>          # a users database somewhere else
 ```
 

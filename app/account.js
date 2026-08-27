@@ -39,10 +39,20 @@ const state = {
   profiles: [], // this account's saved filter documents
   working: null, // the filter document this account was last using
   scope: { kind: 'all' }, // what the saved view is showing
+  hiddenCount: 0, // jobs pressed × on; the rows themselves load with the screen
+  // Set when a job is brought back, cleared when the search is re-run. The
+  // results on screen were filtered by a hidden set that no longer holds, and
+  // a job cannot un-hide itself back into a list it was excluded from.
+  hiddenStale: false,
 };
 
 /** Set by `init()`; how this module reaches the page's single `profile` object. */
-let bridge = { getProfile: () => ({}), setProfile: () => {}, onProfilesChanged: () => {} };
+let bridge = {
+  getProfile: () => ({}),
+  setProfile: () => {},
+  onProfilesChanged: () => {},
+  rerunSearch: () => {},
+};
 
 /**
  * A local copy of app.js's fetch wrapper.
@@ -73,7 +83,20 @@ const send = (path, method, payload) =>
 
 // ------------------------------------------------------------------- state --
 
-export const account = { init, starFor, decorateCard, detailPanel, remember, profileOptions, save, load, isOn, signedIn };
+export const account = {
+  init,
+  starFor,
+  hideFor,
+  openHidden,
+  decorateCard,
+  detailPanel,
+  remember,
+  profileOptions,
+  save,
+  load,
+  isOn,
+  signedIn,
+};
 
 function isOn() {
   return state.enabled;
@@ -82,8 +105,8 @@ function signedIn() {
   return Boolean(state.user);
 }
 
-async function init({ meta, who, getProfile, setProfile, onProfilesChanged }) {
-  bridge = { getProfile, setProfile, onProfilesChanged };
+async function init({ meta, who, getProfile, setProfile, onProfilesChanged, rerunSearch }) {
+  bridge = { getProfile, setProfile, onProfilesChanged, rerunSearch: rerunSearch ?? (() => {}) };
   state.enabled = Boolean(meta?.auth?.enabled);
   state.statuses = meta?.auth?.statuses ?? [];
   if (!state.enabled) return null;
@@ -117,6 +140,7 @@ async function refresh() {
   state.counts = me.counts ?? { total: 0 };
   state.profiles = me.profiles ?? [];
   state.working = me.working_profile ?? null;
+  state.hiddenCount = me.hidden_count ?? 0;
   drawChrome();
   bridge.onProfilesChanged();
 }
@@ -128,6 +152,8 @@ function forget() {
   state.membership = {};
   state.counts = { total: 0 };
   state.profiles = [];
+  state.hiddenCount = 0;
+  state.scope = { kind: 'all' };
   drawChrome();
   bridge.onProfilesChanged();
   showSaved(false);
@@ -154,7 +180,13 @@ function bindChrome() {
   // "open in new tab" all work. The listener only leaves a breadcrumb behind;
   // the navigation is the browser's.
   $('signin').addEventListener('click', stashProfile);
-  $('saved-toggle').onclick = () => showSaved($('saved-view').hidden);
+  // The button says Saved, so it opens Saved — even when the last thing you
+  // looked at on that screen was the hidden list.
+  $('saved-toggle').onclick = () => {
+    const opening = $('saved-view').hidden;
+    if (opening && state.scope.kind === 'hidden') state.scope = { kind: 'all' };
+    showSaved(opening);
+  };
   $('saved-back').onclick = () => showSaved(false);
 
   const menu = $('acct-menu');
@@ -264,13 +296,21 @@ function remember(profile, { now = false } = {}) {
 // ------------------------------------------------------ the star on a card --
 
 /**
- * The star, which is now the saved view's own control: it is how a row leaves
- * this list. It came off the result cards, where it sat in the rank gutter and
- * read as an ornament on the position number — see `decorateCard`.
+ * The star: save a job, or take it back off the list.
  *
- * It still handles the signed-out case, because the saved view is reachable
- * before a session exists and a control that vanishes teaches nobody what an
- * account is for.
+ * It sits on every result card and on every row of the saved view, and it means
+ * the same thing in both places. On a result card it is the opposite number of
+ * the × beside it — the two decisions you can make about a job at a glance, keep
+ * it or never see it again — and unlike the ×, starring changes nothing about
+ * what the search returns: a saved job stays exactly where it ranked, with the
+ * star filled in so you can see which ones are yours.
+ *
+ * It once lived in the rank gutter alone, where `1☆ 2☆ 3☆` read as decoration
+ * on the position number rather than as a control. It is back because a pair of
+ * buttons in a cluster of their own reads as a pair of buttons.
+ *
+ * Handles the signed-out case rather than vanishing: a control that disappears
+ * teaches nobody what an account is for.
  */
 function starFor(row) {
   if (!state.enabled) return null;
@@ -303,7 +343,7 @@ function paintStar(button, jobId) {
   button.title = saved
     ? `Saved${saved.status !== 'saved' ? ` · ${labelFor(saved.status)}` : ''} — click to remove`
     : state.user
-      ? 'Save this job'
+      ? 'Save this job — it stays in your results, marked ★, and is listed under Saved'
       : 'Sign in to save jobs';
 }
 
@@ -328,14 +368,103 @@ async function toggleSave(row) {
   drawChrome();
 }
 
+// ------------------------------------------------------ the × on a card --
+
+/**
+ * "Not interested." The other half of the star, and the only control on the
+ * page that changes what a search *returns* rather than what it says about a
+ * job you keep.
+ *
+ * Pressing it takes the card off the list at once, because a button called "do
+ * not show me this again" that leaves the row sitting there has not done the
+ * thing it says. What it leaves behind is a line naming the job and an Undo —
+ * hiding by mistake is a click away from being fixed, and the line is also how
+ * you learn where the job went. From the next search on it is simply not there:
+ * the server subtracts it before counting (`opts.exclude` in server.mjs).
+ */
+function hideFor(row) {
+  if (!state.enabled) return null;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'hide-x';
+  button.textContent = '×';
+  button.setAttribute('aria-label', 'Not interested — hide this job');
+  button.title = state.user
+    ? 'Not interested — hide this job from every future search'
+    : 'Sign in to hide jobs you do not want to see again';
+  button.onclick = async (event) => {
+    event.stopPropagation();
+    if (!state.user) return goToAuth('signin');
+    const card = button.closest('.job');
+    button.disabled = true;
+    try {
+      const result = await send(`/api/me/hidden/${encodeURIComponent(row.id)}`, 'PUT', {
+        // The snapshot travels with the ×, and it is load-bearing: a hidden job
+        // is absent from every search, so this is the only copy of its title
+        // the "hidden" screen will ever have to draw.
+        title: row.title,
+        company: row.company ?? row.company_name,
+        url: row.url,
+      });
+      state.hiddenCount = result.count;
+      drawChrome();
+      if (card) card.replaceWith(hiddenNotice(row, card, button));
+    } catch (err) {
+      button.disabled = false;
+      alert(`Could not hide that: ${err.message}`);
+    }
+  };
+  return button;
+}
+
+/**
+ * What stands in the list where a hidden job was.
+ *
+ * The card itself is kept, detached, and put back on Undo — rebuilding one here
+ * would mean a second copy of `jobCard` in this file, and this way the restored
+ * row comes back with its rank, its chips and its open/closed state intact.
+ */
+function hiddenNotice(row, card, button) {
+  const notice = document.createElement('div');
+  notice.className = 'job hidden-notice';
+
+  const said = document.createElement('span');
+  said.className = 'said';
+  const name = document.createElement('b');
+  name.textContent = row.title ?? 'That job';
+  said.append('Hidden — ', name, ' will stay out of your searches.');
+
+  const undo = document.createElement('button');
+  undo.type = 'button';
+  undo.className = 'btn ghost';
+  undo.textContent = 'Undo';
+  undo.onclick = async (event) => {
+    event.stopPropagation();
+    undo.disabled = true;
+    try {
+      const result = await request(`/api/me/hidden/${encodeURIComponent(row.id)}`, { method: 'DELETE' });
+      state.hiddenCount = result.count;
+      drawChrome();
+      button.disabled = false;
+      notice.replaceWith(card);
+    } catch (err) {
+      undo.disabled = false;
+      alert(`Could not bring that back: ${err.message}`);
+    }
+  };
+
+  notice.append(said, undo);
+  return notice;
+}
+
 /**
  * Called for every result card. Adds a pill if you have acted on the job.
  *
- * No star here. It used to sit in the rank gutter beside the position number,
- * where `1☆ 2☆ 3☆` read as decoration on the number rather than as a control
- * of its own. Saving now lives one click in, on the status row inside an opened
- * job, next to the rest of what an account remembers about it; the star is
- * still the control in the saved view, where un-starring is the whole point.
+ * The star says a job is saved; this says what you did about it afterwards, and
+ * only when there is something to say. A row reading "saved" next to a filled
+ * star would be the same fact printed twice, so `saved` draws no pill — but
+ * *applied* on a job you are scrolling past for the second time is the one
+ * thing you would want the list to tell you without being asked.
  */
 function decorateCard(row, { meta }) {
   if (!state.enabled) return;
@@ -534,11 +663,29 @@ function showSaved(on) {
   $('search-view').hidden = on;
   document.body.classList.toggle('viewing-saved', on);
   $('saved-toggle').classList.toggle('on', on);
-  if (on) void renderSaved();
+  if (on) return void renderSaved();
+  // Back to a list that was filtered by a hidden set which no longer holds. A
+  // job brought back cannot re-insert itself into results it was excluded from
+  // before they were counted, so the search runs again — and only when
+  // something actually changed, so the ordinary trip in and out of the saved
+  // view costs nothing.
+  if (state.hiddenStale) {
+    state.hiddenStale = false;
+    bridge.rerunSearch();
+  }
+}
+
+/** Open the hidden list directly — from the results line that counts them. */
+function openHidden() {
+  if (!state.user) return goToAuth('signin');
+  state.scope = { kind: 'hidden' };
+  showSaved(true);
 }
 
 async function renderSaved() {
   if (!state.user) return;
+  if (state.scope.kind === 'hidden') return renderHidden();
+  sectionTitle('Saved');
   const params = new URLSearchParams();
   if (state.scope.kind === 'status') params.set('status', state.scope.value);
   if (state.scope.kind === 'list') params.set('list', state.scope.value);
@@ -564,6 +711,143 @@ function describeScope() {
   if (state.scope.kind === 'status') return labelFor(state.scope.value).toLowerCase();
   if (state.scope.kind === 'list') return state.lists.find((l) => l.id === state.scope.value)?.name ?? 'list';
   return 'everything you starred';
+}
+
+/** The one heading over both screens; the scope bar decides which it names. */
+function sectionTitle(text) {
+  const node = $('saved-title');
+  if (node) node.textContent = text;
+}
+
+// ------------------------------------------------------------- hidden view --
+
+/**
+ * The jobs you pressed × on, and the way back from each.
+ *
+ * It shares the saved view's frame and scope bar rather than being a screen of
+ * its own, because it answers a question of the same shape — *which jobs have I
+ * already made my mind up about* — and because a second full-page view with its
+ * own toggle in the header would put a permanent button up there for a list
+ * most people open twice.
+ *
+ * Rows are drawn from the snapshot taken at hide time, hydrated against the
+ * corpus where the job is still there. That is not an optimisation: a hidden
+ * job is by construction missing from every search, so the snapshot is the only
+ * copy of its title this screen can have.
+ */
+async function renderHidden() {
+  sectionTitle('Hidden');
+  const data = await request('/api/me/hidden');
+  state.hiddenCount = data.count;
+  drawChrome();
+  drawScopes();
+
+  const rows = data.hidden;
+  $('saved-sub').textContent = rows.length
+    ? `${fmt(rows.length)} hidden · kept out of every search until you bring them back`
+    : '';
+  drawHiddenRows(rows);
+}
+
+function drawHiddenRows(rows) {
+  const host = $('saved-results');
+  if (!rows.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    const strong = document.createElement('b');
+    strong.textContent = 'Nothing hidden';
+    empty.append(
+      strong,
+      'Press × on a job in the results to hide it. It leaves the list at once and stays out of every ' +
+        'search you run from then on — and it lands here, so hiding one is never the last word on it.',
+    );
+    host.replaceChildren(empty);
+    return;
+  }
+
+  host.replaceChildren(
+    ...rows.map((hidden) => {
+      const live = hidden.job;
+      const card = document.createElement('div');
+      card.className = 'job saved-job hidden-job';
+
+      const gutter = document.createElement('div');
+      gutter.className = 'rank';
+
+      const main = document.createElement('div');
+      const heading = document.createElement('h4');
+      const href = live?.url ?? hidden.url;
+      const title = live?.title ?? hidden.title ?? hidden.job_id;
+      if (href) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = title;
+        heading.append(link);
+      } else {
+        heading.textContent = title;
+      }
+      const company = document.createElement('div');
+      company.className = 'co';
+      const coName = live?.company ?? hidden.company;
+      if (coName) {
+        const strong = document.createElement('b');
+        strong.textContent = coName;
+        company.append(strong);
+      }
+      if (live?.department) {
+        const dept = document.createElement('span');
+        dept.className = 'dept';
+        dept.textContent = coName ? ` · ${live.department}` : live.department;
+        company.append(dept);
+      }
+      main.append(heading, company);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      for (const text of savedChips(hidden, live)) {
+        const chip = document.createElement('span');
+        chip.className = 'chip soft';
+        chip.textContent = text;
+        meta.append(chip);
+      }
+      // The same three states the saved view names. A hidden job can be pulled
+      // from the board like any other, and bringing that one back would put
+      // nothing in your results — worth knowing before you press the button.
+      if (live && !live.is_open) meta.append(warnChip('no longer listed'));
+      else if (!live) meta.append(warnChip('not in this corpus'));
+      main.append(meta);
+
+      const side = document.createElement('div');
+      side.className = 'score';
+      const restore = document.createElement('button');
+      restore.type = 'button';
+      restore.className = 'btn';
+      restore.textContent = 'Bring back';
+      restore.title = 'Show this job in searches again';
+      restore.onclick = async () => {
+        restore.disabled = true;
+        try {
+          await request(`/api/me/hidden/${encodeURIComponent(hidden.job_id)}`, { method: 'DELETE' });
+          // The results behind this screen were counted without it. Say so to
+          // `showSaved`, which re-runs the search on the way back.
+          state.hiddenStale = true;
+          await renderHidden();
+        } catch (err) {
+          restore.disabled = false;
+          alert(`Could not bring that back: ${err.message}`);
+        }
+      };
+      const when = document.createElement('span');
+      when.className = 'when';
+      when.textContent = `hidden ${stamp(hidden.hidden_at)}`;
+      side.append(restore, when);
+
+      card.append(gutter, main, side);
+      return card;
+    }),
+  );
 }
 
 function drawScopes() {
@@ -642,6 +926,18 @@ function drawScopes() {
     }
   };
   nodes.push(add);
+
+  // Last, and set apart. Everything to its left is a way of slicing the jobs
+  // you kept; this is the other pile entirely — the ones you turned down — and
+  // it belongs on this screen because both answer "what have I already decided
+  // about", but it is not one more status.
+  const hidden = pill('Hidden', state.hiddenCount, state.scope.kind === 'hidden', () => {
+    state.scope = { kind: 'hidden' };
+    void renderSaved();
+  });
+  hidden.classList.add('hid');
+  hidden.title = 'Jobs you pressed × on — kept out of your searches until you bring them back';
+  nodes.push(hidden);
 
   host.replaceChildren(...nodes);
 }
