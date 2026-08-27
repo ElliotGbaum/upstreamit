@@ -219,7 +219,7 @@ function securityHeaders(req, res) {
  *
  * Written against the `Host` we were actually reached on rather than a domain
  * in a constant: it survives the domain changing, and every host without the
- * prefix — the apex, `job-finder-ats.fly.dev`, `localhost:8080` — falls through
+ * prefix — `upstreamit.io`, `job-finder-ats.fly.dev`, `localhost:8080` — falls through
  * untouched.
  *
  * @returns {boolean} true when a redirect was sent and the caller must stop.
