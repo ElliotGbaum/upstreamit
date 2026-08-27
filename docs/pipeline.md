@@ -19,16 +19,16 @@ Every command below exists in `package.json`.
 
 ```bash
 npm run sync           # pull every source, dedupe, write the slug store
-npm run verify         # probe the slugs not yet resolved, all three ATSes
+npm run verify         # probe the slugs not yet resolved, all four ATSes
 npm run verify:all     # re-probe every slug in the store
-npm run sweep          # fetch every live board into data/jobs.db (ashby, greenhouse, lever)
+npm run sweep          # fetch every live board into data/jobs.db (ashby, greenhouse, lever, workday)
 npm run derive         # normalize into the d_* columns the filters read
 npm run derive:new     # derive only the jobs a sweep has added since the last pass
 npm run refresh        # sync → verify → sweep → derive
-npm test               # 680 checks, about a second, no database and no network
+npm test               # 771 checks, about a second, no database and no network
 ```
 
-Per-ATS variants: `npm run verify:ashby`, `verify:greenhouse`, `verify:lever`, `sweep:ashby`, `sweep:greenhouse`, `sweep:lever`.
+Per-ATS variants: `npm run verify:ashby`, `verify:greenhouse`, `verify:lever`, `verify:workday`, `sweep:ashby`, `sweep:greenhouse`, `sweep:lever`, `sweep:workday`.
 
 Utilities:
 
@@ -41,7 +41,7 @@ npm run vacuum         # checkpoint the WAL and VACUUM data/jobs.db (stop the se
 npm run progress       # static server for progress/index.html on :7788, separate from the app
 ```
 
-The test count is 680: 132 derivation, 216 filter, 133 adapter, 92 account and 107 interpret checks, run by `npm test` in that order.
+The test count is 771: 132 derivation, 216 filter, 190 adapter, 34 store, 92 account and 107 interpret checks, run by `npm test` in that order.
 
 ## Sync
 
@@ -107,7 +107,7 @@ Measured mid-August 2026, before the sweep was extended past Ashby:
 | **ashby** | **7,951** | **4,297** (54.0%) | yes |
 | **greenhouse** | **15,197** | **8,272** (54.4%) | yes |
 | **lever** | **8,721** | **2,611** (29.9%) | yes |
-| workday | 12,884 | not yet probed | — |
+| workday | 12,884 (6,834 distinct boards; see the repair note below) | probing since 2026-08-26 | adapter landed 2026-08-26 |
 | bamboohr | 11,316 | not yet probed | — |
 | paylocity | 10,252 | not yet probed | — |
 | icims | 10,106 | not yet probed | — |
@@ -117,12 +117,13 @@ On 2026-08-24 the live lists held 4,355 Ashby, 8,299 Greenhouse and 2,611 Lever 
 ## Sweep
 
 ```bash
-npm run sweep                                          # all three ATSes, in order
+npm run sweep                                          # all four ATSes, in order
 npm run sweep:greenhouse                               # one of them
 node src/sweep.mjs --ats=greenhouse --limit=200        # smoke run
 node src/sweep.mjs --ats=greenhouse --concurrency=8
 node src/sweep.mjs --ats=greenhouse --only=stripe,ramp # named boards only
 node src/sweep.mjs --ats=greenhouse --no-conditional   # ignore stored ETags
+node src/sweep.mjs --ats=workday --detail-concurrency=8    # detail requests in flight per board (Workday only)
 ```
 
 The sweeper reads its slug list from `data/slugs/<ats>-live.txt` when that exists, otherwise from `data/slugs/<ats>.txt`, otherwise from whatever the database already knows is live. Writes go through batched transactions: one transaction per board would fsync thousands of times, and one for the whole sweep would hold a write lock for minutes and lose everything on a crash.

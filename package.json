@@ -2,7 +2,7 @@
   "name": "upstreamit",
   "version": "0.1.0",
   "private": true,
-  "description": "Job search engine that reads companies’ own ATS hiring APIs (Ashby, Greenhouse, Lever), normalizes 330k+ open postings into filterable columns, and never excludes a job for what its posting does not say.",
+  "description": "Job search engine that reads companies’ own ATS hiring APIs (Ashby, Greenhouse, Lever, Workday), normalizes 330k+ open postings into filterable columns, and never excludes a job for what its posting does not say.",
   "homepage": "https://upstreamit.io",
   "repository": {
     "type": "git",
