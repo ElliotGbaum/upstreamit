@@ -113,29 +113,11 @@ way held every raw row and every built row alive at once, which is the entire re
 building a 450 MB index took 1.7 GB. The retained figure came down because `url` and
 `apply_url` left the index for the page that actually renders them.
 
-Why it matters beyond tidiness: the corpus was on its way to roughly a million jobs as
-Workday landed. Scaled linearly, the old build would have wanted ~5 GB of RSS and been
-OOM-killed on this machine; the new one was projected at ~2.6 GB.
-
-Measured on 2026-08-27, with Workday in and 996,065 jobs (967,277 open) in the
-database, the projection was pessimistic:
-
-| | 339k jobs (2026-08-26) | 996k jobs (2026-08-27) |
-| --- | --- | --- |
-| Retained heap once built | 387 MB | **1,040 MB** |
-| RSS with the index warm | — | **1,640 MB** |
-| Build time (laptop) | 3,266 ms | 9,700 ms |
-| A keyword search | — | 150–250 ms |
-
-Two ceilings matter on the machine, and RAM is only one of them. V8 sets Node's heap
-limit from physical memory — **2,150 MB** on the 4 GB machine (`node -p
-v8.getHeapStatistics().heap_size_limit`) — and a process that reaches it dies with
-"heap out of memory" while the machine still has a gigabyte free. The `Dockerfile`
-therefore sets `--max-old-space-size=3072` in `NODE_OPTIONS`, so the heap ceiling sits
-above anything the machine could hold rather than below it, and `fly.toml` adds 1 GB of
-swap so an excursion past that degrades into a slow minute instead of an OOM kill.
-Watch `fly logs` on the first boot after a large sweep; the line to look for is
-`… open jobs · … boards · … index warm in N ms`.
+Why it matters beyond tidiness: the corpus is on its way to roughly a million jobs as
+Workday lands. Scaled linearly, the old build would have wanted ~5 GB of RSS and been
+OOM-killed on this machine; the new one wants ~2.6 GB and fits with room over. Watch
+`fly logs` on the first boot after a large sweep and raise `memory` if that projection
+turns out optimistic.
 
 ## Step 5 — Create the disk
 
@@ -188,9 +170,9 @@ The script is fully non-interactive and does five things:
 3. `fly sftp put` the archive to `/data/jobs.db.new.gz` on the volume — *beside* the
    live database, which keeps serving — and check its sha256 against the local copy.
 4. Unpack it there and verify it with `deploy/verify-db.mjs` (uploaded alongside, since
-   the image has no `sqlite3`): `PRAGMA quick_check`, and the byte size and open-job
-   count must equal the local copy's. Anything off and the new file is deleted; the
-   live site never sees it.
+   the image has no `sqlite3`): `PRAGMA quick_check`, a full-text query that must
+   return hits, and the byte size and open-job count must equal the local copy's.
+   Anything off and the new file is deleted; the live site never sees it.
 5. `fly apps restart`. The swap itself happens in `deploy/entrypoint.sh` at boot,
    when nothing has the old file open: it deletes `jobs.db` and its write-ahead log
    and renames `jobs.db.new` into place. The site is down for the restart only.
