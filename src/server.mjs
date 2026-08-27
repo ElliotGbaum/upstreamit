@@ -65,6 +65,7 @@ import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { openDb } from './lib/db.mjs';
 import {
+  search,
   searchYielding,
   corpusMeta,
   getJob,
@@ -77,7 +78,7 @@ import {
   REMOTE_SCOPES,
 } from './lib/filter/index.mjs';
 import { newSince, changedSince, goneSince, activity } from './lib/filter/diff.mjs';
-import { profilesVisibleTo, ownerOf, ownedBy, PROFILE_DIR } from './find.mjs';
+import { profilesVisibleTo, ownerOf, ownedBy, listProfiles, PROFILE_DIR } from './find.mjs';
 import { json, readBody, CONTENT_TYPES as TYPES } from './lib/wire.mjs';
 import { interpret, aiMeta, CALLS_PER_HOUR } from './lib/interpret.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
@@ -643,6 +644,26 @@ function holdsTag(req, etag) {
   return header.split(',').some((tag) => bare(tag) === wanted);
 }
 
+/**
+ * Search once with every profile in `profiles/`, and say how many ran.
+ *
+ * The result is thrown away; what it leaves behind is the page cache. A file
+ * that will not parse is skipped rather than fatal — it is the page's problem
+ * when someone picks it, not a reason the server should fail to start.
+ */
+async function warmProfiles(db) {
+  let warmed = 0;
+  for (const profile of listProfiles()) {
+    try {
+      search(db, JSON.parse(await readFile(profile.path, 'utf8')), { limit: 1, facets: false });
+      warmed++;
+    } catch {
+      /* skipped */
+    }
+  }
+  return warmed;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const db = openDb(args.db);
@@ -674,11 +695,23 @@ async function main() {
   getIndex(db);
   const warmMs = Date.now() - started;
 
+  // Then run each listed profile once, for the same reason. The index is the
+  // open rows; a search also reads the full-text index and the descriptions
+  // of the rows it ranks, and on first touch those come off the volume — which
+  // on the deployed machine is slow enough that a cold search is seconds where
+  // a warm one is one. The page boots into a listed profile, so this is the
+  // exact search the first visitor after a deploy is about to ask for; paying
+  // for it here means they get the warm answer, not the cold one.
+  const warming = Date.now();
+  const warmed = await warmProfiles(db);
+  const warmedMs = Date.now() - warming;
+
   server.listen(args.port, args.host, () => {
     console.log(`\n  UpstreamIt → http://${args.host}:${args.port}`);
     console.log(
       `  ${meta.open.toLocaleString('en-US')} open jobs · ${meta.companies.toLocaleString('en-US')} boards · ` +
-        `${meta.metros_total.toLocaleString('en-US')} metros · index warm in ${warmMs} ms`,
+        `${meta.metros_total.toLocaleString('en-US')} metros · index warm in ${warmMs} ms · ` +
+        `${warmed} profile${warmed === 1 ? '' : 's'} warm in ${warmedMs} ms`,
     );
     console.log(
       accounts
