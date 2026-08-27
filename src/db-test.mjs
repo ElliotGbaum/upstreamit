@@ -31,7 +31,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openDb, upsertBoard, hashJob } from './lib/db.mjs';
 import { blankJob, jobId } from './lib/schema.mjs';
-import { search, searchYielding, getIndex, invalidateIndex } from './lib/filter/index.mjs';
+import { search, searchYielding, getIndex, invalidateIndex, MISSING_DESCRIPTION_SQL } from './lib/filter/index.mjs';
 
 let passed = 0;
 const failures = [];
@@ -259,6 +259,37 @@ try {
     check('closed: the event log says disappeared', events(jobId('ashby', 'acme', 'j2')).at(-1), 'disappeared');
     upsertBoard(db, board([job(), job({ native_id: 'j2' })]), day(12));
     check('closed: a relisted job reappears rather than being born again', events(jobId('ashby', 'acme', 'j2')).at(-1), 'reappeared');
+  }
+
+  // ---------------------------------------------------- missing descriptions --
+  // A description-keyword gate answers `unknown` for a job with no prose, not
+  // `no` — and it has to find those jobs without reading the prose of every
+  // job that has some. The lookup used to do exactly that, and on the deployed
+  // machine it was a 2 GB read the first time anyone searched after a deploy.
+  // The plans are pinned here because nothing else would notice them regress:
+  // the answer is identical either way, and a laptop with the file in cache
+  // cannot feel the difference.
+  {
+    const empty = job({ native_id: 'j3', url: 'https://jobs.ashbyhq.com/acme/j3', description_text: null });
+    upsertBoard(db, board([job(), job({ native_id: 'j2' }), empty]), day(13));
+    // The keyword gate runs in FTS, which the derive pass builds and the sweep
+    // does not; one row is fed in by hand here, the way `derive.mjs` does it,
+    // so that there is a job the gate can say yes to beside the one it cannot
+    // answer for.
+    db.prepare('INSERT INTO jobs_fts (rowid, title, company, body) VALUES (?, ?, ?, ?)').run(1, 'Solutions Engineer', 'Acme', 'Build things with SQL and Python.');
+    db.prepare('INSERT OR REPLACE INTO jobs_fts_map (rowid, job_id) VALUES (?, ?)').run(1, ID);
+    invalidateIndex();
+    const id3 = jobId('ashby', 'acme', 'j3');
+    const { results } = search(db, { description_keywords: ['sql'] }, { facets: false });
+    const rows = new Map(results.map((r) => [r.id, r]));
+    check('missing prose: a job whose text has the word matches', rows.get(ID)?.unknown_on, []);
+    check('missing prose: a job with no text is unknown, and kept', rows.get(id3)?.unknown_on, ['description']);
+
+    for (const [name, sql] of Object.entries(MISSING_DESCRIPTION_SQL)) {
+      const plan = db.prepare(`EXPLAIN QUERY PLAN ${sql}`).all().map((r) => r.detail);
+      const readsRows = plan.filter((d) => /\bjob_content\b|\bc\b/.test(d) && !/INDEX/.test(d));
+      check(`missing prose: \`${name}\` never reads the prose table`, readsRows, []);
+    }
   }
 } finally {
   db.close();

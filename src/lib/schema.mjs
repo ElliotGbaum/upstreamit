@@ -307,6 +307,15 @@ CREATE TABLE IF NOT EXISTS job_content (
   description_text TEXT,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
+-- The rows with no prose in them, so that "which jobs have no description?"
+-- can be answered without reading the description of every job that has one.
+-- A partial index holds only the rows its WHERE admits -- a handful, usually
+-- none -- so it costs a few hundred bytes and the question costs one seek.
+-- Without it the filter engine's missingDescriptions() was a full read of this
+-- table: 2 GB on the deployed machine, which on its volume was minutes, on the
+-- event loop, the first time anyone searched after a deploy.
+CREATE INDEX IF NOT EXISTS idx_job_content_empty ON job_content(job_id)
+  WHERE description_text IS NULL OR description_text = '';
 
 -- Many-to-many so metro facet counts are an index seek, not a JSON scan.
 -- A job legitimately belongs to several metros (Ashby secondaryLocations).

@@ -1309,23 +1309,47 @@ function descriptionIndex(db, profile, warnings) {
  * It has been empty every time it was checked — every open job carried a body.
  * It is still computed, because "there are none right now" is not a property
  * the sweep guarantees, and the alternative is a filter that quietly drops
- * every job whose description failed to arrive. One scan, 180 ms warm, cached
- * on the same generation key as the index and only ever run for a profile that
- * sets description keywords.
+ * every job whose description failed to arrive. Cached on the same generation
+ * key as the index and only ever run for a profile that sets description
+ * keywords.
+ *
+ * What it must never do is read the descriptions to find out. The first
+ * version asked `LEFT JOIN job_content … WHERE description_text IS NULL OR
+ * description_text = ''`, and to evaluate that SQLite fetches every row of the
+ * prose table — 2 GB on the deployed machine, whose 4 GB leaves ~2.4 GB of page
+ * cache for a 3.4 GB file. Warm, that was 180 ms. Cold, which is the state
+ * after every deploy, it was a five-minute read at the volume's ~7 MB/s, held
+ * on the event loop with every other request queued behind it: the first
+ * person to search after a deploy sat on the loading bar until it finished,
+ * and the next one saw it answer in a second. The two statements below answer
+ * the same question from indexes alone — `job_content`'s primary key says
+ * which jobs have a row, and `idx_job_content_empty` (schema.mjs) holds only
+ * the rows whose text is null or blank — so the cold cost is a few MB, not
+ * the corpus. `db-test.mjs` pins the query plans.
  */
+export const MISSING_DESCRIPTION_SQL = {
+  // Open jobs with no `job_content` row at all. Every row the sweep writes has
+  // one, so this is the guard for a database that was not written by the
+  // sweep; it is a covering-index probe per open job either way.
+  no_row: `SELECT j.id FROM jobs j
+            WHERE j.is_open = 1
+              AND NOT EXISTS (SELECT 1 FROM job_content c WHERE c.job_id = j.id)`,
+  // Rows whose text is null or blank. The WHERE is written exactly as the
+  // partial index's is, which is what lets SQLite use it; open-ness is checked
+  // against the in-memory index rather than by joining `jobs` here.
+  empty: `SELECT c.job_id FROM job_content c
+           WHERE c.description_text IS NULL OR c.description_text = ''`,
+};
 let missingDescriptionCache = { generation: null, ids: null };
 function missingDescriptions(db) {
-  const generation = getIndex(db).generation;
-  if (missingDescriptionCache.generation !== generation) {
-    const rows = db
-      .prepare(
-        `SELECT j.id FROM jobs j
-          LEFT JOIN job_content c ON c.job_id = j.id
-         WHERE j.is_open = 1
-           AND (c.job_id IS NULL OR c.description_text IS NULL OR c.description_text = '')`,
-      )
-      .all();
-    missingDescriptionCache = { generation, ids: new Set(rows.map((r) => r.id)) };
+  const index = getIndex(db);
+  if (missingDescriptionCache.generation !== index.generation) {
+    const ids = new Set();
+    for (const row of db.prepare(MISSING_DESCRIPTION_SQL.no_row).iterate()) ids.add(row.id);
+    for (const row of db.prepare(MISSING_DESCRIPTION_SQL.empty).iterate()) {
+      if (index.byId.has(row.job_id)) ids.add(row.job_id);
+    }
+    missingDescriptionCache = { generation: index.generation, ids };
   }
   return missingDescriptionCache.ids;
 }
