@@ -4,12 +4,13 @@ How UpstreamIt's data pipeline runs: the slug sync, board verification, the swee
 
 Related: [sources](./sources.md) for the eleven upstream slug lists, [filtering](./filtering.md) for what the derived columns feed, [automation](./automation.md) for the daily run that chains these stages, and the [README](../README.md).
 
-## The four stages
+## The five stages
 
 1. **sync** (`src/sync-slugs.mjs`) pulls company slugs from every configured source, normalizes and deduplicates them, and writes a per-ATS slug store under `data/slugs/`.
 2. **verify** (`src/probe-boards.mjs`) sends a `HEAD` request per slug to the ATS's board API and records which slugs are real boards.
 3. **sweep** (`src/sweep.mjs`) fetches every live board's postings, full descriptions included, into `data/jobs.db`.
 4. **derive** (`src/derive.mjs`) turns the raw columns into the canonical `d_*` columns the filter engine reads. It is a pure function of what the sweep stored and never touches the network, so improving a metro alias or a seniority rule means re-running it, not re-sweeping.
+5. **enrich** (`src/enrich-companies.mjs`) reads what each company does off its own postings — one model call per company, over the "about us" text and the list of open titles — and stores a sector and a one-sentence blurb on `companies`. The one stage that spends money and the one that reads anything but an ATS. See [Enrich](#enrich).
 
 Each stage is its own process. A stage that dies on a network error leaves the previous stage's output intact.
 
@@ -24,8 +25,11 @@ npm run verify:all     # re-probe every slug in the store
 npm run sweep          # fetch every live board into data/jobs.db (ashby, greenhouse, lever, workday)
 npm run derive         # normalize into the d_* columns the filters read
 npm run derive:new     # derive only the jobs a sweep has added since the last pass
-npm run refresh        # sync → verify → sweep → derive
-npm test               # 771 checks, about a second, no database and no network
+npm run enrich         # read the sector of every hiring company not yet read (needs ANTHROPIC_API_KEY)
+npm run enrich:all     # re-read every hiring company — after a prompt or vocabulary change
+npm run enrich:dry     # print the first three dossiers and the estimated bill; spend nothing
+npm run refresh        # sync → verify → sweep → derive → enrich
+npm test               # 931 checks, about a second, no database and no network
 ```
 
 Per-ATS variants: `npm run verify:ashby`, `verify:greenhouse`, `verify:lever`, `verify:workday`, `sweep:ashby`, `sweep:greenhouse`, `sweep:lever`, `sweep:workday`.
@@ -41,7 +45,7 @@ npm run vacuum         # checkpoint the WAL and VACUUM data/jobs.db (stop the se
 npm run progress       # static server for progress/index.html on :7788, separate from the app
 ```
 
-The test count is 771: 132 derivation, 216 filter, 190 adapter, 34 store, 92 account and 107 interpret checks, run by `npm test` in that order.
+The test count is 931: 132 derivation, 234 filter, 190 adapter, 54 store, 133 account, 19 sheet-sync, 113 interpret and 56 enrich checks, run by `npm test` in that order.
 
 ## Sync
 
@@ -219,6 +223,22 @@ node src/rebuild-metros.mjs --dry-run    # report what it would write
 ```
 
 Aliases observed in the wild live only in memory during a run, so the rebuild adds to the alias table rather than replacing it.
+
+## Enrich
+
+```bash
+node src/enrich-companies.mjs                  # every live board with an open job and no sector_at
+node src/enrich-companies.mjs --all            # re-read everything
+node src/enrich-companies.mjs --limit=50       # smoke run, biggest boards first
+node src/enrich-companies.mjs --dry-run        # dossiers and the estimate, no calls
+node src/enrich-companies.mjs --concurrency=4 --model=claude-sonnet-5
+```
+
+What one company's call sees is a *dossier* built from the database: name, website or board URL, up to fourteen distinct open titles, and the "about us" excerpt of up to three postings (`aboutOffset` in `lib/enrich.mjs` finds the paragraph headed "About Acme" / "Who we are" / "Our mission", and falls back to the top of the posting). Capped at 6,000 characters so a board with 900 roles costs the same call as one with two. The model answers through one tool call — `sector` from `SECTORS`, a `blurb`, and a `confidence` — and a low confidence is stored as **read and unsure**: `sector_at` set, `sector` NULL. The default run skips anything with a `sector_at`, so nothing is paid for twice by accident; `--all` is how you pay again.
+
+Ordered biggest board first, so a run cut short has read the companies behind the most jobs. `meta.last_enrich` is written at the end and is part of the filter index's generation key, so a running server picks the column up without a restart.
+
+Cost: the default model is `claude-haiku-4-5` (`ANTHROPIC_ENRICH_MODEL` or `--model` overrides it). The script prints a list-price estimate before it starts and the measured token counts after, in the console and in `data/enrich-report.md`. The system prompt is cached across the run. With no `ANTHROPIC_API_KEY` the script prints one line and exits 0, which is what lets the daily run include it on a machine that has no key.
 
 ## How the merge behaves
 

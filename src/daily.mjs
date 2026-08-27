@@ -8,7 +8,7 @@
  *   node src/daily.mjs --profiles=nyc-entry-level
  *   node src/daily.mjs --since=2026-08-18    # override what "new" means
  *
- * sync slugs → verify the new ones → sweep the boards → derive → diff.
+ * sync slugs → verify the new ones → sweep the boards → derive → enrich → diff.
  *
  * The output that matters is the last step. A profile that matches 221 jobs is
  * worth reading once; re-reading it every morning is not. What changed overnight
@@ -82,6 +82,11 @@ const STAGES = [
     args: [`--ats=${ats}`],
   })),
   { key: 'derive', label: 'Normalize', script: 'derive.mjs', args: ['--only-new'] },
+  // The one stage that spends money: one model call per company the sweep
+  // found that nobody has read yet — a handful a night after the first full
+  // run. With no API key it prints one line and exits clean, so a machine
+  // without one still gets its report.
+  { key: 'enrich', label: 'Read company sectors', script: 'enrich-companies.mjs', args: ['--only-new'] },
 ];
 
 function parseArgs(argv) {

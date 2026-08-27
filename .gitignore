@@ -43,6 +43,7 @@ data/daily.log
 data/repair-ashby.log
 data/daily-report.md
 data/derive-report.md
+data/enrich-report.md
 progress/state.json
 
 # The launchd job and its wrapper script. `npm run schedule` writes them with
