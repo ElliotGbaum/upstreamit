@@ -242,7 +242,7 @@ touches the database, the accounts, or the saved profiles.
 **Refreshing job data** means re-running the pipeline on the laptop and re-uploading:
 
 ```
-npm run refresh          # sync slugs, verify boards, sweep all three ATSes, derive
+npm run refresh          # sync slugs, verify boards, sweep all four ATSes, derive
 ./deploy/upload-db.sh
 ```
 
