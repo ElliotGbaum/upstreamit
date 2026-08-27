@@ -180,6 +180,7 @@ src/
 app/                  three served HTML pages (landing.html is kept, not routed), plain ES modules, no build
 profiles/             filter profiles: portable JSON, read by the app, the CLI and the daily run
 data/slugs/           the slug store (tracked; refreshed nightly by CI)
+integrations/         sheet-sync.gs — pasted into a Google Sheet, reads the saved list over HTTP
 docs/                 design notes, measurements, dead ends
 ```
 
@@ -191,6 +192,7 @@ docs/                 design notes, measurements, dead ends
 - [`docs/filtering.md`](docs/filtering.md): the profile format, three-valued criteria, ranking
 - [`docs/app-and-accounts.md`](docs/app-and-accounts.md): the app, "describe your search", accounts and what secures them
 - [`docs/automation.md`](docs/automation.md): the daily run and the CI / laptop split
+- [`docs/sheet-sync.md`](docs/sheet-sync.md): starring a job writes a row into a Google Sheet tracker
 - [`docs/deploy.md`](docs/deploy.md): Fly.io, step by step
 - [`docs/filter-research.md`](docs/filter-research.md): sixty job boards' filters, measured against this one
 - [`docs/greenhouse-plan.md`](docs/greenhouse-plan.md): the measurements behind adding a second ATS
