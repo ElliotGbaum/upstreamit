@@ -176,6 +176,29 @@ try {
     check('search: a missing apply_url is null, not undefined', byId.get(jobId('ashby', 'acme', 'j2'))?.apply_url, null);
   }
 
+  // -------------------------------------------------------- hidden jobs --
+  // The set a signed-in reader's × builds, handed to the engine as ids. The
+  // engine knows nothing about accounts; this is the whole of the contract.
+  {
+    const hidden = search(db, {}, { facets: false, exclude: new Set([ID]) });
+    check('exclude: the hidden job is not in the results', hidden.results.map((r) => r.id), [jobId('ashby', 'acme', 'j2')]);
+    check('exclude: nor in the total', hidden.total, 1);
+    // Counted, because a list that quietly shrinks is indistinguishable from a
+    // filter that went wrong — and this is the number the page offers a way
+    // back from.
+    check('exclude: but it is counted', hidden.funnel.hidden, 1);
+    check('exclude: an empty set changes nothing', search(db, {}, { facets: false, exclude: new Set() }).total, 2);
+    check('exclude: no set at all changes nothing', search(db, {}, { facets: false }).funnel.hidden, 0);
+
+    // The facets are counts of the match set, so a hidden job must be out of
+    // them too: a control promising "+1 job" that cannot appear in the list is
+    // a number the list cannot keep. Checked as a before and after, because
+    // "0" would pass on a facet that was never going to count anything.
+    const workplace = (opts) =>
+      search(db, {}, opts).facets?.workplace?.find((r) => r.value === 'unknown')?.count ?? 0;
+    check('exclude: the facet counts drop with it', [workplace({}), workplace({ exclude: new Set([ID]) })], [2, 1]);
+  }
+
   // ---------------------------------------------------------- disappearance --
   {
     const r = upsertBoard(db, board([job()]), day(11));

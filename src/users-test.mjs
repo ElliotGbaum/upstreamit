@@ -46,6 +46,12 @@ import {
   listSaved,
   unsaveJob,
   savedCounts,
+  hideJob,
+  unhideJob,
+  getHidden,
+  listHidden,
+  hiddenIds,
+  hiddenCount,
   createList,
   listsFor,
   addToList,
@@ -282,6 +288,45 @@ try {
     check('save: another user sees none of it', listSaved(db, 'u_someone-else').length, 0);
   }
 
+  // ---------------------------------------------------------- hidden jobs --
+  // The cases that matter are the ones where hiding stops being reversible:
+  // a snapshot lost (leaving a row the un-hide page cannot draw), a timestamp
+  // restamped (so the list no longer reads newest-first), or the hidden set
+  // leaking across accounts — which would be one person's × deciding what
+  // somebody else is allowed to see.
+  {
+    const HID = 'greenhouse:globex:job-9';
+    const row = hideJob(db, elliot.id, HID, { title: 'Night Shift QA', company: 'Globex', url: 'https://globex.example/9' }, 1_000);
+    check('hide: keeps the snapshot', [row.title, row.company, row.url], ['Night Shift QA', 'Globex', 'https://globex.example/9']);
+    check('hide: stamps when', row.hidden_at, 1_000);
+
+    hideJob(db, elliot.id, HID, {}, 7_000);
+    check('hide: hiding it twice keeps the first timestamp', getHidden(db, elliot.id, HID).hidden_at, 1_000);
+    check('hide: and does not wipe the snapshot', getHidden(db, elliot.id, HID).title, 'Night Shift QA');
+    check('hide: it is one row, not two', hiddenCount(db, elliot.id), 1);
+
+    hideJob(db, elliot.id, 'lever:initech:job-3', { title: 'Cobol Wrangler' }, 9_000);
+    check('hide: newest first', listHidden(db, elliot.id).map((r) => r.job_id), ['lever:initech:job-3', HID]);
+    check('hide: the engine gets a set of ids', [...hiddenIds(db, elliot.id)].sort(), ['greenhouse:globex:job-9', 'lever:initech:job-3']);
+    check('hide: another account is not touched by it', hiddenIds(db, 'u_someone-else').size, 0);
+    check('hide: a bad job id is refused', await throws(() => hideJob(db, elliot.id, '')), 'bad job id');
+
+    // Hiding and saving answer different questions, so neither disturbs the
+    // other: being rejected from a job you applied to is exactly when you
+    // would want it out of your results and still in your history.
+    hideJob(db, elliot.id, JOB, { title: 'Solutions Engineer' }, 10_000);
+    check('hide: a saved job stays saved when hidden', getSaved(db, elliot.id, JOB)?.status, 'saved');
+    check('hide: and stays in the saved counts', savedCounts(db, elliot.id).total, 2);
+    unhideJob(db, elliot.id, JOB);
+
+    check('unhide: it comes back', unhideJob(db, elliot.id, HID), true);
+    check('unhide: it is gone from the list', hiddenIds(db, elliot.id).has(HID), false);
+    check('unhide: twice is not an error', unhideJob(db, elliot.id, HID), false);
+    check('unhide: the saved row it never touched is still there', getSaved(db, elliot.id, JOB)?.title, 'Solutions Engineer');
+    unhideJob(db, elliot.id, 'lever:initech:job-3');
+    check('unhide: back to nothing hidden', hiddenCount(db, elliot.id), 0);
+  }
+
   // ---------------------------------------------------------------- lists --
   {
     const list = createList(db, elliot.id, 'apply this week');
@@ -317,7 +362,11 @@ try {
   // ----------------------------------------------------------- one payload --
   {
     const state = accountState(db, elliot.id);
-    check('account state: everything the page needs, in one shape', Object.keys(state).sort(), ['counts', 'lists', 'membership', 'profiles', 'saved']);
+    check('account state: everything the page needs, in one shape', Object.keys(state).sort(), ['counts', 'hidden_count', 'lists', 'membership', 'profiles', 'saved']);
+    // A count, not the rows. The hidden list is read on one screen; carrying it
+    // into every page load would be the largest thing in this payload for
+    // somebody who has been using the × for a month.
+    check('account state: hidden jobs arrive as a number', typeof state.hidden_count, 'number');
     check('account state: carries no secret', JSON.stringify(state).includes('scrypt$'), false);
   }
 
@@ -328,8 +377,10 @@ try {
     const list = createList(db, doomed.id, 'temp');
     addToList(db, doomed.id, list.id, JOB);
     putUserProfile(db, doomed.id, 'temp', { metros: ['nyc'] });
+    hideJob(db, doomed.id, 'ashby:acme:job-7', { title: 'x' });
     db.prepare('DELETE FROM users WHERE id = ?').run(doomed.id);
     check('delete: takes the saved jobs with it', listSaved(db, doomed.id).length, 0);
+    check('delete: takes the hidden jobs with it', listHidden(db, doomed.id).length, 0);
     check('delete: takes the lists with it', listsFor(db, doomed.id).length, 0);
     check('delete: takes the profiles with it', listUserProfiles(db, doomed.id).length, 0);
     check('delete: leaves other accounts alone', findByEmail(db, 'elliot@example.com')?.id, elliot.id);
