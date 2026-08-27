@@ -34,11 +34,16 @@ so expect somewhat more. Prices change; check fly.io/pricing.
 
 ## The app name
 
-`fly.toml` says `app = "job-finder-ats"`. That is the name of the live deployment at
-<https://job-finder-ats.fly.dev>, and app names are global across all of Fly, so it
-is taken. **Anyone deploying their own fork must pick a different, globally-unique
-name and change that line in `fly.toml`** before the first deploy. Everything below
-uses `<your-app-name>` where the name appears; replace it with whatever was chosen.
+`fly.toml` says `app = "job-finder-ats"`. That is the Fly app name, and it is not
+the address the site answers on: this deployment is served at <https://upstreamit.io>
+(see *A custom domain* below). Fly derives `<app-name>.fly.dev` from the name and
+serves that too, but once a custom domain is attached the name is internal
+bookkeeping, and changing it would mean creating a new app, so it stays as it is.
+
+App names are global across all of Fly, so this one is taken. **Anyone deploying
+their own fork must pick a different, globally-unique name and change that line in
+`fly.toml`** before the first deploy. Everything below uses `<your-app-name>` where
+the name appears; replace it with whatever was chosen.
 
 ---
 
@@ -227,8 +232,13 @@ after that the volume's copy is authoritative. Editing a JSON file under `profil
 in the repo and pushing therefore changes the seed for a *fresh* volume but not the
 live profile list. Change live profiles through the UI, or over `fly ssh console`.
 
-**A custom domain** (about $12/year) looks better than `.fly.dev`. Buy one anywhere,
-then `fly certs add <domain>` and follow what it prints.
+**A custom domain** (about $12/year) looks better than `.fly.dev`. This deployment
+uses `upstreamit.io`. Buy the name anywhere, then `fly certs add upstreamit.io` and
+`fly certs add www.upstreamit.io`, and create the DNS records each command prints;
+Fly issues the certificates once those records resolve. `fly certs list` shows
+`Issued` when it is done. Add both names, not just the apex — `www` is redirected to
+the apex in `src/server.mjs`, and that redirect exists because a session cookie set
+on one hostname does not exist on the other.
 
 ---
 
