@@ -40,10 +40,11 @@ const state = {
   working: null, // the filter document this account was last using
   scope: { kind: 'all' }, // what the saved view is showing
   hiddenCount: 0, // jobs pressed × on; the rows themselves load with the screen
-  // Set when a job is brought back, cleared when the search is re-run. The
-  // results on screen were filtered by a hidden set that no longer holds, and
-  // a job cannot un-hide itself back into a list it was excluded from.
-  hiddenStale: false,
+  // Set when a job stops being held back — brought back from Hidden, or moved
+  // off Applied — and cleared when the search is re-run. The results on screen
+  // were filtered by sets that no longer hold, and a job cannot put itself back
+  // into a list it was excluded from before that list was counted.
+  excludeStale: false,
 };
 
 /** Set by `init()`; how this module reaches the page's single `profile` object. */
@@ -86,8 +87,10 @@ const send = (path, method, payload) =>
 export const account = {
   init,
   starFor,
+  appliedFor,
   hideFor,
   openHidden,
+  openApplied,
   decorateCard,
   detailPanel,
   remember,
@@ -159,7 +162,7 @@ function forget() {
   showSaved(false);
   // Signing out has to take your marks off the page with it — a leftover
   // "applied" pill on a signed-out screen is someone else's business.
-  document.querySelectorAll('.job .star, .job .chip.status').forEach((node) => node.remove());
+  document.querySelectorAll('.job .star, .job .applied-tick, .job .chip.status').forEach((node) => node.remove());
 }
 
 // ------------------------------------------------------------------ header --
@@ -299,9 +302,9 @@ function remember(profile, { now = false } = {}) {
  * The star: save a job, or take it back off the list.
  *
  * It sits on every result card and on every row of the saved view, and it means
- * the same thing in both places. On a result card it is the opposite number of
- * the × beside it — the two decisions you can make about a job at a glance, keep
- * it or never see it again — and unlike the ×, starring changes nothing about
+ * the same thing in both places. On a result card it is the first of the three
+ * decisions you can make about a job at a glance — keep it, apply to it, never
+ * see it again — and it is the only one of the three that changes nothing about
  * what the search returns: a saved job stays exactly where it ranked, with the
  * star filled in so you can see which ones are yours.
  *
@@ -349,31 +352,206 @@ function paintStar(button, jobId) {
 
 async function toggleSave(row) {
   const jobId = row.id;
-  if (state.saved.has(jobId)) {
-    const result = await request(`/api/me/saved/${encodeURIComponent(jobId)}`, { method: 'DELETE' });
-    state.saved.delete(jobId);
-    state.counts = result.counts;
-    state.membership = result.membership;
-  } else {
-    // The snapshot travels with the save so the row still reads correctly if
-    // the posting is pulled from the board later.
-    const result = await send(`/api/me/saved/${encodeURIComponent(jobId)}`, 'PUT', {
-      title: row.title,
-      company: row.company ?? row.company_name,
-      url: row.url,
-    });
-    state.saved.set(jobId, result.saved);
-    state.counts = result.counts;
-  }
+  if (state.saved.has(jobId)) return unsave(jobId);
+  // The snapshot travels with the save so the row still reads correctly if
+  // the posting is pulled from the board later.
+  const result = await send(`/api/me/saved/${encodeURIComponent(jobId)}`, 'PUT', {
+    title: row.title,
+    company: row.company ?? row.company_name,
+    url: row.url,
+  });
+  state.saved.set(jobId, result.saved);
+  state.counts = result.counts;
   drawChrome();
+}
+
+/**
+ * Take a job off the saved list entirely.
+ *
+ * Un-starring a job you had marked applied also un-marks it, so it is back in
+ * your searches — which is why this reports a stale search the same way a
+ * status change does.
+ */
+async function unsave(jobId) {
+  const before = state.saved.get(jobId) ?? null;
+  const result = await request(`/api/me/saved/${encodeURIComponent(jobId)}`, { method: 'DELETE' });
+  state.saved.delete(jobId);
+  state.counts = result.counts;
+  state.membership = result.membership;
+  if (hidesFromSearch(before?.status)) state.excludeStale = true;
+  drawChrome();
+  repaintMarks(jobId);
+}
+
+/**
+ * Write a status, and leave every copy of the job on screen in agreement.
+ *
+ * The single place a status is written: the ✓ on a card, the five-way control
+ * inside an opened job and the same control on a saved row all come through
+ * here, so the star, the header count and the saved view cannot end up telling
+ * you different things about one job.
+ *
+ * Crossing into or out of a status that holds a job back marks the search
+ * behind it stale — the list on screen was counted under a set that has just
+ * changed, and no job can put itself back into a count it was left out of.
+ */
+async function setStatus(row, status) {
+  const before = state.saved.get(row.id) ?? null;
+  const result = await send(`/api/me/saved/${encodeURIComponent(row.id)}`, 'PUT', {
+    status,
+    title: row.title,
+    company: row.company ?? row.company_name,
+    url: row.url,
+  });
+  state.saved.set(row.id, result.saved);
+  state.counts = result.counts;
+  if (hidesFromSearch(before?.status) !== hidesFromSearch(status)) state.excludeStale = true;
+  drawChrome();
+  repaintMarks(row.id);
+  return result.saved;
+}
+
+/** Both marks a card carries, on every copy of that job the page is showing. */
+function repaintMarks(jobId) {
+  const selector = `[data-job="${cssEscape(jobId)}"]`;
+  document.querySelectorAll(`.star${selector}`).forEach((el) => paintStar(el, jobId));
+  document.querySelectorAll(`.applied-tick${selector}`).forEach((el) => paintApplied(el, jobId));
+}
+
+/**
+ * Does this status take the job out of your searches?
+ *
+ * The answer arrives with the vocabulary — `hides` on each status, out of the
+ * server's `ACTED_ON` — rather than being a second list written out here, so
+ * what the ✓ promises and what the engine actually subtracts are one rule. A
+ * page that has not heard from the server yet knows of no such status, and the
+ * ✓ is simply off.
+ */
+function hidesFromSearch(status) {
+  return Boolean(status && state.statuses.find((s) => s.value === status)?.hides);
+}
+
+/** Has this job been applied to — or anything further along than applied? */
+function markedApplied(jobId) {
+  return hidesFromSearch(state.saved.get(jobId)?.status);
+}
+
+// ----------------------------------------------------- the ✓ on a card --
+
+/**
+ * "I applied to this."
+ *
+ * The third decision a card offers, and the one this page was missing: the star
+ * says *keep this*, the × says *never show me this again*, and neither of them
+ * is what you mean at the moment you finish an application. That job is not a
+ * favourite and it is not a rejection — it is done, and a board that keeps
+ * offering it back to you every morning is wrong in the same way as one that
+ * keeps offering the job you turned down.
+ *
+ * So it behaves like the × where that is what it means, and like the star where
+ * that is: the row leaves the list at once with a line naming it and an Undo,
+ * and from the next search on the posting is subtracted before anything is
+ * counted — but the job is *kept*, filed under Applied with the date on it,
+ * because "did I ever apply to this" has to keep answering after the posting is
+ * gone. Nothing is thrown away by pressing it.
+ *
+ * Pressing it on a job already marked takes the mark off and puts the job back
+ * in your searches, which is the way back for the misclick you notice later
+ * rather than at once.
+ */
+function appliedFor(row) {
+  if (!state.enabled) return null;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'applied-tick';
+  paintApplied(button, row.id);
+  button.onclick = async (event) => {
+    event.stopPropagation();
+    if (!state.user) return goToAuth('signin');
+    const card = button.closest('.job');
+    // What to put back on Undo: the row as it stood before this click, or
+    // nothing at all if the job was not saved. An undo that left a starred job
+    // behind would be a second thing to undo.
+    const before = state.saved.get(row.id) ?? null;
+    const marked = markedApplied(row.id);
+    button.disabled = true;
+    try {
+      await setStatus(row, marked ? 'saved' : 'applied');
+      // Coming *off* applied leaves the card where it is. The row is in front
+      // of you, and taking it away to announce that it is back in your results
+      // would be the opposite of what the click asked for.
+      if (marked || !card) button.disabled = false;
+      else card.replaceWith(appliedNotice(row, card, button, before));
+      if (!$('saved-view').hidden) void renderSaved();
+    } catch (err) {
+      button.disabled = false;
+      alert(`Could not mark that applied: ${err.message}`);
+    }
+  };
+  return button;
+}
+
+function paintApplied(button, jobId) {
+  const on = markedApplied(jobId);
+  button.dataset.job = jobId;
+  button.textContent = '✓';
+  button.classList.toggle('on', on);
+  button.setAttribute('aria-label', on ? 'Applied — undo' : 'I applied to this');
+  button.title = on
+    ? `${labelFor(state.saved.get(jobId)?.status)} — click to put this job back in your searches`
+    : state.user
+      ? 'I applied to this — file it under Applied and keep it out of your searches'
+      : 'Sign in to mark the jobs you have applied to';
+}
+
+/**
+ * What stands in the list where a job you just applied to was.
+ *
+ * The card itself is kept, detached, and put back on Undo — the same trick the
+ * × uses, and for the same reason: the restored row comes back with its rank,
+ * its chips and its open/closed state, rather than being rebuilt from a second
+ * copy of `jobCard` living in this file.
+ */
+function appliedNotice(row, card, button, before) {
+  const notice = document.createElement('div');
+  notice.className = 'job hidden-notice applied-notice';
+
+  const said = document.createElement('span');
+  said.className = 'said';
+  const name = document.createElement('b');
+  name.textContent = row.title ?? 'That job';
+  said.append('Applied — ', name, ' is under Applied, and out of your searches from here on.');
+
+  const undo = document.createElement('button');
+  undo.type = 'button';
+  undo.className = 'btn ghost';
+  undo.textContent = 'Undo';
+  undo.onclick = async (event) => {
+    event.stopPropagation();
+    undo.disabled = true;
+    try {
+      if (before) await setStatus(row, before.status);
+      else await unsave(row.id);
+      button.disabled = false;
+      notice.replaceWith(card);
+      if (!$('saved-view').hidden) void renderSaved();
+    } catch (err) {
+      undo.disabled = false;
+      alert(`Could not undo that: ${err.message}`);
+    }
+  };
+
+  notice.append(said, undo);
+  return notice;
 }
 
 // ------------------------------------------------------ the × on a card --
 
 /**
- * "Not interested." The other half of the star, and the only control on the
- * page that changes what a search *returns* rather than what it says about a
- * job you keep.
+ * "Not interested." The last of the three marks on a card, and — with the ✓ —
+ * one of the two that change what a search *returns* rather than what it says
+ * about a job you keep. The two are not the same answer: the ✓ says you have
+ * already done this one, the × says you never want it.
  *
  * Pressing it takes the card off the list at once, because a button called "do
  * not show me this again" that leaves the row sitting there has not done the
@@ -511,7 +689,13 @@ function detailPanel(job) {
   return wrap;
 }
 
-/** The five-way status control. Picking any of them saves the job if it wasn't. */
+/**
+ * The five-way status control. Picking any of them saves the job if it wasn't.
+ *
+ * Four of the five hold the job back from your searches — everything from
+ * `applied` on, which is the same rule the ✓ on a card follows, because they
+ * are the same fact written two ways. `saved` is the one that leaves it in.
+ */
 function statusRow(row) {
   const line = document.createElement('div');
   line.className = 'track-line';
@@ -530,17 +714,8 @@ function statusRow(row) {
     if (current === value) button.classList.add('on');
     button.onclick = async (event) => {
       event.stopPropagation();
-      const result = await send(`/api/me/saved/${encodeURIComponent(row.id)}`, 'PUT', {
-        status: value,
-        title: row.title,
-        company: row.company,
-        url: row.url,
-      });
-      state.saved.set(row.id, result.saved);
-      state.counts = result.counts;
-      drawChrome();
+      await setStatus(row, value);
       seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.status === value));
-      document.querySelectorAll(`.star[data-job="${cssEscape(row.id)}"]`).forEach((el) => paintStar(el, row.id));
       if (!$('saved-view').hidden) renderSaved();
     };
     seg.append(button);
@@ -664,13 +839,13 @@ function showSaved(on) {
   document.body.classList.toggle('viewing-saved', on);
   $('saved-toggle').classList.toggle('on', on);
   if (on) return void renderSaved();
-  // Back to a list that was filtered by a hidden set which no longer holds. A
-  // job brought back cannot re-insert itself into results it was excluded from
-  // before they were counted, so the search runs again — and only when
-  // something actually changed, so the ordinary trip in and out of the saved
-  // view costs nothing.
-  if (state.hiddenStale) {
-    state.hiddenStale = false;
+  // Back to a list that was filtered by sets which no longer hold. A job
+  // brought back — from Hidden, or off Applied — cannot re-insert itself into
+  // results it was excluded from before they were counted, so the search runs
+  // again, and only when something actually changed: the ordinary trip in and
+  // out of the saved view costs nothing.
+  if (state.excludeStale) {
+    state.excludeStale = false;
     bridge.rerunSearch();
   }
 }
@@ -679,6 +854,13 @@ function showSaved(on) {
 function openHidden() {
   if (!state.user) return goToAuth('signin');
   state.scope = { kind: 'hidden' };
+  showSaved(true);
+}
+
+/** And the applied list, from the other count on that line. */
+function openApplied() {
+  if (!state.user) return goToAuth('signin');
+  state.scope = { kind: 'status', value: 'applied' };
   showSaved(true);
 }
 
@@ -832,7 +1014,7 @@ function drawHiddenRows(rows) {
           await request(`/api/me/hidden/${encodeURIComponent(hidden.job_id)}`, { method: 'DELETE' });
           // The results behind this screen were counted without it. Say so to
           // `showSaved`, which re-runs the search on the way back.
-          state.hiddenStale = true;
+          state.excludeStale = true;
           await renderHidden();
         } catch (err) {
           restore.disabled = false;
@@ -875,12 +1057,17 @@ function drawScopes() {
       state.scope = { kind: 'all' };
       void renderSaved();
     }),
-    ...state.statuses.map(({ value, label }) =>
-      pill(label, state.counts[value] ?? 0, state.scope.kind === 'status' && state.scope.value === value, () => {
+    ...state.statuses.map(({ value, label, hides }) => {
+      const node = pill(label, state.counts[value] ?? 0, state.scope.kind === 'status' && state.scope.value === value, () => {
         state.scope = { kind: 'status', value };
         void renderSaved();
-      }),
-    ),
+      });
+      // The tabs from Applied on are also where those jobs went. Said on the
+      // tab, because the count is the first place someone looks for a job that
+      // has stopped turning up in their results.
+      if (hides) node.title = `Jobs you marked ${label.toLowerCase()} — kept out of your searches. Set one back to Saved to see it in results again.`;
+      return node;
+    }),
   ];
 
   for (const list of state.lists) {

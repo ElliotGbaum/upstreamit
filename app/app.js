@@ -727,6 +727,20 @@ function drawResultsSub() {
     sub.append(' · ', link);
   }
 
+  // Held back for the other reason, and counted apart from it: "you already did
+  // this one" and "you said no to this one" are different sentences, and each
+  // count is the link to the screen the job is on.
+  const applied = last.funnel?.applied ?? 0;
+  if (applied) {
+    const link = document.createElement('button');
+    link.type = 'button';
+    link.className = 'sub-link';
+    link.textContent = `${fmt(applied)} already applied to`;
+    link.title = 'Jobs you marked applied that match these filters — they are kept out of the results';
+    link.onclick = () => account.openApplied();
+    sub.append(' · ', link);
+  }
+
   if (!last.results.length) return;
   const hint = document.createElement('span');
   hint.className = 'sub-hint';
@@ -963,15 +977,20 @@ function jobCard(row, i) {
     toggleWhy(card, row, i + 1);
   };
 
-  // The right-hand column: keep it, never show it again, and why it ranks
-  // there. Two of the three are the account's and draw nothing at all on a
-  // server without accounts — `starFor` and `hideFor` return null, the cluster
-  // holds only the `i`, and the card is what it always was.
+  // The right-hand column: keep it, you applied to it, never show it again, and
+  // why it ranks there. Three of the four are the account's and draw nothing at
+  // all on a server without accounts — `starFor`, `appliedFor` and `hideFor`
+  // return null, the cluster holds only the `i`, and the card is what it always
+  // was. In order of how much they take off the page: the star leaves the row
+  // where it is, the ✓ files it and takes it out of later searches, the × takes
+  // it out of them and keeps nothing.
   const acts = document.createElement('div');
   acts.className = 'acts';
   const star = account.starFor(row);
+  const applied = account.appliedFor(row);
   const hide = account.hideFor(row);
   if (star) acts.append(star);
+  if (applied) acts.append(applied);
   if (hide) acts.append(hide);
   acts.append(whyBtn);
 

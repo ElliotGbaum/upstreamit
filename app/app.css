@@ -467,8 +467,24 @@ kbd{font-family:var(--mono);background:var(--line-soft);border:1px solid var(--l
 .job:hover .star,.job .star.on{opacity:1}
 @media (hover:none){.job .star{opacity:.7}}
 
-/* The × beside it. Same size and weight, because the two are one pair of
-   decisions and neither should look like the loud one; red only under the
+/* The ✓ between them: I applied to this. Same circle as the × and the `i`, for
+   the same reason the × matches the star — three marks in a row are read as a
+   set, and one of them drawn louder than the others is read as the one you are
+   meant to press. Green only under the pointer, and a filled green when the
+   mark is on, which is the one state worth seeing without hovering: it says
+   this row is one you have already answered. */
+.applied-tick{align-self:start;flex:none;width:19px;height:19px;padding:0;
+        border:1px solid transparent;border-radius:50%;background:none;color:var(--ink-3);
+        font-family:var(--sans);font-size:12px;line-height:17px;text-align:center;
+        cursor:pointer;opacity:.3;transition:opacity .12s,color .12s,background .12s,border-color .12s}
+.job:hover .applied-tick{opacity:1;border-color:var(--line)}
+.applied-tick:hover{opacity:1;color:var(--ok);border-color:var(--ok)}
+.applied-tick.on{opacity:1;background:var(--ok);border-color:var(--ok);color:#fff}
+.applied-tick[disabled]{opacity:.4;cursor:default}
+@media (hover:none){.applied-tick{opacity:.8;border-color:var(--line)}}
+
+/* The × beside it. Same size and weight, because the three are one set of
+   decisions and none should look like the loud one; red only under the
    pointer, since a column of red crosses down a list reads as an error state
    rather than as a control. */
 .hide-x{align-self:start;flex:none;width:19px;height:19px;padding:0;
@@ -488,6 +504,12 @@ kbd{font-family:var(--mono);background:var(--line-soft);border:1px solid var(--l
 .hidden-notice:hover{border-color:var(--line)}
 .hidden-notice .said{flex:1;min-width:0}
 .hidden-notice .said b{color:var(--ink-2);font-weight:550}
+/* The same receipt for the ✓, tinted the way the mark is: what happened to the
+   row was a different thing from hiding it, and the colour is the fastest way
+   to say so on a list where both can be on screen at once. */
+.applied-notice{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 25%,transparent);
+                color:color-mix(in srgb,var(--ok) 75%,var(--ink-3))}
+.applied-notice .said b{color:var(--ok)}
 #saved-toggle.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 
 .menu{position:absolute;top:calc(100% + 7px);right:0;z-index:40;min-width:210px;
