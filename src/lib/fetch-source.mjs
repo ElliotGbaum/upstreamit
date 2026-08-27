@@ -16,7 +16,7 @@ import { resolve } from 'node:path';
 
 const RAW_BASE = 'https://raw.githubusercontent.com';
 const API_BASE = 'https://api.github.com';
-const USER_AGENT = 'job-finder-ats/0.1 (slug sync)';
+const USER_AGENT = 'upstreamit/0.1 (slug sync)';
 
 /**
  * Resolve a source+file pair to a human-readable origin, for logs and reports.
