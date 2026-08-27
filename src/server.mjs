@@ -16,9 +16,16 @@
  * but one behaves identically with no session: the corpus, the filters, the
  * counts, the descriptions and the apply links are the app, and they are
  * anonymous. What an account adds is *memory* — your filters when you come
- * back, the jobs you starred, and what you did about them — and that part is
- * all additive, served from a second database (`data/users.db`) by
- * `src/lib/users/`. Delete that file and this is the anonymous server again.
+ * back, the jobs you starred, the ones you told it never to show you again, and
+ * what you did about them — and that part is all additive, served from a second
+ * database (`data/users.db`) by `src/lib/users/`. Delete that file and this is
+ * the anonymous server again.
+ *
+ * `POST /api/search` is the one route where "additive" means something subtler
+ * than "unchanged": signed in, the ids you have hidden are subtracted from the
+ * result set before it is counted. That is still the same engine reading the
+ * same profile document — the account contributes a set of ids, not a criterion
+ * — and signed out there is no set and nothing is subtracted.
  *
  * The exception is `POST /api/interpret`, which requires one. It is the only
  * route here that spends real money — an API call on somebody's key, every time
@@ -253,15 +260,18 @@ function redirectFromWww(req, res, url) {
 
 async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
   /**
-   * Who is asking, as an email address, or null when nobody is signed in.
+   * Who is asking. The session behind this request, or null for a stranger.
    *
-   * The only thing the profile routes below need out of a session. A profile
-   * document may name an `owner`; one that does is listed and served to that
-   * address and to nobody else, so that the app boots a visitor into a starter
-   * search rather than into a stranger's twelve keywords and one city. See
-   * `ownerOf` in find.mjs for why this is a visibility rule and not a secret.
+   * Read once here and used by three routes, all of them additively: the
+   * profile routes serve an owned document to its owner alone, `/api/interpret`
+   * needs somebody to bill and cap, and the search excludes the jobs this
+   * reader has hidden. Signed out, all three are what they always were.
+   *
+   * `viewer` is the address, which is what a profile's `owner` field holds. See
+   * `ownerOf` in find.mjs for why that is a visibility rule and not a secret.
    */
-  const viewer = accounts?.userFor(req)?.email ?? null;
+  const reader = accounts?.userFor(req) ?? null;
+  const viewer = reader?.email ?? null;
 
   // ---------------------------------------------------------------- meta --
   // Everything the UI needs to draw its controls, all of it from the data. The
@@ -332,6 +342,16 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
     if (body.limit != null) opts.limit = Number(body.limit);
     if (body.offset != null) opts.offset = Number(body.offset);
     if (body.facets === false) opts.facets = false;
+
+    // The jobs this reader pressed × on, kept out of the results and out of the
+    // counts. It is the one per-account thing the search knows about, and it is
+    // a set of ids rather than a criterion on purpose: a profile is a portable
+    // document describing a *kind* of job, and "not this one" is a fact about a
+    // person. Keeping it here means the same profile file still means the same
+    // thing on the command line, in the daily run, and in somebody else's copy.
+    //
+    // Signed out this is null and the engine takes the branch it always took.
+    if (accounts && reader) opts.exclude = accounts.hiddenFor(reader);
 
     // "New since" reuses the whole engine by restricting the id set rather than
     // reimplementing the criteria, so the diff can never drift from the filter.

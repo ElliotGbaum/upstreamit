@@ -114,7 +114,11 @@ async function main() {
     const counts = db
       .prepare('SELECT COUNT(*) n FROM saved_jobs WHERE user_id = ?')
       .get(user.id).n;
-    console.log(`\n  This deletes ${user.email}, ${counts} saved job${counts === 1 ? '' : 's'}, their lists and their profiles.`);
+    const hidden = db.prepare('SELECT COUNT(*) n FROM hidden_jobs WHERE user_id = ?').get(user.id).n;
+    console.log(
+      `\n  This deletes ${user.email}, ${counts} saved job${counts === 1 ? '' : 's'}, ` +
+        `${hidden} hidden job${hidden === 1 ? '' : 's'}, their lists and their profiles.`,
+    );
     const answer = await ask(`  Type the email to confirm: `);
     if (answer.trim().toLowerCase() !== user.email) fail('Not deleted.');
     deleteUser(db, user.id);

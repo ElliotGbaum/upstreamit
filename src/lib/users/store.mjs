@@ -477,6 +477,63 @@ export function savedCounts(db, userId) {
   return counts;
 }
 
+// ------------------------------------------------------------ hidden jobs --
+
+const HIDDEN_COLUMNS = `job_id, hidden_at, title, company, url`;
+
+/**
+ * Hide a job. Idempotent: hiding one twice keeps the first timestamp, so the
+ * list stays in the order you actually said no in.
+ *
+ * The snapshot is not optional here in the way it is for a save. A hidden job
+ * is absent from every search by construction, so this row is the only place it
+ * can ever be read again — without the title and the company, the page that is
+ * supposed to let you take it back would be a list of opaque ids.
+ */
+export function hideJob(db, userId, jobId, snapshot = {}, now = Date.now()) {
+  if (typeof jobId !== 'string' || !jobId || jobId.length > 300) throw new UserError('bad job id');
+  db.prepare(
+    `INSERT INTO hidden_jobs (user_id, job_id, hidden_at, title, company, url)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id, job_id) DO UPDATE SET
+       title   = COALESCE(excluded.title, hidden_jobs.title),
+       company = COALESCE(excluded.company, hidden_jobs.company),
+       url     = COALESCE(excluded.url, hidden_jobs.url)`,
+  ).run(userId, jobId, now, snapshot.title ?? null, snapshot.company ?? null, snapshot.url ?? null);
+  return getHidden(db, userId, jobId);
+}
+
+/** Un-hide. The job goes back into the searches it always matched. */
+export function unhideJob(db, userId, jobId) {
+  return db.prepare('DELETE FROM hidden_jobs WHERE user_id = ? AND job_id = ?').run(userId, jobId).changes > 0;
+}
+
+export function getHidden(db, userId, jobId) {
+  return (
+    db.prepare(`SELECT ${HIDDEN_COLUMNS} FROM hidden_jobs WHERE user_id = ? AND job_id = ?`).get(userId, jobId) ?? null
+  );
+}
+
+/** Newest first: the one you just hid by mistake is the one you came back for. */
+export function listHidden(db, userId) {
+  return db
+    .prepare(`SELECT ${HIDDEN_COLUMNS} FROM hidden_jobs WHERE user_id = ? ORDER BY hidden_at DESC`)
+    .all(userId);
+}
+
+/**
+ * Just the ids, as a Set — what the search engine takes to keep them out of a
+ * result set. One indexed read per search, which is why this returns ids and
+ * not rows: the engine has no use for a title it is about to not show.
+ */
+export function hiddenIds(db, userId) {
+  return new Set(db.prepare('SELECT job_id FROM hidden_jobs WHERE user_id = ?').all(userId).map((r) => r.job_id));
+}
+
+export function hiddenCount(db, userId) {
+  return db.prepare('SELECT COUNT(*) n FROM hidden_jobs WHERE user_id = ?').get(userId)?.n ?? 0;
+}
+
 // -------------------------------------------------------------------- lists --
 
 export function listsFor(db, userId) {
@@ -555,5 +612,9 @@ export function accountState(db, userId) {
     lists: listsFor(db, userId),
     membership: listMembership(db, userId),
     profiles: listUserProfiles(db, userId),
+    // The count, not the rows. The page needs a number for the tab; the rows
+    // are only ever read on the one screen that asks for them, and a reader
+    // with 800 hidden jobs should not carry all 800 into every page load.
+    hidden_count: hiddenCount(db, userId),
   };
 }

@@ -264,6 +264,10 @@ export function invalidateIndex() {
  *   ~200 ms; there is no point paying that on an unfiltered corpus scan.
  * @param {Set<string>} [opts.restrictTo] only consider these job ids — how the
  *   "new since" diff reuses the whole engine instead of reimplementing it.
+ * @param {Set<string>} [opts.exclude] job ids to keep out of the results and out
+ *   of every count — the jobs a signed-in reader has hidden. The engine is told
+ *   a set of ids and nothing else: it does not know what an account is, and a
+ *   request without one is the search it always was.
  */
 export function search(db, rawProfile, opts = {}) {
   const started = Date.now();
@@ -304,12 +308,14 @@ export function search(db, rawProfile, opts = {}) {
   }
 
   const restrictTo = opts.restrictTo ?? null;
+  const excluded = opts.exclude?.size ? opts.exclude : null;
 
   const inRows = [];
   const asideRows = [];
   const facets = facetsWanted ? newFacets(profile) : null;
   let scanned = 0;
   let titleGated = 0;
+  let hidden = 0;
 
   // One object, reused for every job. `screen` writes its answers here instead
   // of returning them, which is the difference between zero allocations in this
@@ -328,6 +334,26 @@ export function search(db, rawProfile, opts = {}) {
     // Two or more failures: excluded, and countable towards no facet either —
     // see `screen`, which stops asking at that point for exactly this reason.
     if (verdict.failures > 1) continue;
+
+    // A job you hid is one you have already answered "no" to. It leaves the
+    // list and every count with it — a hidden job inflating "New York · 412"
+    // would make the number a promise the list cannot keep.
+    //
+    // Dropped *here* rather than at the top of the loop, which would be one
+    // cheap `Set.has` instead of a whole screening pass, because the count
+    // below has to be honest: "4 hidden" must mean four jobs that match these
+    // filters, not four jobs you once hid, most of them in another city. A
+    // results list that silently shrinks is indistinguishable from a filter
+    // that went wrong, and the fold has been named on this page since the day
+    // it was added for the same reason.
+    // Counted against the list it is reported next to: a posting that would
+    // have gone to the set-aside list was never in `total` to begin with, so
+    // counting it here would be "1 hidden" beside a number that never moved.
+    if (excluded && excluded.has(job.id)) {
+      if (!verdict.failures && verdict.bucket === 'in') hidden++;
+      continue;
+    }
+
     if (facets) tallyFacets(facets, job, verdict.failedKey, profile);
     if (verdict.failures) continue;
 
@@ -431,6 +457,9 @@ export function search(db, rawProfile, opts = {}) {
       // explanation is indistinguishable from a filter that went wrong.
       folded: matched - total,
       set_aside: asideRows.length,
+      // Matches this reader has hidden. Named for the same reason `folded` is:
+      // the page says so out loud, and offers the way back.
+      hidden,
     },
     stats: {
       ms: Date.now() - started,

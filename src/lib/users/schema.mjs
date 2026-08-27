@@ -53,7 +53,7 @@ export const ACTED_ON = new Set(['applied', 'interviewing', 'offer', 'rejected']
 /** Profile and list names become URL segments and are shown verbatim. */
 export const SAFE_NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
 
-export const USERS_SCHEMA_VERSION = 1;
+export const USERS_SCHEMA_VERSION = 2;
 
 /** How long a session cookie stays valid without being used. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -168,6 +168,35 @@ CREATE TABLE IF NOT EXISTS saved_jobs (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_saved_status ON saved_jobs(user_id, status);
+
+-- ----------------------------------------------------------- hidden jobs --
+-- Jobs you answered "no" to. They are kept out of every search you run from
+-- then on, which is the only criterion in this project that is about a single
+-- posting rather than about what a posting is — and that is exactly why it
+-- lives here and not in a filter profile. A profile is a portable document
+-- describing a kind of job; "not this one, and not that one" is a fact about
+-- you, it belongs to the account, and it has to survive being applied to a
+-- profile you have never opened.
+--
+-- Snapshotted for the same reason saved_jobs is, and it matters more here: the
+-- hidden list is the *only* place a hidden job can be read, because by
+-- construction it is missing from every search. Without the snapshot, a corpus
+-- rebuild would leave a page of rows nothing could render, and the un-hide
+-- button would be the only thing on it.
+--
+-- Deliberately independent of saved_jobs. Hiding a job you applied to and were
+-- rejected from is a sensible thing to do, and the two tables answer different
+-- questions: what did I do about this, and do I want to see it again.
+CREATE TABLE IF NOT EXISTS hidden_jobs (
+  user_id   TEXT NOT NULL,
+  job_id    TEXT NOT NULL,          -- "<ats>:<slug>:<native id>", no FK by design
+  hidden_at INTEGER NOT NULL,
+  title     TEXT,
+  company   TEXT,
+  url       TEXT,
+  PRIMARY KEY (user_id, job_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
 -- ---------------------------------------------------------------- lists --
 -- A named bucket. Orthogonal to status on purpose: "apply this week" and

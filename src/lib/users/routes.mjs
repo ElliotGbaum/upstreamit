@@ -7,12 +7,17 @@
  *
  * The shape of the feature, stated once so the code below reads as one idea:
  *
- *   **Signing in is optional and changes nothing about the search.** Every
- *   route in `server.mjs` works exactly as it did with no session. What an
- *   account adds is memory — your filters when you come back, the jobs you
- *   starred, what you did about them — and nothing it adds is a precondition
- *   for anything that worked before. An anonymous visitor is not a degraded
- *   user; they are the default, and the app is theirs first.
+ *   **Signing in is optional, and nothing it adds is a precondition for
+ *   anything that worked before.** What an account adds is memory — your
+ *   filters when you come back, the jobs you starred, the ones you told it
+ *   never to show you again, what you did about them. An anonymous visitor is
+ *   not a degraded user; they are the default, and the app is theirs first.
+ *
+ *   One of those memories reaches back into the search: `hiddenFor` below hands
+ *   `server.mjs` the ids this reader has hidden, and the engine leaves them out
+ *   of the results and the counts. It is still the same search over the same
+ *   corpus reading the same profile document — the account contributes a set of
+ *   ids, never a criterion — and with no session there is no set.
  *
  * Authorization is one line, applied at one place: `/api/me/*` requires a
  * session, and every store call under it is scoped by that session's user id.
@@ -49,6 +54,11 @@ import {
   saveJob,
   unsaveJob,
   savedCounts,
+  hideJob,
+  unhideJob,
+  listHidden,
+  hiddenIds,
+  hiddenCount,
   listsFor,
   createList,
   renameList,
@@ -458,6 +468,34 @@ export function createAccounts({ usersDb, jobsDb }) {
       }
     }
 
+    // ------------------------------------------------------ hidden jobs --
+    // The other half of the ★. A job hidden here is kept out of every search
+    // this account runs — see the `exclude` set handed to the engine in
+    // `server.mjs` — and this is the one screen it can still be read on, which
+    // is what makes hiding a decision you can take back rather than a delete.
+    if (rest === '/hidden' && req.method === 'GET') {
+      const rows = listHidden(db, user.id);
+      json(res, 200, {
+        hidden: url.searchParams.get('hydrate') === '0' ? rows : hydrate(rows),
+        count: rows.length,
+      });
+      return true;
+    }
+    if (rest.startsWith('/hidden/')) {
+      const jobId = rest.slice('/hidden/'.length);
+      if (req.method === 'PUT') {
+        const body = await readBody(req, 50_000);
+        const row = hideJob(db, user.id, jobId, body);
+        json(res, 200, { hidden: row, count: hiddenCount(db, user.id) });
+        return true;
+      }
+      if (req.method === 'DELETE') {
+        unhideJob(db, user.id, jobId);
+        json(res, 200, { restored: jobId, count: hiddenCount(db, user.id) });
+        return true;
+      }
+    }
+
     // ------------------------------------------------------------- lists --
     if (rest === '/lists' && req.method === 'GET') {
       json(res, 200, { lists: listsFor(db, user.id) });
@@ -516,6 +554,17 @@ export function createAccounts({ usersDb, jobsDb }) {
     db,
     handle,
     userFor,
+    /**
+     * The job ids this reader has hidden, or null for a stranger.
+     *
+     * The one thing the account layer hands *outwards* rather than serving.
+     * `server.mjs` passes it to the search engine as an exclusion set, which is
+     * the whole mechanism: the engine never learns what an account is, and the
+     * search route stays a function of the profile document plus one set of
+     * ids. Null and empty are both "change nothing", so a signed-out request is
+     * byte-for-byte the search it always was.
+     */
+    hiddenFor: (user) => (user ? hiddenIds(db, user.id) : null),
     googleEnabled: () => Boolean(googleConfig()),
     close: () => db.close(),
   };
