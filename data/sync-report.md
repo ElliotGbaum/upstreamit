@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-26T08:59:36.194Z
+Run: 2026-08-27T19:03:03.900Z
 
 ## Sources
 
@@ -10,15 +10,16 @@ Run: 2026-08-26T08:59:36.194Z
 | hf-latmay | greenhouse | fetched | 14233 | 55405 | — |
 | hf-latmay | lever | fetched | 8530 | 61108 | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
+| workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | fetched | 3100 | 0 | `cce5ddd` 2026-08-24 |
 | openroles | greenhouse | fetched | 5137 | 1 | `cce5ddd` 2026-08-24 |
 | openroles | lever | fetched | 2135 | 0 | `cce5ddd` 2026-08-24 |
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 922 | 7 | `cefaff6` 2026-08-26 |
-| jobseek | greenhouse | fetched | 2519 | 22 | `cefaff6` 2026-08-26 |
-| jobseek | lever | fetched | 182 | 2 | `cefaff6` 2026-08-26 |
+| jobseek | ashby | fetched | 923 | 7 | `6670add` 2026-08-27 |
+| jobseek | greenhouse | fetched | 2521 | 22 | `6670add` 2026-08-27 |
+| jobseek | lever | fetched | 182 | 2 | `6670add` 2026-08-27 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -36,7 +37,7 @@ Run: 2026-08-26T08:59:36.194Z
 | outscal | lever | fetched | 314 | 5823 | `47cdbb7` 2026-04-22 |
 | openjobsdata | ashby | fetched | 71 | 0 | `66774fc` 2026-08-06 |
 | openjobsdata | greenhouse | fetched | 263 | 0 | `66774fc` 2026-08-06 |
-| openjobsdata | lever | fetched | 11 | 0 | — |
+| openjobsdata | lever | fetched | 11 | 0 | `66774fc` 2026-08-06 |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -45,11 +46,11 @@ Run: 2026-08-26T08:59:36.194Z
 | --- | --- | --- | --- | --- |
 | ashby | 5844 | +0 | -0 | 8013 |
 | bamboohr | 11316 | +0 | -0 | 11316 |
-| greenhouse | 15228 | +0 | -0 | 15228 |
+| greenhouse | 15229 | +1 | -0 | 15229 |
 | icims | 10106 | +0 | -0 | 10106 |
 | lever | 8738 | +0 | -0 | 8738 |
 | paylocity | 10252 | +0 | -0 | 10252 |
-| workday | 12884 | +0 | -0 | 12884 |
+| workday | 12889 | +5 | -0 | 12889 |
 
 ### ashby — contribution by source
 
@@ -60,7 +61,7 @@ Run: 2026-08-26T08:59:36.194Z
 | kalil | 3447 | 30 |
 | feashliaa | 3161 | 5 |
 | openroles | 3100 | 11 |
-| jobseek | 922 | 9 |
+| jobseek | 923 | 9 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
 | jobsync | 120 | 0 |
@@ -81,10 +82,12 @@ Run: 2026-08-26T08:59:36.194Z
 | feashliaa | 8333 | 171 |
 | kalil | 6028 | 448 |
 | openroles | 5137 | 59 |
-| jobseek | 2519 | 28 |
+| jobseek | 2521 | 29 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
+
+Added: cambridgeconsultantslimited
 
 ### icims — contribution by source
 
@@ -115,4 +118,7 @@ Run: 2026-08-26T08:59:36.194Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| feashliaa | 12884 | 12884 |
+| feashliaa | 12884 | 11487 |
+| workday-repair | 1402 | 5 |
+
+Added: conga|wd5|conga-external, cultura|wd3|cultura, embecta|wd1|embectacareers, fabletics|wd1|fabletics, novonesis|wd103|novonesis_careers

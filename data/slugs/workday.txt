@@ -1484,6 +1484,7 @@ conagrabrands|wd1|careers_us
 condenast|wd5|condecareers
 condenast|wd5|pubworx_external_career_site
 confluentmedical|wd5|confluent_medical
+conga|wd5|conga-external
 connect|wd1|vsei_careers
 connect|wd1|ztsystemscareers
 connexuscu|wd1|connexuscareers
@@ -1598,6 +1599,7 @@ ctca|wd1|cancercenter_careers
 ctran|wd5|c-tran_careers
 cubic|wd1|cubic_global_careers
 cubic|wd1|cubic_usa_careers
+cultura|wd3|cultura
 cumminggroup|wd1|cgc
 cuna|wd1|cunamutualgroup
 curriculumassociates|wd5|external
@@ -1867,6 +1869,7 @@ elobau|wd3|elobau
 elobau|wd502|elobau
 elringklinger|wd3|external
 embarkwithus|wd1|embarkcareersite
+embecta|wd1|embectacareers
 embl|wd103|embl
 embryriddle|wd1|adjunctfacultyopportunities
 embryriddle|wd1|external
@@ -2323,6 +2326,7 @@ extendicare|wd10|paramed2023
 extraspace|wd5|ess_acquisitions
 extraspace|wd5|ess_external
 ezcorp|wd12|ezcorp
+fabletics|wd1|fabletics
 factset|wd108|factsetcareers
 factset|wd1|factsetcareers
 faef|wd12|faef_external_careers
@@ -4380,6 +4384,7 @@ novartis|wd3|internal_careers_for_acquired_entities
 novartis|wd3|novartis_careers
 novartis|wd3|swissravcareersite
 novavax|wd1|careers
+novonesis|wd103|novonesis_careers
 novozymes|wd103|novonesis_careers
 novozymes|wd103|novozymes_careers
 nphosting|wd5|bvtcareers
