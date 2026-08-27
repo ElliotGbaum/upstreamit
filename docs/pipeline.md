@@ -172,6 +172,25 @@ The trade being made, stated plainly: a posting whose prose is edited while its 
 
 **A retired board answers `422`, not `404`.** Its human-facing page answers `500`. `probe-boards.mjs` HEADs a URL for every other ATS, which cannot work against a POST endpoint, so an adapter may now answer the existence question itself through `probeSlug()`; Workday is the only one that does. The contract is unchanged: `dead` only for "this board does not exist", `error` for everything else, so a bad ten minutes cannot retire live boards.
 
+### Repairing the Workday slug list
+
+47% of the collected Workday slugs — 6,055 of 12,884 — arrive damaged, and not by our parser: the upstream file itself publishes them that way, verified against the raw source on 2026-08-26.
+
+```
+accenture|wd102|accenturecareers     what it should say
+wd102|wd1|accenturecareers           what it says
+```
+
+The datacenter has been shifted left into the tenant field, the middle field filled with a default `wd1`, and the tenant dropped. So the datacenter survives as field one and the site is intact; only the tenant is missing, and the site name is the only evidence about it. `npm run repair:workday` guesses it (site as-is, site minus a `careers`/`external` affix, first token), confirms each guess against the live API, and writes the confirmed triples to `data/backfill/workday-recovered.txt`.
+
+**It works, and it was almost entirely unnecessary.** Two passes recovered 1,402 tenants — 46.1% of the guessable rows — and five of them were boards the store did not already have. Checked directly: all 6,055 damaged rows have a well-formed row with the same datacenter and site already present. The upstream publishes every Workday board twice, once correctly and once mangled, and the mangled half contains nothing the intact half does not.
+
+Two things follow, and both matter more than the repair did. `parseSlug` rejecting damaged rows is not a lossy shortcut but the complete answer — there is nothing behind them. And **the Workday universe is 6,834 boards, not the 12,884 the raw slug count suggests**, which is the number any estimate of the eventual corpus has to be built on. The script is kept as the evidence for that, and to re-run the day the upstream changes shape; `npm run refresh` does not call it.
+
+Sites named `external`, `careers` or `external_careers` are skipped without spending a request. They are shared by hundreds of unrelated tenants and contain no evidence at all about who owns them; guessing there would be guessing about a word, not a company.
+
+Every attempt is recorded in `slug_attempts` with its strategy and rank, so a re-run costs nothing for a slug already resolved and the hit rate of each guess stays measurable — across both passes: guess #1 (site as-is) 513, #2 (minus a `careers` affix) 800, #3 73, #4 4.
+
 ### Change detection without `updatedAt`
 
 Ashby and Lever publish no `updatedAt` (Ashby has `publishedAt`, Lever `createdAt`), so an edited posting is detected by a content hash (`db.hashJob`). Greenhouse has `updated_at` on 100% of jobs. Either way the sweep writes one `job_events` row per job per day it appeared, changed, reappeared or disappeared, which is what "new since yesterday" is built on.
