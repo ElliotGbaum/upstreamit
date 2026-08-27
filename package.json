@@ -24,9 +24,9 @@
     "sync": "node --disable-warning=ExperimentalWarning src/sync-slugs.mjs",
     "sync:dry": "node --disable-warning=ExperimentalWarning src/sync-slugs.mjs --dry-run",
     "sync:check": "node --disable-warning=ExperimentalWarning src/sync-slugs.mjs --check",
-    "verify": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=ashby --only-unknown && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=greenhouse --only-unknown && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever --only-unknown",
-    "verify:all": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=ashby && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=greenhouse && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever",
-    "sweep": "npm run sweep:ashby && npm run sweep:greenhouse && npm run sweep:lever",
+    "verify": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=ashby --only-unknown && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=greenhouse --only-unknown && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever --only-unknown && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=workday --only-unknown",
+    "verify:all": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=ashby && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=greenhouse && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever && node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=workday",
+    "sweep": "npm run sweep:ashby && npm run sweep:greenhouse && npm run sweep:lever && npm run sweep:workday",
     "derive": "node --disable-warning=ExperimentalWarning src/derive.mjs",
     "derive:new": "node --disable-warning=ExperimentalWarning src/derive.mjs --only-new",
     "find": "node --disable-warning=ExperimentalWarning src/find.mjs",
@@ -45,6 +45,8 @@
     "sweep:ashby": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=ashby",
     "sweep:greenhouse": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=greenhouse",
     "verify:lever": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=lever --only-unknown",
-    "sweep:lever": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=lever"
+    "sweep:lever": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=lever",
+    "verify:workday": "node --disable-warning=ExperimentalWarning src/probe-boards.mjs --ats=workday --only-unknown",
+    "sweep:workday": "node --disable-warning=ExperimentalWarning src/sweep.mjs --ats=workday"
   }
 }
