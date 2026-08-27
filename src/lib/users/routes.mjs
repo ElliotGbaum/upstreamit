@@ -40,6 +40,7 @@ import {
   identitiesFor,
   createSession,
   userForToken,
+  userForSyncToken,
   destroySession,
   destroyAllSessions,
   putOAuthState,
@@ -99,9 +100,13 @@ export function createAccounts({ usersDb, jobsDb }) {
   // lock out logins, which is a denial of service with extra steps.
   const loginLimit = rateLimiter({ limit: 12, windowMs: 15 * 60 * 1000 });
   const signupLimit = rateLimiter({ limit: 6, windowMs: 60 * 60 * 1000 });
+  // Generous: a sheet polling every ten minutes needs six an hour.
+  const exportLimit = rateLimiter({ limit: 120, windowMs: 60 * 60 * 1000 });
 
   const isMe = (path) => path === '/api/me' || path.startsWith('/api/me/');
-  const ours = (path) => isMe(path) || path === '/api/auth' || path.startsWith('/api/auth/');
+  const isExport = (path) => path.startsWith('/api/export/');
+  const ours = (path) =>
+    isMe(path) || isExport(path) || path === '/api/auth' || path.startsWith('/api/auth/');
 
   /** The session behind this request, or null. Never throws; anonymous is normal. */
   function userFor(req) {
@@ -189,6 +194,7 @@ export function createAccounts({ usersDb, jobsDb }) {
 
     try {
       if (await authRoutes(req, res, path, url)) return true;
+      if (await exportRoutes(req, res, path, url)) return true;
       if (await meRoutes(req, res, path, url)) return true;
       json(res, 404, { error: `no route for ${req.method} ${path}` });
     } catch (err) {
@@ -352,6 +358,79 @@ export function createAccounts({ usersDb, jobsDb }) {
     }
 
     return false;
+  }
+
+  // ---------------------------------------------------------------- export --
+
+  /**
+   * The saved list, for a program holding a sync token rather than a browser
+   * holding a session.
+   *
+   * Read-only and deliberately narrow. The thing on the other end of this is a
+   * spreadsheet script running unattended on someone else's servers, so it gets
+   * the one list it needs and no way to change anything — the token cannot sign
+   * in, cannot write, and cannot reach any other route in this module.
+   *
+   * A session cookie is *not* accepted here even though it would be easy to
+   * allow. The two credentials mean different things, and a browser that has
+   * wandered onto this URL while signed in should get the same 401 a stranger
+   * does, rather than quietly rendering the list as a page you can bookmark.
+   *
+   * The shape returned is this app's own vocabulary — its statuses, its job
+   * ids. Mapping that onto some particular spreadsheet's column names is the
+   * script's job, not the server's; otherwise one sheet's choice of the word
+   * "First Round" becomes a fact about the API.
+   */
+  async function exportRoutes(req, res, path, url) {
+    if (!isExport(path)) return false;
+
+    const rest = path.slice('/api/export'.length);
+    if (rest !== '/saved' || req.method !== 'GET') return false;
+
+    // A 32-byte token is not guessable, but a limiter costs nothing and turns a
+    // scripted hunt into an obvious one.
+    const gate = exportLimit.take(clientIp(req));
+    if (!gate.ok) {
+      json(res, 429, { error: 'too many requests from here — try again later' });
+      return true;
+    }
+
+    // Header first, query second. Both work, because Apps Script users copy
+    // whichever line they find; the header is what the shipped script sends,
+    // since a query string lands in access logs and browser history.
+    const header = String(req.headers.authorization ?? '');
+    const bearer = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : null;
+    const user = userForSyncToken(db, bearer || url.searchParams.get('token'));
+    if (!user) {
+      json(res, 401, { error: 'unknown or missing sync token' });
+      return true;
+    }
+
+    const rows = hydrate(listSaved(db, user.id, {}));
+    json(res, 200, {
+      account: user.email,
+      generated_at: Date.now(),
+      statuses: APPLICATION_STATUSES,
+      saved: rows.map((row) => ({
+        job_id: row.job_id,
+        // "<ats>:<slug>:<native id>" — the prefix is part of the id's contract,
+        // so reading it here is not parsing, it is projection.
+        ats: String(row.job_id).split(':')[0] || null,
+        company: row.job?.company ?? row.company ?? null,
+        title: row.job?.title ?? row.title ?? null,
+        url: row.job?.apply_url ?? row.job?.url ?? row.url ?? null,
+        status: row.status,
+        note: row.note ?? null,
+        saved_at: row.saved_at,
+        updated_at: row.updated_at,
+        applied_at: row.applied_at ?? null,
+        // Three-valued on purpose, matching the rule the rest of this project
+        // follows: true still listed, false pulled from the board, null we do
+        // not know because the posting is not in the corpus at all.
+        listed: row.job ? row.job.is_open : null,
+      })),
+    });
+    return true;
   }
 
   // -------------------------------------------------------------------- me --

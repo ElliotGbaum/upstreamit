@@ -33,6 +33,10 @@ import {
   createSession,
   userForToken,
   destroySession,
+  createSyncToken,
+  userForSyncToken,
+  listSyncTokens,
+  revokeSyncTokens,
   upsertIdentity,
   identitiesFor,
   putUserProfile,
@@ -61,6 +65,7 @@ import {
   accountState,
   UserError,
 } from './lib/users/store.mjs';
+import { createAccounts } from './lib/users/routes.mjs';
 import {
   hashPassword,
   verifyPassword,
@@ -142,6 +147,34 @@ try {
     check('session: an expired one resolves to nobody', userForToken(db, expired.token), null);
 
     check('session: logout invalidates it', [destroySession(db, token), userForToken(db, token)], [true, null]);
+  }
+
+  // ---------------------------------------------------------- sync tokens --
+  // The Google Sheet script holds one of these. The cases below are the ones
+  // where a plausible change makes it a session by accident: an expiry that
+  // silently stops the sheet syncing, or a token that outlives the account.
+  {
+    const { token } = createSyncToken(db, elliot.id, { label: 'google-sheet' });
+    check('sync token: resolves to its user', userForSyncToken(db, token)?.id, elliot.id);
+    check('sync token: a forged one resolves to nobody', userForSyncToken(db, 'made-up'), null);
+    check('sync token: an empty one resolves to nobody', userForSyncToken(db, ''), null);
+    check('sync token: is not a session', userForToken(db, token), null);
+    check('sync token: a session is not a sync token', userForSyncToken(db, createSession(db, elliot.id).token), null);
+
+    // The plaintext must exist nowhere but the one return value.
+    const stored = db.prepare('SELECT token_hash FROM sync_tokens').all().map((r) => r.token_hash);
+    check('sync token: stored only as a hash', stored.includes(token), false);
+
+    check('sync token: records that it was used', typeof listSyncTokens(db, elliot.id)[0].last_used_at, 'number');
+    check('sync token: carries its label', listSyncTokens(db, elliot.id)[0].label, 'google-sheet');
+
+    // A password change drops sessions; it must not drop this, or every reset
+    // silently breaks the sheet with nothing on screen to say so.
+    await setPassword(db, elliot.id, 'a-good-password');
+    check('sync token: survives a password change', userForSyncToken(db, token)?.id, elliot.id);
+
+    check('sync token: revoked by label', [revokeSyncTokens(db, elliot.id, 'nope'), userForSyncToken(db, token)?.id], [0, elliot.id]);
+    check('sync token: revoke means gone', [revokeSyncTokens(db, elliot.id), userForSyncToken(db, token)], [1, null]);
   }
   {
     // A password change must not leave a stolen session working.
@@ -386,6 +419,64 @@ try {
     check('delete: leaves other accounts alone', findByEmail(db, 'elliot@example.com')?.id, elliot.id);
     check('delete: and the corpus knows nothing about any of it', getUser(db, doomed.id), null);
   }
+  // ------------------------------------------------- the export endpoint --
+  // The one route a program reaches rather than a browser. Tested through
+  // `handle` rather than against the store, because the things that can go
+  // wrong here are routing decisions: a cookie quietly being accepted as a
+  // token, or the route answering before it has checked anything.
+  {
+    const accounts = createAccounts({ usersDb: db, jobsDb: null });
+    const call = async (headers, path = '/api/export/saved', method = 'GET') => {
+      const captured = {};
+      const res = {
+        writeHead(status) { captured.status = status; },
+        end(payload) { captured.body = payload; },
+      };
+      const handled = await accounts.handle(
+        { method, url: path, headers, socket: { remoteAddress: '127.0.0.1' } },
+        res,
+        path.split('?')[0],
+        new URL(path, 'http://localhost'),
+      );
+      return { handled, status: captured.status, body: captured.body ? JSON.parse(captured.body) : null };
+    };
+
+    const exporter = await createUser(db, { email: 'exporter@example.com', password: 'a-good-password' });
+    saveJob(db, exporter.id, 'ashby:acme:job-9', { title: 'Deployment Strategist', company: 'Acme', url: 'https://acme.test/9' });
+    const { token } = createSyncToken(db, exporter.id, { label: 'google-sheet' });
+
+    const ok = await call({ authorization: `Bearer ${token}` });
+    check('export: a valid token is answered', [ok.handled, ok.status], [true, 200]);
+    check('export: returns the saved list', ok.body.saved.length, 1);
+    check('export: projects the ats out of the job id', ok.body.saved[0].ats, 'ashby');
+    check('export: carries the snapshot', ok.body.saved[0].company, 'Acme');
+    check('export: says whose list it is', ok.body.account, 'exporter@example.com');
+    check(
+      'export: a job the corpus has never heard of is listed: null, not false',
+      ok.body.saved[0].listed,
+      null,
+    );
+
+    const viaQuery = await call({}, `/api/export/saved?token=${token}`);
+    check('export: the query parameter works too', viaQuery.status, 200);
+
+    const noToken = await call({});
+    check('export: no token is refused', noToken.status, 401);
+    const badToken = await call({ authorization: 'Bearer made-up' });
+    check('export: a forged token is refused', badToken.status, 401);
+
+    // The important one: a session cookie must not open this door.
+    const session = createSession(db, exporter.id);
+    const viaCookie = await call({ cookie: `jf_session=${session.token}` });
+    check('export: a session cookie is not a sync token', viaCookie.status, 401);
+
+    // And the token must not open any other door.
+    const elsewhere = await call({ authorization: `Bearer ${token}` }, '/api/me');
+    check('export: the token cannot reach the account routes', elsewhere.status, 401);
+
+    check('export: it is read-only', (await call({ authorization: `Bearer ${token}` }, '/api/export/saved', 'DELETE')).status, 404);
+  }
+
 } finally {
   db.close();
   rmSync(dir, { recursive: true, force: true });

@@ -285,6 +285,54 @@ export function destroyAllSessions(db, userId) {
   return db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId).changes;
 }
 
+// ---------------------------------------------------------------- sync tokens --
+
+/**
+ * Mint a read token for a program, and return it once.
+ *
+ * Once is the whole contract: the plaintext is never stored, so this return
+ * value is the only time it exists anywhere. Lose it and the answer is to mint
+ * another and revoke this one, which is cheap by design.
+ */
+export function createSyncToken(db, userId, { label = null } = {}, now = Date.now()) {
+  const token = newSessionToken();
+  db.prepare(
+    'INSERT INTO sync_tokens (token_hash, user_id, label, created_at, last_used_at) VALUES (?, ?, ?, ?, ?)',
+  ).run(hashToken(token), userId, label ? String(label).slice(0, 100) : null, now, null);
+  return { token, label };
+}
+
+/**
+ * Resolve a sync token to a user.
+ *
+ * `last_used_at` is written on every hit rather than throttled the way the
+ * session slide is. The write is the point: a token used by a scheduled job is
+ * the one thing here whose silence is diagnostic, and "last used three weeks
+ * ago" is how you find out the sheet stopped syncing without anyone noticing.
+ */
+export function userForSyncToken(db, token, now = Date.now()) {
+  if (!token) return null;
+  const hash = hashToken(token);
+  const row = db.prepare('SELECT * FROM sync_tokens WHERE token_hash = ?').get(hash);
+  if (!row) return null;
+  db.prepare('UPDATE sync_tokens SET last_used_at = ? WHERE token_hash = ?').run(now, hash);
+  return getUser(db, row.user_id);
+}
+
+/** Tokens on an account, for a CLI that has to show what exists before revoking. */
+export function listSyncTokens(db, userId) {
+  return db
+    .prepare('SELECT label, created_at, last_used_at FROM sync_tokens WHERE user_id = ? ORDER BY created_at')
+    .all(userId);
+}
+
+/** Revoke every token on an account, or only those carrying one label. */
+export function revokeSyncTokens(db, userId, label = null) {
+  return label
+    ? db.prepare('DELETE FROM sync_tokens WHERE user_id = ? AND label = ?').run(userId, label).changes
+    : db.prepare('DELETE FROM sync_tokens WHERE user_id = ?').run(userId).changes;
+}
+
 // -------------------------------------------------------------- oauth state --
 
 export function putOAuthState(db, { state, provider, verifier, ttlMs = 10 * 60 * 1000 }, now = Date.now()) {
