@@ -310,6 +310,13 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .sechead h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);
             font-weight:600;margin:0}
 .sechead .sub{color:var(--ink-3);font-size:12px}
+/* A clause of the results line that happens to be clickable — how the count of
+   jobs held back out of this search reaches the screen that holds them. It
+   reads as part of the sentence, not as a button parked next to it. */
+.sechead .sub-link{background:none;border:0;padding:0;font:inherit;font-size:12px;
+                   color:var(--accent);cursor:pointer;text-decoration:underline;
+                   text-underline-offset:2px}
+.sechead .sub-link:hover{color:var(--ink)}
 /* Sort and fold. They sit in the results heading rather than the filter rail
    because neither one is a filter: they change what the same match set looks
    like, not which jobs are in it. */
@@ -346,6 +353,11 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
    search results used to print the raw ranking score here and no longer do. */
 .score{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:12px;font-family:var(--mono)}
 .score b{display:block;color:var(--ink);font-size:15px;font-weight:600}
+
+/* The third column of a card: keep it, never show it again, and why it ranks
+   there. Baseline-aligned with the title rather than centred on the card, so
+   the three sit on the line the eye is already reading. */
+.acts{display:flex;align-items:flex-start;gap:7px}
 
 /* ------------------------------------------------------- why it ranked */
 /* What took the score's place in the third column. An icon rather than the word
@@ -442,10 +454,40 @@ kbd{font-family:var(--mono);background:var(--line-soft);border:1px solid var(--l
 [hidden]{display:none !important}
 .acct{display:flex;align-items:center;gap:6px;position:relative}
 .star{background:none;border:0;cursor:pointer;font-size:15px;line-height:1;padding:2px 0 0;
-      color:var(--ink-3);transition:color .12s,transform .12s}
+      color:var(--ink-3);transition:color .12s,transform .12s,opacity .12s}
 .star:hover{color:var(--warn);transform:scale(1.15)}
 .star.on{color:var(--warn)}
 .star[disabled]{opacity:.5;cursor:default}
+/* On a results list the empty stars stay out of the way until the pointer is on
+   a row: 200 of them lit at once is a column of decoration down the edge, which
+   is what took the star off these cards the first time. A *filled* one is never
+   faint — that one is information about the row, and it is the whole of "your
+   saved jobs still come up, and you can see which they are". */
+.job .star{opacity:.35}
+.job:hover .star,.job .star.on{opacity:1}
+@media (hover:none){.job .star{opacity:.7}}
+
+/* The × beside it. Same size and weight, because the two are one pair of
+   decisions and neither should look like the loud one; red only under the
+   pointer, since a column of red crosses down a list reads as an error state
+   rather than as a control. */
+.hide-x{align-self:start;flex:none;width:19px;height:19px;padding:0;
+        border:1px solid transparent;border-radius:50%;background:none;color:var(--ink-3);
+        font-family:var(--sans);font-size:15px;line-height:16px;text-align:center;
+        cursor:pointer;opacity:.3;transition:opacity .12s,color .12s,border-color .12s}
+.job:hover .hide-x{opacity:1;border-color:var(--line)}
+.hide-x:hover{opacity:1;color:var(--err);border-color:var(--err)}
+.hide-x[disabled]{opacity:.4;cursor:default}
+@media (hover:none){.hide-x{opacity:.8;border-color:var(--line)}}
+
+/* What stands in the list where a hidden card was. The same box as a job so the
+   rows below it do not jump, and quieter than one so it does not read as a
+   result: the row is gone, this is the receipt, and the way back is on it. */
+.hidden-notice{display:flex;align-items:center;gap:12px;cursor:auto;
+               background:var(--line-soft);border-style:dashed;color:var(--ink-3);font-size:13px}
+.hidden-notice:hover{border-color:var(--line)}
+.hidden-notice .said{flex:1;min-width:0}
+.hidden-notice .said b{color:var(--ink-2);font-weight:550}
 #saved-toggle.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 
 .menu{position:absolute;top:calc(100% + 7px);right:0;z-index:40;min-width:210px;
@@ -509,10 +551,20 @@ body.viewing-saved .layout{grid-template-columns:minmax(0,1fr)}
 .scope .x{opacity:.45;font-size:14px;line-height:1;margin-left:1px}
 .scope .x:hover{opacity:1}
 .scope.new{border-style:dashed;color:var(--ink-3)}
+/* The hidden pill. Last in the bar and deliberately not one more status: it
+   holds the other pile — the jobs you turned down — so when it is on it goes
+   ink rather than accent, and the heading above changes with it. */
+.scope.hid{color:var(--ink-3)}
+.scope.hid.on{background:var(--ink-2);border-color:var(--ink-2);color:var(--panel);font-weight:600}
 .saved-job{cursor:auto}
 .saved-job:hover{border-color:var(--line)}
 .saved-job .score{text-align:right;white-space:nowrap}
 .saved-job .score b{font-size:12.5px;font-weight:600;text-transform:lowercase}
+/* A hidden row's right-hand column is a button and a date rather than a status:
+   there is only one thing to do with a job on this screen, and the screen is
+   worth nothing if that thing is hard to find. */
+.hidden-job .score{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.hidden-job .score .when{font-size:11px}
 
 /* ----------------------------------------------------- describe your search */
 /* The one panel on the rail that is not a criterion. It sits above forty

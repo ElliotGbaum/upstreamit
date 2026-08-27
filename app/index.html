@@ -363,10 +363,15 @@
   <!-- Your own list, and deliberately not a filtered view of the corpus: it
        shows every job you saved, including ones the board has since pulled,
        because "did I ever apply to this" has to keep answering after the
-       posting is gone. -->
+       posting is gone.
+
+       The same frame holds the hidden list — the jobs you pressed × on — under
+       the last pill in the scope bar. Two piles of jobs you have already made
+       your mind up about, one screen, and the heading says which you are
+       looking at. -->
   <section id="saved-view" hidden>
     <div class="sechead">
-      <h2>Saved</h2>
+      <h2 id="saved-title">Saved</h2>
       <span class="sub" id="saved-sub"></span>
       <span class="spacer"></span>
       <button class="btn ghost" id="saved-back">← back to search</button>

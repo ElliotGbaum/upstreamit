@@ -37,7 +37,7 @@ Measured 2026-08-24; the live counts are on the site.
 | ATSes | Ashby, Greenhouse and Lever, swept daily. A Workday adapter landed 2026-08-26 and its first backfill of ~6,800 boards is under way; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
 | Metros | 24,337, built from the location strings actually observed |
 | A full filter run | a few seconds over the whole corpus, every facet counted, in memory |
-| Tests | 771, covering derivation, filter, adapters, the store, accounts and AI interpret. No database, no network, ~1 s |
+| Tests | 795, covering derivation, filter, adapters, the store, accounts and AI interpret. No database, no network, ~1 s |
 | Dependencies | one (`@anthropic-ai/sdk`, for the optional "describe your search"). Everything else is Node built-ins, including SQLite |
 
 ## How it works
@@ -125,6 +125,10 @@ key is configured.
 
 Accounts are optional, and everything the app does works signed out. An account adds
 memory: your saved filter sets, starred jobs, application status, and curated lists.
+A ★ and a × sit on every result — keep this one, or never show me this one again. A
+starred job ranks where it always did, marked; a hidden one is subtracted from every
+later search before anything is counted, and the results line says how many it held
+back and links to the list that brings them back.
 Email + password (scrypt) or Google sign-in; `HttpOnly` `SameSite=Lax` sessions; CSRF
 checks on every write; rate limits on login and signup. Accounts live in their own SQLite
 file, separate from the corpus.

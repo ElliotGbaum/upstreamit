@@ -711,6 +711,22 @@ function drawResultsSub() {
   sub.replaceChildren(
     `${fmt(last.total)} matching · showing ${fmt(last.results.length)} · ${last.stats.ms} ms${folded}`,
   );
+
+  // And the same rule for the jobs you hid: named, counted, and one click from
+  // being taken back. A list that quietly leaves things out is the thing this
+  // project exists not to be — the count here is of jobs that match *these*
+  // filters and were held back, not of everything you have ever hidden.
+  const hidden = last.funnel?.hidden ?? 0;
+  if (hidden) {
+    const link = document.createElement('button');
+    link.type = 'button';
+    link.className = 'sub-link';
+    link.textContent = `${fmt(hidden)} hidden by you`;
+    link.title = 'Jobs you pressed × on that match these filters — open the list and bring any of them back';
+    link.onclick = () => account.openHidden();
+    sub.append(' · ', link);
+  }
+
   if (!last.results.length) return;
   const hint = document.createElement('span');
   hint.className = 'sub-hint';
@@ -866,7 +882,11 @@ function jobCard(row, i) {
   const card = document.createElement('div');
   card.className = `job${openJobId === row.id ? ' open' : ''}`;
   card.onclick = (event) => {
-    if (event.target.closest('a, .detail, .rank-why, .why-i')) return;
+    // `.acts` covers the whole right-hand cluster — each of its buttons stops
+    // the event itself, but a click on one that is mid-request and disabled is
+    // retargeted to its parent by some browsers, and opening a description is
+    // not what pressing × means.
+    if (event.target.closest('a, .detail, .rank-why, .acts')) return;
     toggleDetail(card, row);
   };
 
@@ -943,7 +963,19 @@ function jobCard(row, i) {
     toggleWhy(card, row, i + 1);
   };
 
-  card.append(rank, main, whyBtn);
+  // The right-hand column: keep it, never show it again, and why it ranks
+  // there. Two of the three are the account's and draw nothing at all on a
+  // server without accounts — `starFor` and `hideFor` return null, the cluster
+  // holds only the `i`, and the card is what it always was.
+  const acts = document.createElement('div');
+  acts.className = 'acts';
+  const star = account.starFor(row);
+  const hide = account.hideFor(row);
+  if (star) acts.append(star);
+  if (hide) acts.append(hide);
+  acts.append(whyBtn);
+
+  card.append(rank, main, acts);
   // Order matters: the breakdown belongs above the description, not under
   // 5 KB of it.
   if (openWhyId === row.id) card.append(rankPanel(row, i + 1));
@@ -2068,6 +2100,10 @@ async function boot() {
         runSearch({ delay: 0 });
       },
       onProfilesChanged: () => fillProfileSelect($('profile-select').value),
+      // Bringing a hidden job back has to re-ask the question: it was
+      // subtracted server-side before the count, so it cannot reappear in a
+      // list that is already drawn.
+      rerunSearch: () => runSearch({ delay: 0 }),
     });
   } catch (err) {
     // An account layer that fails to load must not take the search with it.
