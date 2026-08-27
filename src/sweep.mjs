@@ -6,6 +6,7 @@
  *   node src/sweep.mjs --ats=ashby --limit=200        # quick smoke run
  *   node src/sweep.mjs --ats=greenhouse --concurrency=8
  *   node src/sweep.mjs --ats=greenhouse --no-conditional   # ignore stored ETags
+ *   node src/sweep.mjs --ats=workday --detail-concurrency=8
  *
  * Reads its slug list from `data/slugs/<ats>-live.txt` when that exists,
  * otherwise from `data/slugs/<ats>.txt`, otherwise from whatever the database
@@ -30,6 +31,16 @@
  * board with a broken ETag would look like a company that stopped hiring. Run
  * `--no-conditional` weekly and diff the counts before trusting it.
  *
+ * ## Boards that cost one request per job
+ *
+ * Workday sends no ETag and no description in its listing, so neither of the
+ * savings above is available to it: prose costs one request per posting. An
+ * adapter that declares `hydrates` is therefore handed the set of jobs on that
+ * board whose descriptions this database already holds, and skips a request for
+ * each one — see `describedStmt` below and the header of
+ * `lib/adapters/workday.mjs`. `--no-conditional` turns that off too, which is
+ * the same weekly full re-read the paragraph above prescribes.
+ *
  * Writes go through `upsertBoard` in batched transactions — one transaction per
  * board would fsync thousands of times; one for the whole sweep would hold a
  * write lock for minutes and lose everything on a crash.
@@ -40,6 +51,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { pool } from './lib/http.mjs';
 import { openDb, upsertBoard, markBoard, touchBoard, transact, setMeta } from './lib/db.mjs';
+import { companyId } from './lib/schema.mjs';
 import { ticker, logEvent, setStat } from './lib/progress.mjs';
 import { loadAdapter } from './lib/adapters/index.mjs';
 
@@ -52,6 +64,9 @@ function parseArgs(argv) {
     if (key === 'ats') args.ats = value;
     else if (key === 'limit') args.limit = Number(value);
     else if (key === 'concurrency') args.concurrency = Number(value);
+    // Detail requests in flight within one board, for an ATS that keeps its
+    // descriptions one request per job. Ignored by every other adapter.
+    else if (key === 'detail-concurrency') args.detailConcurrency = Number(value);
     else if (key === 'batch') args.batch = Number(value);
     else if (key === 'only') args.only = value.split(',').map((s) => s.trim()).filter(Boolean);
     else if (key === 'no-conditional') args.conditional = false;
@@ -163,6 +178,33 @@ async function main() {
   // Names and link repairs resolved out-of-band. See `loadResolvedBoards`.
   const resolved = loadResolvedBoards(args.ats);
 
+  /**
+   * Which jobs on a board already have their prose stored.
+   *
+   * Only for an adapter that declares `hydrates` — meaning its descriptions
+   * cost one request *each* rather than arriving with the list. Workday is the
+   * only one, and on a 700,000-job corpus the difference between re-reading
+   * every description nightly and re-reading only the new ones is the
+   * difference between a sweep that takes hours and one that takes minutes.
+   *
+   * Queried per board rather than once for the whole ATS on purpose: the
+   * all-at-once map that `etags` uses would be ~700,000 strings held for the
+   * length of the run, and this is one indexed seek issued immediately before a
+   * board fetch that takes seconds.
+   *
+   * `--no-conditional` skips it, so the same flag that forces a full re-read
+   * past the ETags forces a full re-read of the descriptions.
+   */
+  const describedStmt =
+    adapter.hydrates && args.conditional
+      ? db.prepare(
+          `SELECT j.id
+             FROM jobs j
+             JOIN job_content c ON c.job_id = j.id
+            WHERE j.company_id = ? AND c.description_text IS NOT NULL`,
+        )
+      : null;
+
   const concurrency = args.concurrency || adapter.concurrency || 10;
   const startedAt = Date.now();
   const sweepRow = db
@@ -205,7 +247,14 @@ async function main() {
   await pool(slugs, concurrency, async (slug) => {
     let result;
     try {
-      result = await adapter.fetchBoard(slug, { etag: etags.get(slug) ?? null });
+      const described = describedStmt
+        ? new Set(describedStmt.all(companyId(args.ats, slug)).map((r) => r.id))
+        : null;
+      result = await adapter.fetchBoard(slug, {
+        etag: etags.get(slug) ?? null,
+        ...(described ? { described } : {}),
+        ...(args.detailConcurrency ? { detailConcurrency: args.detailConcurrency } : {}),
+      });
     } catch (err) {
       result = { ok: false, error: String(err?.message ?? err) };
     }
@@ -243,7 +292,18 @@ async function main() {
           : result.jobs;
       pending.push({
         kind: 'board',
-        board: { ats: args.ats, slug, name, url: result.url, etag: result.etag, jobs },
+        board: {
+          ats: args.ats,
+          slug,
+          name,
+          // An adapter that had to work its name out rather than read it says
+          // so, and `name_source` records the difference. Absent means the
+          // usual case: the API stated it.
+          nameSource: result.name ? (result.nameSource ?? 'api') : undefined,
+          url: result.url,
+          etag: result.etag,
+          jobs,
+        },
       });
     } else if (result.dead) {
       totals.dead++;
