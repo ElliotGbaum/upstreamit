@@ -64,3 +64,8 @@ app/landing.html
 # Never part of what this repo publishes.
 RESUME-NOTES.md
 NOTICED.md
+
+# The working agreement for Claude Code sessions in this repo — branch/PR flow,
+# commit style, the test gate. It steers how the work gets done; it is not part
+# of what the repo publishes.
+CLAUDE.md
