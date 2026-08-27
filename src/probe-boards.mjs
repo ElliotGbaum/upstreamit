@@ -51,8 +51,14 @@ if (!adapter) {
   console.error(`No adapter for ATS "${options.ats}". Known: ${ADAPTER_IDS.join(', ')}`);
   process.exit(1);
 }
-if (typeof adapter.probeUrl !== 'function') {
-  console.error(`Adapter "${options.ats}" has no probeUrl(slug) — nothing to probe against.`);
+// An adapter may answer the existence question itself. Workday has to: its
+// listing endpoint is a POST, a HEAD against it answers 405, and a retired
+// board answers 422 rather than 404 — none of which the generic probe below can
+// read correctly. Everything else exposes a URL and gets HEADed.
+if (typeof adapter.probeSlug !== 'function' && typeof adapter.probeUrl !== 'function') {
+  console.error(
+    `Adapter "${options.ats}" has neither probeSlug(slug) nor probeUrl(slug) — nothing to probe against.`,
+  );
   process.exit(1);
 }
 
@@ -205,12 +211,29 @@ if (resolved) console.log(`\n  ${liveRate.toFixed(1)}% of resolved slugs are rea
 console.log(`\n  ${existing.length.toLocaleString()} confirmed board(s) → ${LIVE_LIST_PATH}\n`);
 
 /**
- * HEAD the adapter's probe endpoint. 404 is the only "does not exist" — every
- * other 4xx/5xx is the host having an opinion about us, not about the slug.
- * (Slugs may contain spaces, e.g. Ashby's "flock safety"; `probeUrl` is
- * responsible for percent-encoding.)
+ * One slug's verdict: `exists`, `dead`, or `error`.
+ *
+ * Either the adapter answers it (`probeSlug`, for an ATS whose existence check
+ * is not a HEAD-able URL) or this HEADs `probeUrl(slug)`. In the generic path
+ * 404 is the only "does not exist" — every other 4xx/5xx is the host having an
+ * opinion about us, not about the slug. (Slugs may contain spaces, e.g. Ashby's
+ * "flock safety"; `probeUrl` is responsible for percent-encoding.)
  */
 async function validateSlug(slug) {
+  // The adapter's own verdict wins where it has one. It is held to the same
+  // contract as the generic path: `dead` only for "this board does not exist",
+  // `error` for everything else, so a bad ten minutes cannot retire live
+  // boards.
+  if (typeof adapter.probeSlug === 'function') {
+    try {
+      const verdict = await adapter.probeSlug(slug);
+      if (verdict?.status === 'exists' || verdict?.status === 'dead') return verdict;
+      return { status: 'error', error: verdict?.error ?? 'probeSlug gave no verdict' };
+    } catch (err) {
+      return { status: 'error', error: String(err?.message ?? err) };
+    }
+  }
+
   let res;
   try {
     res = await request(adapter.probeUrl(slug), { method: 'HEAD', timeoutMs: 30_000 });
