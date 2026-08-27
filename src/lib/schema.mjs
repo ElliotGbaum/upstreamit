@@ -167,7 +167,69 @@ export function companySizeBand(openRoles) {
   return COMPANY_SIZE_BANDS[COMPANY_SIZE_BANDS.length - 1].value;
 }
 
-export const SCHEMA_VERSION = 5;
+/**
+ * What a company does, as a short closed list.
+ *
+ * No ATS publishes this either. It is read off the company's own postings —
+ * the "about us" paragraph nearly every description carries, plus the titles
+ * of the roles it has open — by `src/enrich-companies.mjs`, one model call per
+ * company, and stored on `companies.sector`. A job inherits its company's
+ * sector; nothing here is a fact about the posting itself.
+ *
+ * This is the **company's** industry, not the job's function: a data engineer
+ * at a bank is `financial-services` here and `data` in `JOB_FUNCTIONS`. The two
+ * answer different questions — "what would I be building" against "what would
+ * I be doing" — and somebody who does not want to work in finance is asking
+ * the first one.
+ *
+ * `other` is a real answer and not a failure, exactly as it is in
+ * `JOB_FUNCTIONS`: it means the model read the postings and the company fits
+ * no bucket here. A company nobody has read yet is NULL, which the filter
+ * treats as unknown and the `sector` unknown policy decides about.
+ *
+ * Coarse on purpose. Thirty buckets is what a person can scan in a panel and
+ * exclude with one tick; a 200-row industry taxonomy is a search box nobody
+ * opens. Each `hint` is the sentence the model is given to decide by, so a
+ * bucket's meaning lives in one place and the prompt cannot drift from the
+ * label on screen.
+ */
+export const SECTORS = [
+  { value: 'ai', label: 'AI & machine learning', hint: 'AI models, ML platforms, research labs, AI-native products where the AI is the company' },
+  { value: 'developer-tools', label: 'developer tools & infrastructure', hint: 'tools for engineers: cloud infrastructure, observability, CI/CD, APIs, databases, data infrastructure' },
+  { value: 'data-analytics', label: 'data & analytics', hint: 'analytics, BI, data platforms and data providers sold to businesses' },
+  { value: 'cybersecurity', label: 'cybersecurity', hint: 'security products and services' },
+  { value: 'enterprise-software', label: 'business software', hint: 'B2B SaaS for a business function — sales, HR, legal, finance ops, productivity, vertical software — when no more specific bucket fits' },
+  { value: 'fintech', label: 'fintech & payments', hint: 'technology companies whose product is money movement, lending, banking infrastructure, wealth or accounting software' },
+  { value: 'crypto', label: 'crypto & web3', hint: 'blockchains, exchanges, wallets, DeFi, tokens' },
+  { value: 'financial-services', label: 'banking, investing & insurance', hint: 'banks, asset managers, hedge funds, trading firms, brokerages, insurers — finance as the business, not software for it' },
+  { value: 'health-tech', label: 'health technology', hint: 'software and digital services for patients, clinicians or health systems' },
+  { value: 'healthcare', label: 'healthcare providers & services', hint: 'hospitals, clinics, care delivery, staffing of clinicians, payers' },
+  { value: 'biotech-pharma', label: 'biotech & pharma', hint: 'drug discovery, therapeutics, diagnostics, medical devices, life-science tools' },
+  { value: 'education', label: 'education & edtech', hint: 'schools, universities, tutoring, learning platforms' },
+  { value: 'consumer', label: 'consumer apps & products', hint: 'products sold to individuals: consumer apps, social, dating, fitness, personal finance apps, DTC brands' },
+  { value: 'ecommerce-retail', label: 'e-commerce & retail', hint: 'online and physical retail, marketplaces for goods, commerce infrastructure' },
+  { value: 'media-entertainment', label: 'media & entertainment', hint: 'publishing, streaming, music, film, sports, creator platforms' },
+  { value: 'gaming', label: 'gaming', hint: 'video game studios, game platforms and game technology' },
+  { value: 'marketing-adtech', label: 'marketing & advertising', hint: 'ad networks, martech, agencies whose product is marketing' },
+  { value: 'hr-tech', label: 'HR, recruiting & staffing', hint: 'hiring platforms, HR software, staffing and recruiting agencies, payroll and benefits providers' },
+  { value: 'real-estate', label: 'real estate & proptech', hint: 'property, construction tech, brokerages, mortgage, hospitality real estate' },
+  { value: 'transportation-logistics', label: 'transportation & logistics', hint: 'shipping, freight, delivery, mobility, ride-hailing, automotive, supply chain' },
+  { value: 'energy-climate', label: 'energy & climate', hint: 'power, oil and gas, renewables, batteries, carbon, climate tech, utilities' },
+  { value: 'manufacturing-industrial', label: 'manufacturing & industrial', hint: 'factories, industrial equipment, materials, chemicals, industrial automation' },
+  { value: 'hardware-robotics', label: 'hardware, robotics & semiconductors', hint: 'physical devices, robots, chips, sensors, consumer electronics' },
+  { value: 'aerospace-defense', label: 'aerospace & defense', hint: 'space, aviation, defense contractors, government-security technology' },
+  { value: 'government', label: 'government & public sector', hint: 'government bodies, public agencies, and technology built mainly for them' },
+  { value: 'nonprofit', label: 'nonprofit', hint: 'charities, foundations, NGOs, advocacy' },
+  { value: 'professional-services', label: 'consulting & professional services', hint: 'consulting firms, law firms, accounting firms, agencies and IT services whose product is people' },
+  { value: 'telecom', label: 'telecom & networking', hint: 'carriers, ISPs, networking equipment, connectivity' },
+  { value: 'hospitality-travel', label: 'hospitality, travel & food', hint: 'hotels, restaurants, travel, food and beverage, events' },
+  { value: 'construction', label: 'construction & engineering services', hint: 'builders, contractors, civil and engineering services firms' },
+  { value: 'other', label: 'something else', hint: 'none of the above fits' },
+];
+
+export const SECTOR_VALUES = SECTORS.map((s) => s.value);
+
+export const SCHEMA_VERSION = 6;
 
 /**
  * DDL. Written as one string so a fresh database is a single `exec`.
@@ -200,6 +262,14 @@ CREATE TABLE IF NOT EXISTS companies (
   logo_url       TEXT,
   job_count      INTEGER NOT NULL DEFAULT 0,
   hq_location    TEXT,
+  -- What the company does, read off its own postings by the enrich pass. See
+  -- SECTORS. All four are NULL until a company has been read; sector_at set
+  -- with sector NULL means it was read and fit no bucket the model would
+  -- commit to -- which the filter treats the same as never read: unknown.
+  sector         TEXT,                   -- one of SECTOR_VALUES
+  blurb          TEXT,                   -- one sentence: what the company does
+  sector_src     TEXT,                   -- which model read it (audit trail)
+  sector_at      INTEGER,                -- epoch ms of that read
   first_seen     INTEGER NOT NULL,
   last_seen      INTEGER NOT NULL,
   last_swept     INTEGER,

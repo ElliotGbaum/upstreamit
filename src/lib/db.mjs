@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DDL, SCHEMA_VERSION, companyId, jobId, normText } from './schema.mjs';
+import { DDL, SCHEMA_VERSION, SECTOR_VALUES, companyId, jobId, normText } from './schema.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const DEFAULT_DB_PATH = join(ROOT, 'data', 'jobs.db');
@@ -111,6 +111,11 @@ export function migrate(db) {
 
 const ADDITIVE_COLUMNS = [
   ['jobs', 'd_salary_src', 'TEXT'],
+  // The enrich pass's columns, on databases built before it existed.
+  ['companies', 'sector', 'TEXT'],
+  ['companies', 'blurb', 'TEXT'],
+  ['companies', 'sector_src', 'TEXT'],
+  ['companies', 'sector_at', 'INTEGER'],
 ];
 
 /**
@@ -374,6 +379,27 @@ export function upsertBoard(db, board, now = Date.now()) {
   }
 
   return { seen: jobs.length, added, changed, closed };
+}
+
+/**
+ * Record what the enrich pass read about one company.
+ *
+ * The only write path for the four `sector*` columns, so that "was this company
+ * ever read?" has one answer: `sector_at` is set on every call, including one
+ * that found no bucket to commit to. A NULL `sector` under a set `sector_at` is
+ * "read, and unsure" — the filter treats it as unknown, and `--only-new` does
+ * not re-spend a call on it. `--all` does.
+ *
+ * `sector` is checked against `SECTOR_VALUES` here as well as by the caller: an
+ * enum the filter has never heard of stored on 300 companies would be a facet
+ * row nobody can tick and a criterion that quietly matches nothing.
+ */
+export function recordSector(db, id, { sector = null, blurb = null, src = null, at = Date.now() } = {}) {
+  const value = sector && SECTOR_VALUES.includes(sector) ? sector : null;
+  const text = typeof blurb === 'string' && blurb.trim() ? blurb.trim() : null;
+  return db
+    .prepare('UPDATE companies SET sector = ?, blurb = ?, sector_src = ?, sector_at = ? WHERE id = ?')
+    .run(value, text, src, at, id).changes;
 }
 
 /** Mark a board dead (404) without touching its historical jobs. */
