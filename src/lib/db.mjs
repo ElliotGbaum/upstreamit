@@ -138,8 +138,20 @@ export function setMeta(db, key, value) {
   db.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)').run(key, String(value));
 }
 
-/** Content fingerprint used to detect an edited posting. */
-export function hashJob(job) {
+/**
+ * Content fingerprint used to detect an edited posting.
+ *
+ * `descriptionLength` overrides the length taken from `job.description_text`,
+ * and exists for the one adapter that does not re-read every description on
+ * every sweep. Workday keeps its prose behind a request per job, so a job whose
+ * text is already stored comes back from the adapter with no `description_text`
+ * at all (see `adapters/workday.mjs`). Hashing that as a zero-length
+ * description would differ from the stored hash and mark the job `changed` on
+ * every sweep for the rest of its life, filling the event log with edits that
+ * never happened. `upsertBoard` passes the stored length instead, so an
+ * untouched job hashes to exactly what it hashed to yesterday.
+ */
+export function hashJob(job, descriptionLength) {
   return createHash('sha1')
     .update(
       [
@@ -149,7 +161,7 @@ export function hashJob(job) {
         job.comp_min,
         job.comp_max,
         job.department,
-        (job.description_text ?? '').length,
+        descriptionLength ?? (job.description_text ?? '').length,
       ].join('\0'),
     )
     .digest('hex')
@@ -202,9 +214,18 @@ export function upsertBoard(db, board, now = Date.now()) {
     board.discovery ?? null,
   );
 
+  // `desc_len` joins in the length of the description already stored, for the
+  // hash of a job whose prose was deliberately not re-fetched. See `hashJob`.
+  // The join costs one index seek per board against a table already keyed by
+  // job_id, on a query that was already reading every job on the board.
   const existing = new Map(
     db
-      .prepare('SELECT id, content_hash, is_open FROM jobs WHERE company_id = ?')
+      .prepare(
+        `SELECT j.id, j.content_hash, j.is_open, LENGTH(c.description_text) AS desc_len
+           FROM jobs j
+           LEFT JOIN job_content c ON c.job_id = j.id
+          WHERE j.company_id = ?`,
+      )
       .all(cid)
       .map((r) => [r.id, r]),
   );
@@ -248,11 +269,27 @@ export function upsertBoard(db, board, now = Date.now()) {
       has_equity        = excluded.has_equity
   `);
 
+  // Two statements, because an absent description and an empty one mean
+  // different things and SQL cannot tell them apart once both are NULL.
+  //
+  // A job with no `description_text` key at all is saying "I did not read one"
+  // — the Workday adapter skips the request for prose it already stored, and a
+  // detail fetch that simply failed looks identical from here. Either way the
+  // stored text stays exactly as it is; overwriting it would blank a good
+  // description and the derive pass would quietly lose the skills, degree and
+  // visa signals that only the prose carries.
+  //
+  // A job whose `description_text` is null was read and found empty, and that
+  // lands like any other edit: the posting no longer has prose, so neither
+  // does the store.
   const insertContent = db.prepare(
     `INSERT INTO job_content (job_id, description_text)
      VALUES (?, ?)
      ON CONFLICT(job_id) DO UPDATE SET
        description_text = excluded.description_text`,
+  );
+  const keepContent = db.prepare(
+    'INSERT OR IGNORE INTO job_content (job_id, description_text) VALUES (?, NULL)',
   );
 
   const insertEvent = db.prepare(
@@ -266,8 +303,12 @@ export function upsertBoard(db, board, now = Date.now()) {
   for (const job of jobs) {
     const id = job.id ?? jobId(ats, slug, job.native_id);
     seenIds.add(id);
-    const hash = hashJob(job);
     const prior = existing.get(id);
+    // `undefined` means the adapter did not read a description this time;
+    // `null` means it read one and there was nothing there. Only the first
+    // hashes against what is already stored.
+    const unread = job.description_text === undefined;
+    const hash = hashJob(job, unread ? (prior?.desc_len ?? 0) : undefined);
 
     insertJob.run(
       id,
@@ -305,7 +346,8 @@ export function upsertBoard(db, board, now = Date.now()) {
       job.has_equity == null ? null : job.has_equity ? 1 : 0,
     );
 
-    insertContent.run(id, job.description_text ?? null);
+    if (unread) keepContent.run(id);
+    else insertContent.run(id, job.description_text ?? null);
 
     if (!prior) {
       added++;

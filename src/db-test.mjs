@@ -4,14 +4,22 @@
  *
  *   node src/db-test.mjs
  *
- * `upsertBoard` is the only write path into the corpus, and `search()` is the
- * only read path the page uses. Neither had a test that touched a database:
- * the filter tests exercise the criteria on hand-built rows, so they cannot
- * see what happens between SQLite and the in-memory index.
+ * `upsertBoard` is the only write path into the corpus, and two of its rules
+ * exist for an adapter that does not re-read every description on every sweep
+ * (Workday keeps its prose one request per job, so the sweep skips the request
+ * for text it already holds). Both are the kind of thing a reasonable-looking
+ * edit would break without any other test noticing:
  *
- * The case that prompted this: `url` and `apply_url` left the index on
- * 2026-08-26 and are read from SQLite for the rows on the page instead, so a
- * result row must still carry both and the index row must not.
+ *  - a job that comes back with `description_text` *absent* keeps the text
+ *    already stored, and hashes to what it hashed to yesterday, so a skipped
+ *    request is never recorded as an edit that did not happen;
+ *  - a job that comes back with `description_text: null` was read and found
+ *    empty, and that is a real change.
+ *
+ * `search()` is exercised here too, for the one thing the filter tests cannot
+ * see: `url` and `apply_url` left the in-memory index on 2026-08-26 and are
+ * read from SQLite for the rows on the page, so a result row must still carry
+ * both.
  *
  * Uses a throwaway file in the OS temp directory, like `users-test.mjs`, so it
  * never sees `data/jobs.db` and leaves nothing behind.
@@ -20,7 +28,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { openDb, upsertBoard } from './lib/db.mjs';
+import { openDb, upsertBoard, hashJob } from './lib/db.mjs';
 import { blankJob, jobId } from './lib/schema.mjs';
 import { search, getIndex, invalidateIndex } from './lib/filter/index.mjs';
 
@@ -70,24 +78,88 @@ const board = (jobs, over = {}) => ({
 const ID = jobId('ashby', 'acme', 'j1');
 const stored = (id = ID) =>
   db.prepare('SELECT description_text FROM job_content WHERE job_id = ?').get(id)?.description_text;
+const hashOf = (id = ID) => db.prepare('SELECT content_hash FROM jobs WHERE id = ?').get(id)?.content_hash;
 const events = (id = ID) =>
   db.prepare('SELECT event FROM job_events WHERE job_id = ? ORDER BY day, rowid').all(id).map((r) => r.event);
+const company = () =>
+  db.prepare("SELECT name, name_source FROM companies WHERE id = 'ashby:acme'").get();
 
 try {
-  // ------------------------------------------------------------ a sweep --
+  // ------------------------------------------------- the description rules --
   {
     check('first sweep: the job is added', upsertBoard(db, board([job()]), day(0)), { seen: 1, added: 1, changed: 0, closed: 0 });
     check('first sweep: the description is stored', stored(), 'Build things with SQL and Python.');
     check('first sweep: one appeared event', events(), ['appeared']);
+    const hash = hashOf();
+
     check('unchanged: an identical job is not a change', upsertBoard(db, board([job()]), day(1)).changed, 0);
-    check('new prose: a change', upsertBoard(db, board([job({ description_text: 'Now with Rust.' })]), day(2)).changed, 1);
+
+    // The adapter did not read the description this time. Nothing about the
+    // job may move: not the text, not the hash, not the event log.
+    const unread = job();
+    delete unread.description_text;
+    check('unread: not a change', upsertBoard(db, board([unread]), day(2)).changed, 0);
+    check('unread: the stored text survives', stored(), 'Build things with SQL and Python.');
+    check('unread: the hash is what it was', hashOf(), hash);
+    check('unread: no event is written', events(), ['appeared']);
+
+    // The adapter read it and there was nothing. That is a change, and the
+    // stored text goes with it.
+    check('read as empty: a change', upsertBoard(db, board([job({ description_text: null })]), day(3)).changed, 1);
+    check('read as empty: the stored text is gone', stored(), null);
+    check('read as empty: the event says so', events(), ['appeared', 'changed']);
+
+    check('new prose: a change', upsertBoard(db, board([job({ description_text: 'Now with Rust.' })]), day(4)).changed, 1);
     check('new prose: replaces the old', stored(), 'Now with Rust.');
-    upsertBoard(db, board([job()]), day(3));
+
+    // Same length, different words. The hash is a content fingerprint of the
+    // fields plus the description *length*, so this is the one edit it
+    // cannot see; the test pins that as the known trade rather than a bug.
+    check('same-length edit: invisible to the hash', upsertBoard(db, board([job({ description_text: 'Now with Java.' })]), day(5)).changed, 0);
+
+    // Back to the original prose, so the blocks below start from a known job.
+    upsertBoard(db, board([job()]), day(5));
+  }
+
+  // A job first seen without prose gains some later. That is a change — the
+  // first sweep hashed it against a stored length of zero.
+  {
+    const first = job({ native_id: 'j2', url: 'https://jobs.ashbyhq.com/acme/j2' });
+    delete first.description_text;
+    const id = jobId('ashby', 'acme', 'j2');
+    const r = upsertBoard(db, board([job(), first]), day(6));
+    check('born unread: added', [r.added, r.changed], [1, 0]);
+    check('born unread: nothing stored', stored(id), null);
+    const hydrated = job({ native_id: 'j2', url: 'https://jobs.ashbyhq.com/acme/j2', description_text: 'Prose at last.' });
+    check('born unread: gaining prose is a change', upsertBoard(db, board([job(), hydrated]), day(7)).changed, 1);
+    check('born unread: the prose is stored', stored(id), 'Prose at last.');
+  }
+
+  // `hashJob` on its own: the override stands in for a description that was
+  // not read, and only its length matters.
+  {
+    const j = job();
+    const bare = job();
+    delete bare.description_text;
+    check('hashJob: an unread description hashes by stored length', hashJob(bare, j.description_text.length), hashJob(j));
+    check('hashJob: a different stored length is a different hash', hashJob(bare, j.description_text.length + 1) === hashJob(j), false);
+    check('hashJob: with no override, absent and empty hash alike', hashJob(bare), hashJob(job({ description_text: '' })));
+  }
+
+  // ------------------------------------------------------- the board name --
+  {
+    check('name: stated by the API', company(), { name: 'Acme', name_source: 'api' });
+    upsertBoard(db, board([job()], { name: 'Acme Corp', nameSource: 'derived' }), day(8));
+    check('name: worked out from a URL says so', company(), { name: 'Acme Corp', name_source: 'derived' });
+    // An incremental sweep that hydrated nothing learns no name. The stored
+    // one, and how it was learned, both stay.
+    upsertBoard(db, board([job()], { name: null }), day(9));
+    check('name: an adapter with no name keeps the stored one', company(), { name: 'Acme Corp', name_source: 'derived' });
   }
 
   // ----------------------------------------------------------- the links --
   {
-    upsertBoard(db, board([job(), job({ native_id: 'j2', url: 'https://jobs.ashbyhq.com/acme/j2', apply_url: null })]), day(4));
+    upsertBoard(db, board([job(), job({ native_id: 'j2', url: 'https://jobs.ashbyhq.com/acme/j2', apply_url: null })]), day(10));
     invalidateIndex();
     const index = getIndex(db, { force: true });
     check('index: two open jobs', index.jobs.length, 2);
@@ -106,10 +178,10 @@ try {
 
   // ---------------------------------------------------------- disappearance --
   {
-    const r = upsertBoard(db, board([job()]), day(5));
+    const r = upsertBoard(db, board([job()]), day(11));
     check('closed: a job the board no longer lists is closed, not deleted', [r.closed, stored(jobId('ashby', 'acme', 'j2'))], [1, 'Build things with SQL and Python.']);
     check('closed: the event log says disappeared', events(jobId('ashby', 'acme', 'j2')).at(-1), 'disappeared');
-    upsertBoard(db, board([job(), job({ native_id: 'j2' })]), day(6));
+    upsertBoard(db, board([job(), job({ native_id: 'j2' })]), day(12));
     check('closed: a relisted job reappears rather than being born again', events(jobId('ashby', 'acme', 'j2')).at(-1), 'reappeared');
   }
 } finally {
