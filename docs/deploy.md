@@ -15,7 +15,7 @@ exactly as they are.
 | Piece | Where it ends up | Why |
 |---|---|---|
 | The code (`src/`, `app/`) | Inside a ~5 MB container image | Small, so deploys take seconds |
-| `data/jobs.db` (about 8.4 GB since Workday landed on 2026-08-27; 3.3 GB before it) | On a mounted disk (a Fly "volume") at `/data` | Too big for the image; uploaded once by script |
+| `data/jobs.db` (about 10 GB since Workday landed on 2026-08-27; 3.3 GB before it) | On a mounted disk (a Fly "volume") at `/data` | Too big for the image; uploaded once by script |
 | `data/users.db` (accounts) | Same volume | Must survive deploys, or people get logged out |
 | `profiles/*.json` | Same volume, seeded from the image on first boot | So a profile saved through the UI is not wiped by the next deploy |
 
@@ -129,9 +129,12 @@ fly volumes create jobdata --size 30 --region ewr --app <your-app-name>
 match `primary_region`. The size is three databases' worth, not one: the upload
 script (step 7) keeps the old database serving until the new one has been unpacked
 beside it and verified, so at the peak the volume holds the live database, the
-compressed upload and the unpacked copy at once — about 19 GB at the 8.4 GB the
-database reached when Workday landed on 2026-08-27. The volume was 6 GB while the
-database was 3.3 GB. It can be enlarged later, without a restart, with
+compressed upload and the unpacked copy at once — about 23 GB at the 10 GB the
+database reached when Workday landed on 2026-08-27 (10.8 GB unpacked, 2.6 GB
+compressed, beside the 3.6 GB it was replacing). The volume was 6 GB while the
+database was 3.3 GB. The corpus grows every night and closed jobs are kept, so
+check `fly ssh console -C "df -h /data"` before an upload: the next one needs
+roughly 2.3 × the database's size free. It can be enlarged later, without a restart, with
 `fly volumes extend <volume id> -s <GB>`; it cannot be shrunk.
 
 It will ask for confirmation. Say yes.
@@ -166,7 +169,7 @@ The script is fully non-interactive and does five things:
 
 1. `VACUUM INTO` a compact copy at `data/jobs-deploy.db`. The working `data/jobs.db`
    is never modified or write-locked.
-2. `gzip -1` it (roughly a quarter of the size: 8.4 GB → about 2.2 GB).
+2. `gzip -1` it (roughly a quarter of the size: 10 GB → 2.6 GB on 2026-08-27).
 3. `fly sftp put` the archive to `/data/jobs.db.new.gz` on the volume — *beside* the
    live database, which keeps serving — and check its sha256 against the local copy.
 4. Unpack it there and verify it with `deploy/verify-db.mjs` (uploaded alongside, since
@@ -178,7 +181,10 @@ The script is fully non-interactive and does five things:
    and renames `jobs.db.new` into place. The site is down for the restart only.
 
 **Step 3 is the long one.** Upload speed is whatever the local connection gives —
-think 15 minutes per GB on a 10 Mbps upload. Start it and go do something else.
+think 15 minutes per GB on a 10 Mbps upload. Start it and go do something else. The
+first million-job upload on 2026-08-27 took about an hour and a half end to end: a
+minute to compact, five to compress, an hour for the 2.6 GB transfer, and twenty
+minutes for the unpack and `quick_check` on the machine.
 
 The swap is done at boot and not by renaming under the running server for a reason
 that is easy to miss: the server keeps the database in WAL mode, so `jobs.db-wal`
