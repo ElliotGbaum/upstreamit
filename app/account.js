@@ -296,6 +296,32 @@ function remember(profile, { now = false } = {}) {
   else rememberTimer = setTimeout(write, 1200);
 }
 
+// ------------------------------------------------- one request at a time --
+
+/**
+ * The last request sent about each job, so the next one about the same job
+ * goes after it.
+ *
+ * Every mark on a card is drawn before the server has answered — see
+ * `toggleSave` — which means a second press can come while the first is still
+ * on its way: hide, then Undo a moment later. Sent together, the two can be
+ * handled in either order, and "hidden" would be the server's answer to a
+ * pair of presses that meant "not hidden". Chaining them per job keeps the
+ * server's record in the order the presses came. Requests about different
+ * jobs do not wait on each other.
+ */
+const inFlight = new Map(); // job id → the promise of the last request about it
+
+function afterPrevious(jobId, work) {
+  const run = (inFlight.get(jobId) ?? Promise.resolve()).then(work, work);
+  const settled = run.catch(() => {});
+  inFlight.set(jobId, settled);
+  settled.then(() => {
+    if (inFlight.get(jobId) === settled) inFlight.delete(jobId);
+  });
+  return run;
+}
+
 // ------------------------------------------------------ the star on a card --
 
 /**
@@ -321,19 +347,10 @@ function starFor(row) {
   button.type = 'button';
   button.className = 'star';
   paintStar(button, row.id);
-  button.onclick = async (event) => {
+  button.onclick = (event) => {
     event.stopPropagation();
     if (!state.user) return goToAuth('signin');
-    button.disabled = true;
-    try {
-      await toggleSave(row);
-      document.querySelectorAll(`.star[data-job="${cssEscape(row.id)}"]`).forEach((el) => paintStar(el, row.id));
-      if (!$('saved-view').hidden) renderSaved();
-    } catch (err) {
-      alert(`Could not save that: ${err.message}`);
-    } finally {
-      button.disabled = false;
-    }
+    void toggleSave(row);
   };
   return button;
 }
@@ -350,19 +367,91 @@ function paintStar(button, jobId) {
       : 'Sign in to save jobs';
 }
 
+/**
+ * Save or un-save: drawn first, sent second.
+ *
+ * The star fills in the instant it is pressed and the request goes out behind
+ * it. It used to be the other way round — press, wait, paint — which put the
+ * whole round trip, plus whatever the server happened to be busy with, between
+ * the press and anything visibly happening. The trip is ~40 ms on a quiet
+ * server; behind somebody's search it was a second or more, and a button that
+ * does nothing for a second reads as a button that did not work. If the server
+ * refuses, the star goes back to how it was and the page says so.
+ *
+ * Until the answer comes the row under the star is a stand-in with the fields
+ * the star reads. The server's row replaces it — unless a later press has
+ * already moved the star on, in which case that press's answer is the one
+ * that counts, and this one leaves the star alone.
+ */
 async function toggleSave(row) {
   const jobId = row.id;
-  if (state.saved.has(jobId)) return unsave(jobId);
-  // The snapshot travels with the save so the row still reads correctly if
-  // the posting is pulled from the board later.
-  const result = await send(`/api/me/saved/${encodeURIComponent(jobId)}`, 'PUT', {
-    title: row.title,
-    company: row.company ?? row.company_name,
-    url: row.url,
-  });
-  state.saved.set(jobId, result.saved);
-  state.counts = result.counts;
+  const before = state.saved.get(jobId) ?? null;
+  const placeholder = before ? null : provisionalSave(row);
+  if (before) state.saved.delete(jobId);
+  else state.saved.set(jobId, placeholder);
+  state.counts = countsMoved(before ? before.status : 'saved', before ? -1 : 1);
+  // Un-starring a job filed under a status that held it back puts it back in
+  // your searches, and the list on screen was counted without it.
+  if (before && hidesFromSearch(before.status)) state.excludeStale = true;
   drawChrome();
+  repaintMarks(jobId);
+  try {
+    await afterPrevious(jobId, async () => {
+      if (before) {
+        const result = await request(`/api/me/saved/${encodeURIComponent(jobId)}`, { method: 'DELETE' });
+        state.counts = result.counts;
+        state.membership = result.membership;
+      } else {
+        // The snapshot travels with the save so the row still reads correctly
+        // if the posting is pulled from the board later.
+        const result = await send(`/api/me/saved/${encodeURIComponent(jobId)}`, 'PUT', {
+          title: row.title,
+          company: row.company ?? row.company_name,
+          url: row.url,
+        });
+        if (state.saved.get(jobId) === placeholder) state.saved.set(jobId, result.saved);
+        state.counts = result.counts;
+      }
+    });
+    drawChrome();
+    repaintMarks(jobId);
+    if (!$('saved-view').hidden) renderSaved();
+  } catch (err) {
+    // Undo only what this press drew. A later press's star stands.
+    const untouched = before ? !state.saved.has(jobId) : state.saved.get(jobId) === placeholder;
+    if (untouched) {
+      if (before) state.saved.set(jobId, before);
+      else state.saved.delete(jobId);
+      state.counts = countsMoved(before ? before.status : 'saved', before ? 1 : -1);
+      drawChrome();
+      repaintMarks(jobId);
+    }
+    alert(`Could not save that: ${err.message}`);
+  }
+}
+
+/** What the star reads while the server's own row is on its way. */
+function provisionalSave(row) {
+  const now = Date.now();
+  return {
+    job_id: row.id,
+    status: 'saved',
+    note: null,
+    saved_at: now,
+    updated_at: now,
+    applied_at: null,
+    title: row.title ?? null,
+    company: row.company ?? row.company_name ?? null,
+    url: row.url ?? null,
+  };
+}
+
+/** The header's counts, moved by one, for the moment before the server's own arrive. */
+function countsMoved(status, delta) {
+  const counts = { ...state.counts };
+  counts[status] = (counts[status] ?? 0) + delta;
+  counts.total = (counts.total ?? 0) + delta;
+  return counts;
 }
 
 /**
@@ -570,27 +659,39 @@ function hideFor(row) {
   button.title = state.user
     ? 'Not interested — hide this job from every future search'
     : 'Sign in to hide jobs you do not want to see again';
-  button.onclick = async (event) => {
+  button.onclick = (event) => {
     event.stopPropagation();
     if (!state.user) return goToAuth('signin');
     const card = button.closest('.job');
-    button.disabled = true;
-    try {
-      const result = await send(`/api/me/hidden/${encodeURIComponent(row.id)}`, 'PUT', {
+    // Off the list before the server has heard about it, for the reason
+    // `toggleSave` gives: the press is the thing that happened, and the
+    // round trip — or whatever the server is busy with — is not the user's
+    // wait to sit through. If the server refuses, the card comes back.
+    const notice = hiddenNotice(row, card);
+    if (card) card.replaceWith(notice);
+    state.hiddenCount += 1;
+    drawChrome();
+    afterPrevious(row.id, () =>
+      send(`/api/me/hidden/${encodeURIComponent(row.id)}`, 'PUT', {
         // The snapshot travels with the ×, and it is load-bearing: a hidden job
         // is absent from every search, so this is the only copy of its title
         // the "hidden" screen will ever have to draw.
         title: row.title,
         company: row.company ?? row.company_name,
         url: row.url,
-      });
-      state.hiddenCount = result.count;
-      drawChrome();
-      if (card) card.replaceWith(hiddenNotice(row, card, button));
-    } catch (err) {
-      button.disabled = false;
-      alert(`Could not hide that: ${err.message}`);
-    }
+      }),
+    ).then(
+      (result) => {
+        state.hiddenCount = result.count;
+        drawChrome();
+      },
+      (err) => {
+        state.hiddenCount = Math.max(0, state.hiddenCount - 1);
+        drawChrome();
+        if (card && notice.isConnected) notice.replaceWith(card);
+        alert(`Could not hide that: ${err.message}`);
+      },
+    );
   };
   return button;
 }
@@ -602,7 +703,7 @@ function hideFor(row) {
  * would mean a second copy of `jobCard` in this file, and this way the restored
  * row comes back with its rank, its chips and its open/closed state intact.
  */
-function hiddenNotice(row, card, button) {
+function hiddenNotice(row, card) {
   const notice = document.createElement('div');
   notice.className = 'job hidden-notice';
 
@@ -616,19 +717,23 @@ function hiddenNotice(row, card, button) {
   undo.type = 'button';
   undo.className = 'btn ghost';
   undo.textContent = 'Undo';
-  undo.onclick = async (event) => {
+  undo.onclick = (event) => {
     event.stopPropagation();
-    undo.disabled = true;
-    try {
-      const result = await request(`/api/me/hidden/${encodeURIComponent(row.id)}`, { method: 'DELETE' });
-      state.hiddenCount = result.count;
-      drawChrome();
-      button.disabled = false;
-      notice.replaceWith(card);
-    } catch (err) {
-      undo.disabled = false;
-      alert(`Could not bring that back: ${err.message}`);
-    }
+    notice.replaceWith(card);
+    state.hiddenCount = Math.max(0, state.hiddenCount - 1);
+    drawChrome();
+    afterPrevious(row.id, () => request(`/api/me/hidden/${encodeURIComponent(row.id)}`, { method: 'DELETE' })).then(
+      (result) => {
+        state.hiddenCount = result.count;
+        drawChrome();
+      },
+      (err) => {
+        state.hiddenCount += 1;
+        drawChrome();
+        if (card.isConnected) card.replaceWith(notice);
+        alert(`Could not bring that back: ${err.message}`);
+      },
+    );
   };
 
   notice.append(said, undo);
