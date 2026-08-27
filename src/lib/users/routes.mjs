@@ -13,11 +13,12 @@
  *   never to show you again, what you did about them. An anonymous visitor is
  *   not a degraded user; they are the default, and the app is theirs first.
  *
- *   One of those memories reaches back into the search: `hiddenFor` below hands
- *   `server.mjs` the ids this reader has hidden, and the engine leaves them out
- *   of the results and the counts. It is still the same search over the same
- *   corpus reading the same profile document — the account contributes a set of
- *   ids, never a criterion — and with no session there is no set.
+ *   Two of those memories reach back into the search: `hiddenFor` and
+ *   `appliedFor` below hand `server.mjs` the ids this reader has hidden and the
+ *   ones they have applied to, and the engine leaves them out of the results
+ *   and the counts. It is still the same search over the same corpus reading
+ *   the same profile document — the account contributes sets of ids, never a
+ *   criterion — and with no session there are no sets.
  *
  * Authorization is one line, applied at one place: `/api/me/*` requires a
  * session, and every store call under it is scoped by that session's user id.
@@ -55,6 +56,7 @@ import {
   saveJob,
   unsaveJob,
   savedCounts,
+  appliedIds,
   hideJob,
   unhideJob,
   listHidden,
@@ -80,7 +82,7 @@ import {
   clientIp,
   MIN_PASSWORD_LENGTH,
 } from './auth.mjs';
-import { SESSION_TTL_MS, APPLICATION_STATUSES, STATUS_LABELS, SAFE_NAME } from './schema.mjs';
+import { SESSION_TTL_MS, APPLICATION_STATUSES, statusVocabulary, SAFE_NAME } from './schema.mjs';
 import { googleConfig, callbackUrl, pkce, newState, authUrl, exchangeCode, readIdToken } from './google.mjs';
 
 /** The working filter document, saved under this key in `user_settings`. */
@@ -450,7 +452,7 @@ export function createAccounts({ usersDb, jobsDb }) {
         user: publicUser(user),
         ...accountState(db, user.id),
         working_profile: getSetting(db, user.id, WORKING_PROFILE, null),
-        statuses: APPLICATION_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] })),
+        statuses: statusVocabulary(),
       });
       return true;
     }
@@ -644,6 +646,15 @@ export function createAccounts({ usersDb, jobsDb }) {
      * byte-for-byte the search it always was.
      */
     hiddenFor: (user) => (user ? hiddenIds(db, user.id) : null),
+    /**
+     * And the ids this reader has already applied to, on the same terms.
+     *
+     * Two sets rather than one union, because the page reports them apart: a
+     * job held back because you applied to it and a job held back because you
+     * turned it down are different facts, and a results line that merged them
+     * would send you to the wrong screen to find out which.
+     */
+    appliedFor: (user) => (user ? appliedIds(db, user.id) : null),
     googleEnabled: () => Boolean(googleConfig()),
     close: () => db.close(),
   };

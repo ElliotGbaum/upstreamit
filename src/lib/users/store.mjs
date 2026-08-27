@@ -525,6 +525,32 @@ export function savedCounts(db, userId) {
   return counts;
 }
 
+/**
+ * The jobs this account has already acted on, as ids for the engine to subtract.
+ *
+ * A job you applied to is one you have already answered, and a board that keeps
+ * offering it to you every morning is wrong in the same way as one that keeps
+ * offering the job you pressed × on. So this set leaves the results exactly as
+ * the hidden set does — and it is a *different* set, reported under its own
+ * count, because "you applied to this" and "you turned this down" are different
+ * sentences and the page says which one held a job back.
+ *
+ * `ACTED_ON` rather than `applied` alone: moving a job on to interviewing or
+ * offer is not a request to see the posting in tomorrow's results again, and
+ * rejected least of all. The only status that leaves a job in your searches is
+ * `saved`, which is the star's whole promise — starring changes nothing about
+ * what the search returns.
+ */
+export function appliedIds(db, userId) {
+  const marks = [...ACTED_ON];
+  return new Set(
+    db
+      .prepare(`SELECT job_id FROM saved_jobs WHERE user_id = ? AND status IN (${marks.map(() => '?').join(', ')})`)
+      .all(userId, ...marks)
+      .map((r) => r.job_id),
+  );
+}
+
 // ------------------------------------------------------------ hidden jobs --
 
 const HIDDEN_COLUMNS = `job_id, hidden_at, title, company, url`;

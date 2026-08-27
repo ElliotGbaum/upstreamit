@@ -47,8 +47,31 @@ export const STATUS_LABELS = {
   rejected: 'Rejected',
 };
 
-/** Statuses that mean "I have actually acted on this". Drives `applied_at`. */
+/**
+ * Statuses that mean "I have actually acted on this". Drives `applied_at`, and
+ * drives the second exclusion set: a job you applied to has been answered, and
+ * a board that keeps offering it back is wrong in the same way as one that
+ * keeps offering the job you pressed × on. `saved` is the only status that
+ * leaves a job in your searches, which is the star's whole promise.
+ */
 export const ACTED_ON = new Set(['applied', 'interviewing', 'offer', 'rejected']);
+
+/**
+ * The status vocabulary as a page draws it: the value, the human label, and
+ * whether choosing it takes the job out of your searches.
+ *
+ * Served rather than written out again in the browser — the same rule the metro
+ * list and the sort order follow. `hides` is the client's only copy of
+ * `ACTED_ON`, so the promise the ✓ button makes and the set the engine
+ * subtracts cannot drift apart.
+ */
+export function statusVocabulary() {
+  return APPLICATION_STATUSES.map((value) => ({
+    value,
+    label: STATUS_LABELS[value],
+    hides: ACTED_ON.has(value),
+  }));
+}
 
 /** Profile and list names become URL segments and are shown verbatim. */
 export const SAFE_NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i;

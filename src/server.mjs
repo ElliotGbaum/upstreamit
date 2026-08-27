@@ -22,10 +22,11 @@
  * the anonymous server again.
  *
  * `POST /api/search` is the one route where "additive" means something subtler
- * than "unchanged": signed in, the ids you have hidden are subtracted from the
- * result set before it is counted. That is still the same engine reading the
- * same profile document — the account contributes a set of ids, not a criterion
- * — and signed out there is no set and nothing is subtracted.
+ * than "unchanged": signed in, the ids you have hidden and the ones you have
+ * applied to are subtracted from the result set before it is counted. That is
+ * still the same engine reading the same profile document — the account
+ * contributes sets of ids, not criteria — and signed out there are no sets and
+ * nothing is subtracted.
  *
  * The exception is `POST /api/interpret`, which requires one. It is the only
  * route here that spends real money — an API call on somebody's key, every time
@@ -82,7 +83,7 @@ import { interpret, aiMeta, CALLS_PER_HOUR } from './lib/interpret.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
 import { isSecureRequest } from './lib/users/auth.mjs';
 import { openUsersDb } from './lib/users/store.mjs';
-import { APPLICATION_STATUSES, STATUS_LABELS } from './lib/users/schema.mjs';
+import { statusVocabulary } from './lib/users/schema.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_DIR = join(ROOT, 'app');
@@ -265,7 +266,8 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
    * Read once here and used by three routes, all of them additively: the
    * profile routes serve an owned document to its owner alone, `/api/interpret`
    * needs somebody to bill and cap, and the search excludes the jobs this
-   * reader has hidden. Signed out, all three are what they always were.
+   * reader has hidden or applied to. Signed out, all three are what they always
+   * were.
    *
    * `viewer` is the address, which is what a profile's `owner` field holds. See
    * `ownerOf` in find.mjs for why that is a visibility rule and not a secret.
@@ -318,7 +320,7 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
       auth: {
         enabled: Boolean(accounts),
         google: Boolean(accounts?.googleEnabled()),
-        statuses: APPLICATION_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] })),
+        statuses: statusVocabulary(),
       },
       // And again for "describe it in words". Dormant with no API key, and the
       // page reads it to decide what to draw — the same shape as `auth` above,
@@ -343,15 +345,24 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
     if (body.offset != null) opts.offset = Number(body.offset);
     if (body.facets === false) opts.facets = false;
 
-    // The jobs this reader pressed × on, kept out of the results and out of the
-    // counts. It is the one per-account thing the search knows about, and it is
-    // a set of ids rather than a criterion on purpose: a profile is a portable
-    // document describing a *kind* of job, and "not this one" is a fact about a
-    // person. Keeping it here means the same profile file still means the same
-    // thing on the command line, in the daily run, and in somebody else's copy.
+    // The jobs this reader has already answered — pressed × on, or applied to —
+    // kept out of the results and out of the counts. It is the one per-account
+    // thing the search knows about, and it is sets of ids rather than criteria
+    // on purpose: a profile is a portable document describing a *kind* of job,
+    // and "not this one" is a fact about a person. Keeping it here means the
+    // same profile file still means the same thing on the command line, in the
+    // daily run, and in somebody else's copy.
     //
-    // Signed out this is null and the engine takes the branch it always took.
-    if (accounts && reader) opts.exclude = accounts.hiddenFor(reader);
+    // Signed out both are null and the engine takes the branch it always took.
+    //
+    // The second set is the jobs this reader has applied to. It is held back
+    // for the same reason and by the same mechanism, and kept apart from the
+    // first because the results line names which one held a job back and each
+    // count links to the screen that has the way out of it.
+    if (accounts && reader) {
+      opts.exclude = accounts.hiddenFor(reader);
+      opts.excludeApplied = accounts.appliedFor(reader);
+    }
 
     // "New since" reuses the whole engine by restricting the id set rather than
     // reimplementing the criteria, so the diff can never drift from the filter.

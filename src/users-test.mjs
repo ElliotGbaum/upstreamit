@@ -22,6 +22,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { ACTED_ON, statusVocabulary } from './lib/users/schema.mjs';
 import {
   openUsersDb,
   createUser,
@@ -56,6 +57,7 @@ import {
   listHidden,
   hiddenIds,
   hiddenCount,
+  appliedIds,
   createList,
   listsFor,
   addToList,
@@ -319,6 +321,37 @@ try {
     check('save: counts by status', savedCounts(db, elliot.id), { saved: 1, applied: 1, interviewing: 0, offer: 0, rejected: 0, total: 2 });
     check('save: listing by status', listSaved(db, elliot.id, { status: 'applied' }).map((r) => r.job_id), ['ashby:acme:job-2']);
     check('save: another user sees none of it', listSaved(db, 'u_someone-else').length, 0);
+
+    // The other set the engine subtracts. A job you applied to has been
+    // answered, and every status past `applied` is still an answer: moving one
+    // on to interviewing is not a request to see the posting in tomorrow's
+    // results. Starring alone is the one status that leaves a job in them,
+    // which is the whole of what the ★ promises.
+    check('applied: the engine gets the jobs acted on', [...appliedIds(db, elliot.id)], ['ashby:acme:job-2']);
+    check('applied: a starred job is not one of them', appliedIds(db, elliot.id).has(JOB), false);
+    saveJob(db, elliot.id, 'ashby:acme:job-2', { status: 'interviewing' });
+    check('applied: a later stage still counts as answered', appliedIds(db, elliot.id).has('ashby:acme:job-2'), true);
+    saveJob(db, elliot.id, 'ashby:acme:job-2', { status: 'rejected' });
+    check('applied: so does a rejection', appliedIds(db, elliot.id).has('ashby:acme:job-2'), true);
+    saveJob(db, elliot.id, 'ashby:acme:job-2', { status: 'saved' });
+    check('applied: moving it back to saved puts it in your results again', appliedIds(db, elliot.id).size, 0);
+    check('applied: and does not erase that you applied', getSaved(db, elliot.id, 'ashby:acme:job-2').applied_at != null, true);
+    check('applied: another account is not touched by it', appliedIds(db, 'u_someone-else').size, 0);
+    saveJob(db, elliot.id, 'ashby:acme:job-2', { status: 'applied' });
+
+    // The page draws the ✓ from `hides` and the engine subtracts `ACTED_ON`.
+    // They are one rule served once; this is the check that they stay so, since
+    // a second list written out in the browser is exactly how a button ends up
+    // promising something the search does not do.
+    check(
+      'statuses: what the page is told matches what the engine subtracts',
+      statusVocabulary().filter((s) => s.hides).map((s) => s.value),
+      [...ACTED_ON],
+    );
+    check('statuses: saved is the one that leaves a job in your results',
+      statusVocabulary().find((s) => s.value === 'saved').hides, false);
+    check('statuses: every status still arrives with a label',
+      statusVocabulary().every((s) => typeof s.label === 'string' && s.label), true);
   }
 
   // ---------------------------------------------------------- hidden jobs --

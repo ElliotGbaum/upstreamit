@@ -268,6 +268,11 @@ export function invalidateIndex() {
  *   of every count — the jobs a signed-in reader has hidden. The engine is told
  *   a set of ids and nothing else: it does not know what an account is, and a
  *   request without one is the search it always was.
+ * @param {Set<string>} [opts.excludeApplied] the same, for the jobs that reader
+ *   has already applied to. A second set rather than a bigger first one because
+ *   the two are counted apart — `funnel.hidden` and `funnel.applied` — and the
+ *   page owes the reader the difference between "you said no to this" and "you
+ *   already did this".
  */
 export function search(db, rawProfile, opts = {}) {
   const started = Date.now();
@@ -309,6 +314,7 @@ export function search(db, rawProfile, opts = {}) {
 
   const restrictTo = opts.restrictTo ?? null;
   const excluded = opts.exclude?.size ? opts.exclude : null;
+  const excludedApplied = opts.excludeApplied?.size ? opts.excludeApplied : null;
 
   const inRows = [];
   const asideRows = [];
@@ -316,6 +322,7 @@ export function search(db, rawProfile, opts = {}) {
   let scanned = 0;
   let titleGated = 0;
   let hidden = 0;
+  let applied = 0;
 
   // One object, reused for every job. `screen` writes its answers here instead
   // of returning them, which is the difference between zero allocations in this
@@ -351,6 +358,15 @@ export function search(db, rawProfile, opts = {}) {
     // counting it here would be "1 hidden" beside a number that never moved.
     if (excluded && excluded.has(job.id)) {
       if (!verdict.failures && verdict.bucket === 'in') hidden++;
+      continue;
+    }
+
+    // And the ones already applied to, on exactly the same terms. Hidden is
+    // asked first so a job that is both is counted once, under the answer that
+    // came with a way back on this screen: the hidden list has a Bring back
+    // button, and "applied" is a status you change where the job is tracked.
+    if (excludedApplied && excludedApplied.has(job.id)) {
+      if (!verdict.failures && verdict.bucket === 'in') applied++;
       continue;
     }
 
@@ -460,6 +476,9 @@ export function search(db, rawProfile, opts = {}) {
       // Matches this reader has hidden. Named for the same reason `folded` is:
       // the page says so out loud, and offers the way back.
       hidden,
+      // And the matches held back because they have already been applied to.
+      // Same rule, said separately, because they are found on a different tab.
+      applied,
     },
     stats: {
       ms: Date.now() - started,

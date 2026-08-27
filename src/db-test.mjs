@@ -199,6 +199,39 @@ try {
     check('exclude: the facet counts drop with it', [workplace({}), workplace({ exclude: new Set([ID]) })], [2, 1]);
   }
 
+  // ------------------------------------------------------- applied jobs --
+  // The second set, built from the jobs an account has marked applied. It
+  // leaves the results by the same door and is counted through a different one,
+  // because the page tells you which of the two answers held a job back and
+  // sends you to the screen that has the way out of it.
+  {
+    const applied = search(db, {}, { facets: false, excludeApplied: new Set([ID]) });
+    check('applied: the job is not in the results', applied.results.map((r) => r.id), [jobId('ashby', 'acme', 'j2')]);
+    check('applied: nor in the total', applied.total, 1);
+    check('applied: it is counted under its own name', [applied.funnel.applied, applied.funnel.hidden], [1, 0]);
+    check('applied: no set at all changes nothing', search(db, {}, { facets: false }).funnel.applied, 0);
+
+    // A job can be both. Counted once, and under `hidden`: two counts for one
+    // missing row would add up to more jobs than the search held back.
+    const both = search(db, {}, { facets: false, exclude: new Set([ID]), excludeApplied: new Set([ID]) });
+    check('applied: a job in both sets is counted once', [both.total, both.funnel.hidden, both.funnel.applied], [1, 1, 0]);
+
+    // The two sets are subtracted independently, so between them they can empty
+    // a search — the state someone who has worked through a filter set is in.
+    const neither = search(db, {}, {
+      facets: false,
+      exclude: new Set([ID]),
+      excludeApplied: new Set([jobId('ashby', 'acme', 'j2')]),
+    });
+    check('applied: both sets subtract', [neither.total, neither.funnel.hidden, neither.funnel.applied], [0, 1, 1]);
+
+    // Same rule as the hidden set: out of the facets too, or a control would
+    // promise a job the list cannot show.
+    const workplace = (opts) =>
+      search(db, {}, opts).facets?.workplace?.find((r) => r.value === 'unknown')?.count ?? 0;
+    check('applied: the facet counts drop with it', workplace({ excludeApplied: new Set([ID]) }), 1);
+  }
+
   // ---------------------------------------------------------- disappearance --
   {
     const r = upsertBoard(db, board([job()]), day(11));
