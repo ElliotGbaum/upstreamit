@@ -94,13 +94,34 @@ export const label = 'Workday';
  * Boards in flight. Deliberately lower than the other adapters: each board here
  * is not one request but dozens, and every one of them fans out again by
  * `detailConcurrency`, so the real ceiling is the product of the two.
+ *
+ * ## Why 4 x 6 and not more, measured
+ *
+ * Workday rate-limits by **client IP across every tenant at once**, which is
+ * not what the hostnames suggest. A sweep run at 8 x 8 = 64 in flight was
+ * answering `429` on 36% of sampled boards after thirteen minutes, and the
+ * boards being refused were on unrelated tenants and different datacenters
+ * (`gea.wd3`, `ijm.wd5`, `kantar.wd3`) — one limiter, not one per customer.
+ * Stopping the sweep and re-requesting the same boards immediately returned
+ * 200 on 14 of 14, so the sweep was the sole cause of its own throttling.
+ *
+ * A burst test then showed the ceiling is not really about how many sockets are
+ * open at one instant. 40 requests at concurrency 8, 16, 24 and 32 all returned
+ * zero 429s; throughput peaked at **~22 req/s around 24 in flight** and got
+ * *worse* at 32. The 429s in the real sweep came from sustained rate over
+ * minutes, and the limiter's window is longer than any burst.
+ *
+ * So 24 in flight is where the useful throughput already is, and everything
+ * above it buys nothing while spending the budget that later triggers refusals.
+ * `--concurrency` and `--detail-concurrency` override both if a future run
+ * finds a different ceiling; no `retry-after` header is sent, so `http.mjs`'s
+ * exponential backoff is what absorbs whatever slips through.
  */
 export const concurrency = 4;
 
 /**
- * Detail requests in flight *within* one board. 4 x 6 = 24 sockets at peak,
- * which is the same order as Greenhouse's flat 8 and spread across many hosts
- * rather than pointed at one — every tenant is its own hostname.
+ * Detail requests in flight *within* one board. 4 x 6 = 24 sockets at peak.
+ * See the note above for why that number and not a larger one.
  */
 export const detailConcurrency = 6;
 
