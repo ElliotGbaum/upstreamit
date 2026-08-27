@@ -44,7 +44,7 @@ import {
 } from './lib/interpret.mjs';
 import { DEFAULT_MODEL } from './lib/interpret.mjs';
 import { UNKNOWNABLE } from './lib/filter/profile.mjs';
-import { JOB_FUNCTIONS, WORKPLACE_TYPES, SENIORITY_LEVELS, EMPLOYMENT_TYPES } from './lib/schema.mjs';
+import { JOB_FUNCTIONS, WORKPLACE_TYPES, SENIORITY_LEVELS, EMPLOYMENT_TYPES, SECTOR_VALUES } from './lib/schema.mjs';
 import { SKILL_TERMS } from './lib/derive/signals.mjs';
 
 let passed = 0;
@@ -226,6 +226,12 @@ const db = corpus();
     seniority: ['entry', 'wizard'],
   });
   check('invalid: the good values survive', [profile.job_functions, profile.workplace, profile.seniority], [['operations'], ['hybrid'], ['entry']]);
+  // "Not finance" is the sentence this field exists for, and it has to arrive
+  // as an exclusion the engine validates — never as a raw string it stores.
+  const finance = buildProfile(db, { summary: 'x', exclude_sectors: ['financial-services', 'fintech', 'finance'] });
+  check('invalid: sector exclusions are validated', finance.profile.exclude_sectors, ['financial-services', 'fintech']);
+  check('invalid: and the made-up one is named', finance.warnings.some((w) => w.includes('finance')), true);
+  check('invalid: an exclusion sets no unknown policy', finance.profile.unknowns.sector, 'include');
   check('invalid: each drop is reported', warnings.length >= 3, true);
   check('invalid: and names the value', warnings.some((w) => w.includes('consulting')), true);
 }
@@ -257,6 +263,9 @@ const db = corpus();
   check('tool: seniority drops "unknown"', enumOf('seniority'), SENIORITY_LEVELS.filter((s) => s !== 'unknown'));
   check('tool: employment type drops "Unknown"', enumOf('employment_type'), EMPLOYMENT_TYPES.filter((t) => t !== 'Unknown'));
   check('tool: skills are the derive pass\'s own vocabulary', enumOf('skills'), SKILL_TERMS);
+  check('tool: sectors come from the schema', enumOf('sectors'), SECTOR_VALUES);
+  check('tool: and so do the exclusions, from the same list', enumOf('exclude_sectors'), SECTOR_VALUES);
+  check('tool: the sector field says it is not the department', props.sectors.description.includes('job_functions'), true);
   check('tool: the ATS list is read off the corpus', enumOf('ats').sort(), ['ashby', 'greenhouse', 'lever']);
   check('tool: the unknown roster generates its own field', enumOf('exclude_when_unstated'), UNKNOWNABLE.map((u) => u.key));
 

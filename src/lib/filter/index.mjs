@@ -34,7 +34,7 @@ import { GUESSED_ONSITE } from '../derive/workplace.mjs';
 import { normalizeProfile } from './profile.mjs';
 import { compileProfile, screen, hits, compileTerms } from './match.mjs';
 import { scoreJob, explain, sortRows, topRows, salaryLabel, textSpecificity } from './rank.mjs';
-import { ATS_KEYS, COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, companySizeBand } from '../schema.mjs';
+import { ATS_KEYS, COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, SECTORS, companyId, companySizeBand } from '../schema.mjs';
 import { countryName } from '../adapters/iso-countries.mjs';
 
 export {
@@ -46,7 +46,7 @@ export {
   DEFAULT_WEIGHTS,
   SORTS,
 } from './profile.mjs';
-export { COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES } from '../schema.mjs';
+export { COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, SECTORS } from '../schema.mjs';
 
 /**
  * Columns the filter reads. Everything else stays on disk.
@@ -94,6 +94,11 @@ function corpusGeneration(db, key, { fresh = false } = {}) {
 
   const value = [
     db.prepare("SELECT value FROM meta WHERE key = 'last_derive'").get()?.value ?? '0',
+    // The enrich pass writes a column the index reads (`companies.sector`)
+    // without touching a job row or a derive stamp, so it has its own stamp
+    // here. Without it a finished read would sit invisible until the next
+    // sweep moved the open count.
+    db.prepare("SELECT value FROM meta WHERE key = 'last_enrich'").get()?.value ?? '0',
     db.prepare('SELECT COUNT(*) n FROM jobs WHERE is_open = 1').get().n,
     db.prepare('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL').get().n,
   ].join(':');
@@ -160,6 +165,16 @@ export function getIndex(db, { force = false } = {}) {
     openRoles.set(r.company_slug, r.n);
   }
 
+  // What each company does, from the enrich pass. One string per company,
+  // shared by reference across its jobs, so the column costs the index one
+  // Map of ~17k entries rather than a string per row. Keyed by company id
+  // (`ats:slug`) and rebuilt with the index, so a finished enrich run is seen
+  // on the next generation change and never cached past it.
+  const sectors = new Map();
+  for (const r of db.prepare('SELECT id, sector FROM companies WHERE sector IS NOT NULL').iterate()) {
+    sectors.set(r.id, r.sector);
+  }
+
   /**
    * Streamed, not `.all()`.
    *
@@ -189,6 +204,8 @@ export function getIndex(db, { force = false } = {}) {
       company_slug: r.company_slug,
       company_size: companySizeBand(openRoles.get(r.company_slug) ?? 1),
       company_open_roles: openRoles.get(r.company_slug) ?? 1,
+      // The id is not a hot column; it is two columns that already are.
+      sector: sectors.get(companyId(r.ats, r.company_slug)) ?? null,
       department: r.department,
       employment_type: r.employment_type,
       workplace: r.d_workplace,
@@ -573,18 +590,17 @@ function rank(run) {
   // returned. They are not in the in-memory index — see `HOT_COLUMNS` — and
   // this is one indexed lookup over ~100 primary keys, against holding 133
   // characters a row for every job in the corpus on the chance one is shown.
-  const links = linkFor(db, [
-    ...shown.slice(offset, offset + limit),
-    ...shownAside.slice(0, limit),
-  ]);
+  const pageRows = [...shown.slice(offset, offset + limit), ...shownAside.slice(0, limit)];
+  const links = linkFor(db, pageRows);
+  const blurbs = blurbFor(db, pageRows);
 
   return {
     profile,
     warnings,
     total,
     aside_total: asideTotal,
-    results: shown.slice(offset, offset + limit).map(present(links)),
-    aside: shownAside.slice(0, limit).map(present(links)),
+    results: shown.slice(offset, offset + limit).map(present(links, blurbs)),
+    aside: shownAside.slice(0, limit).map(present(links, blurbs)),
     facets: facets ? finishFacets(facets, db, profile) : null,
     funnel: {
       open_jobs: index.jobs.length,
@@ -671,12 +687,36 @@ function linkFor(db, rows) {
 }
 
 /**
+ * The one-line "what this company does" for the companies on the page.
+ *
+ * Read from SQLite for the rows being returned, for the reason the links are:
+ * a sentence per company would be ~17k strings in the index for the sake of
+ * the fifty or so on screen. Keyed by company id; a page of 200 rows is
+ * rarely more than 150 companies, one indexed lookup each.
+ */
+function blurbFor(db, rows) {
+  const ids = [...new Set(rows.map((row) => companyId(row.job.ats, row.job.company_slug)))];
+  const blurbs = new Map();
+  for (let i = 0; i < ids.length; i += 400) {
+    const chunk = ids.slice(i, i + 400);
+    const holes = chunk.map(() => '?').join(',');
+    for (const r of db
+      .prepare(`SELECT id, blurb FROM companies WHERE blurb IS NOT NULL AND id IN (${holes})`)
+      .iterate(...chunk)) {
+      blurbs.set(r.id, r.blurb);
+    }
+  }
+  return blurbs;
+}
+
+/**
  * The wire shape. Deliberately flat — the UI and the CLI both render this.
  *
  * Curried over the link map because `url` and `apply_url` no longer live on the
- * indexed row; everything else here still comes straight off it.
+ * indexed row, and over the blurb map for the same reason; everything else
+ * here still comes straight off it.
  */
-const present = (links) => (row) => {
+const present = (links, blurbs) => (row) => {
   const j = row.job;
   const link = links?.get(j.id);
   return {
@@ -690,6 +730,11 @@ const present = (links) => (row) => {
     company_slug: j.company_slug,
     company_open_roles: j.company_open_roles,
     company_size: j.company_size,
+    // What the company does. Both null until the enrich pass has read it,
+    // which the card draws as nothing rather than as "unknown" — the absence
+    // of a sentence is not a fact about the company.
+    sector: j.sector,
+    company_blurb: blurbs?.get(companyId(j.ats, j.company_slug)) ?? null,
     department: j.department,
     url: link?.url ?? null,
     apply_url: link?.apply_url ?? null,
@@ -782,6 +827,10 @@ const FACET_DIMENSIONS = [
     value: (j) => j.company_size,
     order: COMPANY_SIZE_BANDS.map((b) => b.value),
   },
+  // No `unknown` row, for the reason `employment_type` has none: the list is
+  // what you can ask for, and a company nobody has read is not a sector. The
+  // `sector` unknown policy governs those, `include` by default.
+  { key: 'sector', criterion: 'sector', value: (j) => j.sector },
   {
     key: 'remote_scope',
     criterion: 'remote_scope',
@@ -1026,6 +1075,7 @@ function tallyFacets(facets, job, failedKey, profile) {
 function finishFacets(facets, db, profile) {
   const labels = metroLabels(db);
   const bandLabels = new Map(COMPANY_SIZE_BANDS.map((b) => [b.value, b.label]));
+  const sectorLabels = new Map(SECTORS.map((s) => [s.value, s.label]));
   const out = {};
   // 250 for both place dimensions. The corpus holds 100 distinct countries and
   // the ISO list tops out at 249, so this cap can no longer cut a country off
@@ -1041,6 +1091,7 @@ function finishFacets(facets, db, profile) {
   const labelFor = (key, value) =>
     key === 'metro' ? (labels.get(value) ?? value)
     : key === 'company_size' ? (bandLabels.get(value) ?? value)
+    : key === 'sector' ? (sectorLabels.get(value) ?? value)
     // `countryName` refuses anything that is not an alpha-2 code, which is the
     // right answer where it is used to *store* a country and the wrong one
     // here, where the code is already the id and only its caption is at stake.
@@ -1116,6 +1167,10 @@ function selectedValues(key, profile) {
       return new Set(profile.companies);
     case 'company_size':
       return new Set(profile.company_size);
+    // Both lists light a row: a ticked exclusion is as much a selection as a
+    // ticked inclusion, and the panel draws each from the same counts.
+    case 'sector':
+      return new Set([...profile.sectors, ...profile.exclude_sectors]);
     case 'remote_scope':
       return new Set(profile.remote_scope);
     case 'pay_period':
@@ -1376,7 +1431,8 @@ function readDescriptions(db, ids) {
 export function getJob(db, id) {
   const row = db
     .prepare(
-      `SELECT j.*, c.description_text, co.name AS company_display, co.name_source, co.board_url
+      `SELECT j.*, c.description_text, co.name AS company_display, co.name_source, co.board_url,
+              co.website, co.sector, co.blurb AS company_blurb, co.sector_src, co.sector_at
        FROM jobs j
        LEFT JOIN job_content c ON c.job_id = j.id
        LEFT JOIN companies co ON co.id = j.company_id
@@ -1463,6 +1519,20 @@ function buildCorpusMeta(db) {
     derived: count('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL'),
     companies: db.prepare('SELECT COUNT(*) n FROM companies').get().n,
     boards_live: db.prepare("SELECT COUNT(*) n FROM companies WHERE status = 'live'").get().n,
+    // How far the enrich pass has got: live boards with a sector, and the
+    // open jobs those boards account for. The second is the number the panel
+    // and the methodology page owe a reader — "sector is known for 94% of
+    // jobs" is a claim about jobs, not boards.
+    sectors_read: db.prepare("SELECT COUNT(*) n FROM companies WHERE status = 'live' AND sector IS NOT NULL").get().n,
+    // One GROUP BY and a join, not an EXISTS per open job: the same shape
+    // `getIndex` counts open roles with, and it rides the same index.
+    jobs_with_sector: count(
+      `SELECT COALESCE(SUM(o.n), 0) n
+         FROM (SELECT company_id, COUNT(*) AS n FROM jobs WHERE is_open = 1 GROUP BY company_id) o
+         JOIN companies co ON co.id = o.company_id
+        WHERE co.sector IS NOT NULL`,
+    ),
+    last_enrich: Number(meta.last_enrich ?? 0) || null,
     // The *registry* is 24,576 rows and serializing all of them made `/api/meta`
     // a 1.8 MB payload on every page load. Nothing reads them: the metro control
     // is drawn from the search facets, which are already capped and already

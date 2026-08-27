@@ -51,6 +51,7 @@ import {
   matchSalarySource,
   matchCompanySize,
   matchAts,
+  matchSector,
 } from './lib/filter/match.mjs';
 import { scoreJob, sortByScore, sortRows, salaryLabel } from './lib/filter/rank.mjs';
 import { ageBandsFor, AGE_BANDS, salaryLadder, SALARY_BANDS, textQuery } from './lib/filter/index.mjs';
@@ -96,6 +97,7 @@ function job(overrides = {}) {
     equity: null,
     salary_src: null,
     company_size: '6-20',
+    sector: null,
     title_norm: 'implementation specialist',
     age_days: 10,
     quality: 0.5,
@@ -710,6 +712,44 @@ check(
   check('company size: bands are contiguous', [1, 2, 5, 6, 20, 21, 100, 101, 500, 501, 9999].map(companySizeBand),
     ['1', '2-5', '2-5', '6-20', '6-20', '21-100', '21-100', '101-500', '101-500', '500+', '500+']);
 }
+// What the company does — the one column a model wrote. Three things pinned
+// here: a company nobody has read is unknown and not a no; `other` is unknown
+// unless asked for by name; and the exclusion fires only on a company the
+// model placed. "Not finance" must never drop the bank whose postings did not
+// say it was one — that would be the largest silent exclusion in the engine,
+// because the unread share is every board the pass has not reached.
+{
+  const [p, c] = withProfile({ sectors: ['fintech'] });
+  check('sector: a match', matchSector(job({ sector: 'fintech' }), p, c), 'match');
+  check('sector: another sector is a no', matchSector(job({ sector: 'healthcare' }), p, c), 'no');
+  check('sector: a company nobody has read is unknown', matchSector(job(), p, c), 'unknown');
+  check('sector: "other" is unknown, not a no', matchSector(job({ sector: 'other' }), p, c), 'unknown');
+  const [po, co] = withProfile({ sectors: ['other'] });
+  check('sector: unless "other" is what was asked for', matchSector(job({ sector: 'other' }), po, co), 'match');
+
+  const [px, cx] = withProfile({ exclude_sectors: ['financial-services'] });
+  check('exclude sector: fires on evidence', matchSector(job({ sector: 'financial-services' }), px, cx), 'no');
+  check('exclude sector: not on a different sector', matchSector(job({ sector: 'fintech' }), px, cx), 'match');
+  check('exclude sector: never on silence', matchSector(job(), px, cx), 'match');
+  check('exclude sector: nor on "other"', matchSector(job({ sector: 'other' }), px, cx), 'match');
+  const [pb, cb] = withProfile({ sectors: ['fintech', 'financial-services'], exclude_sectors: ['financial-services'] });
+  check('exclude sector: outranks an inclusion', matchSector(job({ sector: 'financial-services' }), pb, cb), 'no');
+
+  const asked = CRITERIA.find((x) => x.key === 'sector').asked;
+  check('sector: an exclusion alone is a live criterion', asked(px, cx), true);
+  check('sector: nothing asked is inactive', asked(...withProfile({})), false);
+  check('sector: is on the unknown roster', UNKNOWNABLE.some((u) => u.key === 'sector'), true);
+  check('sector: and defaults to keeping the silent ones', UNKNOWNABLE.find((u) => u.key === 'sector').default, 'include');
+
+  // The profile side: the vocabulary is the schema's, and a value outside it
+  // is dropped out loud rather than stored as a criterion that matches nothing.
+  const { profile, warnings } = normalizeProfile({ sectors: ['fintech', 'vibes'], exclude_sectors: ['FINANCE'] });
+  check('sector: an unknown value is dropped', profile.sectors, ['fintech']);
+  check('sector: and named', warnings.some((w) => w.includes('vibes')), true);
+  check('sector: exclusions are validated the same way', [profile.exclude_sectors, warnings.some((w) => w.includes('FINANCE'))], [[], true]);
+  check('sector: both halves are active criteria', activeCriteria(normalizeProfile({ sectors: ['ai'], exclude_sectors: ['gaming'] }).profile).filter((a) => a.key === 'sector').length, 2);
+}
+
 {
   // The negative half of the skills panel. An exclusion outranks an inclusion,
   // and cannot fire on a posting that named no skills at all.

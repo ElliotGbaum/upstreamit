@@ -31,6 +31,7 @@ import {
   JOB_FUNCTIONS,
   PAY_PERIODS,
   REMOTE_SCOPES,
+  SECTOR_VALUES,
   SENIORITY_LEVELS,
   WORKPLACE_TYPES,
 } from '../schema.mjs';
@@ -97,6 +98,7 @@ const DEFAULT_UNKNOWN_POLICIES = {
   equity: 'include',
   remote_scope: 'include',
   salary_source: 'include',
+  sector: 'include',
 };
 
 // Re-measured 2026-08-22 over the full 337,487-job Ashby + Greenhouse + Lever
@@ -137,6 +139,12 @@ export const UNKNOWNABLE = [
   { key: 'skills', label: 'skills', detail: 'description names none of the tracked skills', share: 0.424 },
   { key: 'experience', label: 'seniority', detail: 'no title band and no years stated', share: 0.279 },
   { key: 'job_function', label: 'job function', detail: 'title and department match no function rule', share: 0.193 },
+  // A fact about the company, not the posting, and the one share here that
+  // moves with a pass nobody has to re-sweep for: it is the open jobs at
+  // companies the enrich pass has not read, or read and would not commit on.
+  // Measured 2026-08-28 after the first full read; re-measure after a run
+  // with --all.
+  { key: 'sector', label: 'sector', detail: "the company's postings did not say what it does, or nobody has read them yet", share: 0.05 },
   { key: 'metro', label: 'location', detail: 'no location string we could place', share: 0.127 },
   // The one share here that is a floor rather than a figure, and the comment is
   // load-bearing for anyone about to "fix" the number. 2.3% is the jobs with no
@@ -262,6 +270,14 @@ export function blankProfile() {
 
     // --- companies --------------------------------------------------------
     companies: [], // allow-list, slug or display name
+    // What the company does — its industry, read off its own postings by the
+    // enrich pass and stored on `companies.sector`. Not the job's function: a
+    // data engineer at a bank is `financial-services` here and `data` there.
+    // The exclusion is the half most people want ("not finance"), and it is
+    // the same evidence read the other way: it fires on a company whose
+    // sector is known and listed, never on one nobody has read.
+    sectors: [], // subset of SECTOR_VALUES
+    exclude_sectors: [],
     // Company size measured in open roles, because headcount is not a field any
     // ATS publishes. See COMPANY_SIZE_BANDS for why it is labelled as what it
     // measures rather than as a funding stage.
@@ -454,6 +470,11 @@ export function normalizeProfile(input = {}) {
   profile.company_size = subsetOf(input.company_size, COMPANY_SIZE_BANDS.map((b) => b.value));
   drop('company_size', asStrings(input.company_size), profile.company_size);
 
+  profile.sectors = subsetOf(input.sectors, SECTOR_VALUES);
+  drop('sectors', asStrings(input.sectors), profile.sectors);
+  profile.exclude_sectors = subsetOf(input.exclude_sectors, SECTOR_VALUES);
+  drop('exclude_sectors', asStrings(input.exclude_sectors), profile.exclude_sectors);
+
   profile.metros = asStrings(input.metros).map((m) => m.toLowerCase());
   profile.countries = asStrings(input.countries).map((c) => c.toLowerCase());
   profile.remote_counts_as_match = Boolean(input.remote_counts_as_match);
@@ -591,6 +612,8 @@ export function activeCriteria(profile) {
   if (profile.ats.length) push('ats', `from ${profile.ats.join(' / ')}`);
   if (profile.companies.length) push('companies', `${profile.companies.length} companies only`);
   if (profile.company_size.length) push('company_size', `company posts ${profile.company_size.join(' / ')} roles`);
+  if (profile.sectors.length) push('sector', `company in ${profile.sectors.join(' / ')}`);
+  if (profile.exclude_sectors.length) push('sector', `company not in ${profile.exclude_sectors.join(' / ')}`);
   if (profile.exclude_title_keywords.length) push('exclude_title_keywords', `${profile.exclude_title_keywords.length} title exclusions`);
   if (profile.exclude_description_keywords.length) push('exclude_description_keywords', `${profile.exclude_description_keywords.length} description exclusions`);
   if (profile.exclude_clearance) push('clearance', 'no security clearance');

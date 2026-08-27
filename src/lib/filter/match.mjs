@@ -100,6 +100,8 @@ export function compileProfile(profile, index = {}) {
     payPeriod: new Set(profile.pay_period),
     currencies: new Set(profile.currencies),
     companySize: new Set(profile.company_size),
+    sectors: new Set(profile.sectors),
+    excludeSectors: new Set(profile.exclude_sectors),
     companies: new Set(profile.companies.map((c) => c.toLowerCase())),
     ats: new Set(profile.ats),
   };
@@ -530,6 +532,36 @@ export function matchCompanySize(job, profile, c) {
 }
 
 /**
+ * What the company does, read off its postings by the enrich pass.
+ *
+ * A fact about the employer rather than the posting — every job at a company
+ * carries the company's answer — and the one column here that a pass other
+ * than derive writes. NULL is the ordinary state for a company nobody has read
+ * yet, and for one whose postings never said: both are `unknown`, and the
+ * `sector` policy decides, `include` by default like everything else.
+ *
+ * `other` is unknown too, unless asked for by name — the same reading
+ * `matchJobFunction` gives its own `other`: it means "fits no bucket", not
+ * "is in the other bucket", and a filter that dropped it for not being
+ * classifiable would be ruling on a blank.
+ *
+ * The exclusion is checked first and cannot fire on silence, exactly as
+ * `exclude_skills` cannot: "not finance" drops a company we *know* is a bank,
+ * and leaves in the one nobody has read, because that one has not been shown
+ * to be a bank. Excluding it would be the failure this engine exists not to
+ * have — and it would be the largest one, since the unread share is every
+ * company the pass has not reached.
+ */
+export function matchSector(job, profile, c) {
+  const known = job.sector && job.sector !== 'other';
+  if (c.excludeSectors.size && known && c.excludeSectors.has(job.sector)) return NO;
+  if (!c.sectors.size) return MATCH;
+  if (job.sector && c.sectors.has(job.sector)) return MATCH;
+  if (!known) return UNKNOWN;
+  return NO;
+}
+
+/**
  * The title gate.
  *
  * Word-boundary, always. Substring matching on `ai` returns 355 title hits
@@ -602,6 +634,8 @@ export const CRITERIA = [
   { key: 'skills', test: matchSkills, asked: (p, c) => c.skills.size > 0 || c.excludeSkills.size > 0 },
   { key: 'company', test: matchCompany, asked: (p, c) => c.companies.size > 0 },
   { key: 'company_size', test: matchCompanySize, asked: (p, c) => c.companySize.size > 0 },
+  // Both halves, as for skills: an exclusion alone is a live criterion.
+  { key: 'sector', test: matchSector, asked: (p, c) => c.sectors.size > 0 || c.excludeSectors.size > 0 },
   { key: 'remote_scope', test: matchRemoteScope, asked: (p, c) => c.remoteScope.size > 0 },
   { key: 'pay_period', test: matchPayPeriod, asked: (p, c) => c.payPeriod.size > 0 },
   { key: 'currency', test: matchCurrency, asked: (p, c) => c.currencies.size > 0 },

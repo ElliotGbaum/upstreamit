@@ -29,7 +29,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { openDb, upsertBoard, hashJob } from './lib/db.mjs';
+import { DatabaseSync } from 'node:sqlite';
+import { openDb, upsertBoard, hashJob, recordSector, migrate, setMeta } from './lib/db.mjs';
 import { blankJob, jobId } from './lib/schema.mjs';
 import { search, searchYielding, getIndex, invalidateIndex, MISSING_DESCRIPTION_SQL } from './lib/filter/index.mjs';
 
@@ -250,6 +251,45 @@ try {
     const plain = search(db, {}, { facets: false });
     const seen = (r) => ({ ids: r.results.map((x) => x.id), total: r.total, funnel: r.funnel });
     check('yielding: the answer is the plain search\'s answer', seen(yielded), seen(plain));
+  }
+
+  // --------------------------------------------------------------- sector --
+  // The one column a model writes, and the only path that writes it. What is
+  // pinned: a company nobody has read is null on the row, not "unknown"; a
+  // value outside the vocabulary is stored as null with the timestamp set, so
+  // it is neither used as evidence nor paid for twice; and the index picks the
+  // column up on the next generation, through `last_enrich`.
+  {
+    const first = () => search(db, {}, { facets: false }).results.find((r) => r.id === ID);
+    check('sector: unread is null on the row', [first().sector, first().company_blurb], [null, null]);
+
+    check('sector: one company written', recordSector(db, 'ashby:acme', { sector: 'fintech', blurb: '  Payments for fleets  ', src: 'test:high', at: day(10) }), 1);
+    check('sector: an unknown company writes nothing', recordSector(db, 'ashby:nobody', { sector: 'fintech' }), 0);
+    setMeta(db, 'last_enrich', String(day(10)));
+    getIndex(db, { force: true });
+    check('sector: the row carries it', [first().sector, first().company_blurb], ['fintech', 'Payments for fleets']);
+    check('sector: and every job on the board inherits it', search(db, {}, { facets: false }).results.every((r) => r.sector === 'fintech'), true);
+    check('sector: a facet row appears', search(db, {}).facets.sector, [{ value: 'fintech', label: 'fintech & payments', count: 2, selected: false }]);
+    check('sector: the exclusion drops the board', search(db, { exclude_sectors: ['fintech'] }, { facets: false }).total, 0);
+    check('sector: and the inclusion keeps it', search(db, { sectors: ['fintech'] }, { facets: false }).total, 2);
+
+    // Read, and unsure — or a value the engine has never heard of, which is
+    // stored exactly the same way.
+    recordSector(db, 'ashby:acme', { sector: 'vibes', blurb: 'Something.', src: 'test:low', at: day(11) });
+    const row = db.prepare('SELECT sector, blurb, sector_src, sector_at FROM companies WHERE id = ?').get('ashby:acme');
+    check('sector: an unknown value is stored as null', row.sector, null);
+    check('sector: with the read on record', [row.sector_src, row.sector_at, row.blurb], ['test:low', day(11), 'Something.']);
+    setMeta(db, 'last_enrich', String(day(11)));
+    getIndex(db, { force: true });
+    check('sector: which the exclusion then leaves alone', search(db, { exclude_sectors: ['fintech'] }, { facets: false }).total, 2);
+    check('sector: while the sentence is still on the card', first().company_blurb, 'Something.');
+
+    // A database from before the column existed grows it on open.
+    const old = new DatabaseSync(':memory:');
+    old.exec('CREATE TABLE companies (id TEXT PRIMARY KEY); CREATE TABLE jobs (id TEXT PRIMARY KEY, d_salary_src TEXT); CREATE TABLE job_content (job_id TEXT PRIMARY KEY);');
+    check('sector: migrate adds the columns', migrate(old).filter((c) => c.startsWith('+companies.')), ['+companies.sector', '+companies.blurb', '+companies.sector_src', '+companies.sector_at']);
+    check('sector: and only once', migrate(old), []);
+    old.close();
   }
 
   // ---------------------------------------------------------- disappearance --

@@ -61,6 +61,7 @@ import {
   JOB_FUNCTIONS,
   PAY_PERIODS,
   REMOTE_SCOPES,
+  SECTORS,
   SENIORITY_LEVELS,
   WORKPLACE_TYPES,
 } from './schema.mjs';
@@ -560,6 +561,20 @@ export function filterTool(vocab) {
           `How many roles the company has open here, as a proxy for size: ${COMPANY_SIZE_BANDS.map((b) => `${b.value} = ${b.label}`).join(', ')}. ` +
           'It is not headcount and cannot be — no ATS publishes that.',
         ),
+        // The company's industry, read off its own postings. The exclusion is
+        // the half people ask for in words — "not finance", "no defense" —
+        // and it is safe to set: it drops only companies known to be in the
+        // sector, never ones nobody has read.
+        sectors: enumArray(
+          SECTORS.map((s) => s.value),
+          'The industry the COMPANY is in, when they said they want to work in one. Not the job\'s ' +
+          'department — that is job_functions. ' + SECTORS.map((s) => `${s.value} = ${s.label}`).join(', '),
+        ),
+        exclude_sectors: enumArray(
+          SECTORS.map((s) => s.value),
+          'Industries they said they do NOT want to work in — "not finance" is financial-services and ' +
+          'fintech, "nothing in defense" is aerospace-defense. Same ids as sectors.',
+        ),
 
         sort: { type: 'string', enum: SORTS.map((s) => s.value), description: `Result order. ${SORTS.map((s) => `${s.value} = ${s.detail}`).join('; ')}.` },
         collapse_duplicates: { type: 'boolean', description: 'One row per company+title instead of the same role once per city.' },
@@ -861,6 +876,8 @@ export function buildProfile(db, input = {}, before = {}) {
     ats: input.ats,
     companies: input.companies,
     company_size: input.company_size,
+    sectors: input.sectors,
+    exclude_sectors: input.exclude_sectors,
 
     sort: input.sort,
     collapse_duplicates: input.collapse_duplicates,

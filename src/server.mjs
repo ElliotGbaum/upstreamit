@@ -76,6 +76,7 @@ import {
   COMPANY_SIZE_BANDS,
   PAY_PERIODS,
   REMOTE_SCOPES,
+  SECTORS,
 } from './lib/filter/index.mjs';
 import { newSince, changedSince, goneSince, activity } from './lib/filter/diff.mjs';
 import { profilesVisibleTo, ownerOf, ownedBy, listProfiles, PROFILE_DIR } from './find.mjs';
@@ -313,6 +314,9 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
       company_sizes: COMPANY_SIZE_BANDS.map(({ value, label }) => ({ value, label })),
       pay_periods: PAY_PERIODS,
       remote_scopes: REMOTE_SCOPES,
+      // What a company can be, for the sector panel. Served with the label
+      // the model chose by, so the panel and the prompt cannot disagree.
+      sectors: SECTORS.map(({ value, label }) => ({ value, label })),
       activity: activity(db, 30),
       index: { jobs: index.jobs.length, built_ms: index.buildMs, generation: index.generation },
       // Same rule again, applied to the account controls: whether accounts
