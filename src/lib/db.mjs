@@ -251,9 +251,15 @@ export function upsertBoard(db, board, now = Date.now()) {
       department        = excluded.department,
       team              = excluded.team,
       employment_type   = excluded.employment_type,
-      location_raw      = excluded.location_raw,
-      locations_all     = excluded.locations_all,
-      country           = excluded.country,
+      -- Coalesced, like the description below it and for the same reason: an
+      -- adapter that could not read a job's location this time leaves these
+      -- undefined, and a sweep that learned nothing must not erase what an
+      -- earlier one learned. Workday is why — its listing collapses a
+      -- multi-location posting to "3 Locations", and every incremental sweep
+      -- was overwriting nine real cities with that placeholder.
+      location_raw      = COALESCE(excluded.location_raw, jobs.location_raw),
+      locations_all     = COALESCE(excluded.locations_all, jobs.locations_all),
+      country           = COALESCE(excluded.country, jobs.country),
       region            = excluded.region,
       city              = excluded.city,
       postal_code       = excluded.postal_code,
@@ -328,7 +334,7 @@ export function upsertBoard(db, board, now = Date.now()) {
       job.team ?? null,
       job.employment_type ?? null,
       job.location_raw ?? null,
-      JSON.stringify(job.locations_all ?? []),
+      job.locations_all === undefined ? null : JSON.stringify(job.locations_all ?? []),
       job.country ?? null,
       job.region ?? null,
       job.city ?? null,

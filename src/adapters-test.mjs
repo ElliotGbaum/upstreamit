@@ -34,6 +34,7 @@ import {
   nativeIdFromPath,
   employmentType as workdayEmploymentType,
   companyNameFromUrl,
+  realPlace,
 } from './lib/adapters/workday.mjs';
 
 let passed = 0;
@@ -586,7 +587,42 @@ const WD_SLUG = 'canadiansolar|wd5|canadiansolar';
   // means upsertBoard keeps the date it already stored.
   check('wd: posted_at is null rather than today', job.posted_at, null);
   check('wd: a url is still constructed', job.url, 'https://canadiansolar.wd5.myworkdayjobs.com/canadiansolar/job/Jeffersonville-IN/IT-Engineer_10001263-1');
-  check('wd: what the list cannot know stays null', [job.employment_type, job.raw_workplace, job.country], [null, null, null]);
+  check('wd: what the list cannot know stays null', [job.employment_type, job.raw_workplace], [null, null]);
+  // Absent, not null, for the same reason as the description: only the detail
+  // states a country, so a sweep that skipped it must not blank the stored one.
+  check('wd: an unread country is absent', 'country' in job, false);
+}
+
+// --- "3 Locations" is a count, not a place ---------------------------------
+//
+// Regression, and the expensive one. The placeholder used to reach
+// `location_raw`, and since an incremental sweep does not re-read a
+// description it already holds, `detail` is null on every sweep after the
+// first — so a posting whose real cities were read during the backfill had
+// them overwritten by "9 Locations" the next night. 50,220 postings were
+// carrying it, not one of them with a metro, and a job with no metro is
+// excluded by no location filter: they were offered to everyone.
+{
+  check('wd: the placeholder is not a place', realPlace('9 Locations'), null);
+  check('wd: singular too', realPlace('1 Location'), null);
+  check('wd: a real place survives', realPlace(' Jeffersonville, IN '), 'Jeffersonville, IN');
+  check('wd: a place that merely counts something is kept', realPlace('2 Rivers, WI'), '2 Rivers, WI');
+
+  const multi = wdRow({ locationsText: '9 Locations' });
+  const job = mapWorkdayJob(multi, null, WD_SLUG);
+  // Absent, never the placeholder: `upsertBoard` coalesces onto the nine
+  // cities an earlier hydrated sweep stored rather than over them.
+  check('wd: an unhydrated multi-location job omits location_raw', 'location_raw' in job, false);
+  check('wd: ...and locations_all with it', 'locations_all' in job, false);
+
+  const hydrated = mapWorkdayJob(multi, wdDetail({
+    location: 'Peru - Lima',
+    additionalLocations: ['Mexico > Mexico City : Building B', 'Colombia - Bogota'],
+  }), WD_SLUG);
+  check('wd: the detail names the primary', hydrated.location_raw, 'Peru - Lima');
+  check('wd: additionalLocations carry the rest', hydrated.locations_all,
+    ['Peru - Lima', 'Mexico > Mexico City : Building B', 'Colombia - Bogota']);
+  check('wd: the placeholder never joins them', hydrated.locations_all.includes('9 Locations'), false);
 }
 
 // --- the company name has to be worked out from a URL ----------------------
