@@ -227,8 +227,16 @@ jobs:
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
           git add data/slugs data/sync-report.md || true
-          git diff --staged --quiet || git commit -m "daily: slug refresh $(date -u +%F)"
-          git push || true
+          if git diff --staged --quiet; then
+            echo "slug store unchanged — nothing to commit"
+            exit 0
+          fi
+          git commit -m "daily: slug refresh $(date -u +%F)"
+          # A push that fails must fail the run, not vanish into \`|| true\`: a
+          # silent failure here is a slug store that looks maintained and is
+          # not. The one benign cause — main moved while this ran — is handled
+          # by rebasing once and pushing again.
+          git push || (git pull --rebase && git push)
 
       - name: Upload the sync report
         if: always()
