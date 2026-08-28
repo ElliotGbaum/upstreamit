@@ -26,6 +26,7 @@ import { promisify } from 'node:util';
 
 import { describeOrigin, fetchLastCommit, loadFile, parseSlugFile } from './lib/fetch-source.mjs';
 import { normalizeSlug } from './lib/normalize.mjs';
+import { diffStore, mergeStore } from './lib/slug-store.mjs';
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -66,7 +67,7 @@ async function main() {
       if (options.ats && file.ats !== options.ats) continue;
 
       const origin = describeOrigin(source, file);
-      const stateKey = `${source.id}:${file.ats}:${file.path ?? file.url}`;
+      const stateKey = `${source.id}:${file.ats}:${file.path ?? file.url ?? file.urlPattern}`;
       const validators = options.force ? {} : (state.files[stateKey]?.validators ?? {});
 
       const result = await loadFile({ source, file, validators, rootDir: ROOT });
@@ -136,6 +137,7 @@ async function main() {
       observed: observed.get(ats) ?? new Map(),
       carriedSources: carried,
       now: runAt,
+      pruneAfter: options.pruneAfter ?? null,
     });
 
     const diff = diffStore(previous.slugs ?? {}, merged.slugs, ats);
@@ -194,86 +196,6 @@ async function main() {
   if (hardErrors.length) return { exitCode: 1 };
   if (options.check && changed) return { exitCode: 1 };
   return { exitCode: 0 };
-}
-
-/**
- * Merge this run's observations into the existing store.
- *
- * A source that returned 304 or errored keeps whatever it previously claimed —
- * otherwise a single upstream hiccup would look like thousands of deletions.
- * Only sources we actually re-read get their claims recomputed.
- */
-function mergeStore({ previous, observed, carriedSources, now }) {
-  // A Map, not an object literal: real slugs collide with Object.prototype keys
-  // ("constructor", "tostring"), and a plain-object lookup would silently return
-  // the inherited function instead of undefined.
-  const slugs = new Map();
-  const pruned = [];
-
-  // Carry forward prior records, keeping only source attributions we can still vouch for.
-  for (const [slug, record] of Object.entries(previous)) {
-    const keptSources = (record.sources ?? []).filter(
-      (sourceId) => carriedSources.has(sourceId) || observed.get(slug)?.has(sourceId),
-    );
-    slugs.set(slug, {
-      sources: keptSources,
-      first_seen: record.first_seen ?? now,
-      last_seen: keptSources.length ? now : (record.last_seen ?? now),
-    });
-  }
-
-  // Fold in what we saw this run.
-  for (const [slug, sourceIds] of observed) {
-    const record = slugs.get(slug) ?? { sources: [], first_seen: now, last_seen: now };
-    record.sources = [...new Set([...record.sources, ...sourceIds])].sort();
-    record.last_seen = now;
-    slugs.set(slug, record);
-  }
-
-  if (options.pruneAfter != null) {
-    const cutoff = Date.now() - options.pruneAfter * 86_400_000;
-    for (const [slug, record] of slugs) {
-      if (record.sources.length === 0 && Date.parse(record.last_seen) < cutoff) {
-        pruned.push(slug);
-        slugs.delete(slug);
-      }
-    }
-  }
-
-  return { slugs: Object.fromEntries(slugs), pruned };
-}
-
-function diffStore(previous, next, ats) {
-  const wasActive = new Set(
-    Object.entries(previous)
-      .filter(([, record]) => (record.sources ?? []).length > 0)
-      .map(([slug]) => slug),
-  );
-  const isActive = new Set(
-    Object.entries(next)
-      .filter(([, record]) => record.sources.length > 0)
-      .map(([slug]) => slug),
-  );
-
-  const perSource = {};
-  for (const [slug, record] of Object.entries(next)) {
-    for (const sourceId of record.sources) {
-      perSource[sourceId] ??= { total: 0, unique: 0 };
-      perSource[sourceId].total += 1;
-      if (record.sources.length === 1) perSource[sourceId].unique += 1;
-    }
-    void slug;
-  }
-
-  return {
-    ats,
-    added: [...isActive].filter((slug) => !wasActive.has(slug)).sort(),
-    removed: [...wasActive].filter((slug) => !isActive.has(slug)).sort(),
-    active: isActive.size,
-    total: Object.keys(next).length,
-    perSource,
-    pruned: [],
-  };
 }
 
 function renderReport({ fileResults, diffs, atsKeys }) {
