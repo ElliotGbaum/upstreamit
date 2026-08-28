@@ -2,7 +2,7 @@
 
 How UpstreamIt's data pipeline runs: the slug sync, board verification, the sweep and the derive pass, with the flags each stage takes, the API behaviour the design depends on, and where the results are stored. Measurements below were taken 2026-08-11 to 2026-08-22 unless a later date is given; the live counts are on the site. On 2026-08-24 the corpus held 337,925 open jobs (343,173 rows including closed) on 12,138 live boards, 15,207 companies known, 24,337 metros, across three ATSes (Ashby, Greenhouse, Lever). Figures quoted from earlier in August, such as 61,213 jobs or 4,297 boards, are from the Ashby-only corpus and are kept as dated measurements.
 
-Related: [sources](./sources.md) for the eleven upstream slug lists, [filtering](./filtering.md) for what the derived columns feed, [automation](./automation.md) for the daily run that chains these stages, and the [README](../README.md).
+Related: [sources](./sources.md) for the eleven upstream slug lists and the two web archives, [filtering](./filtering.md) for what the derived columns feed, [automation](./automation.md) for the daily run that chains these stages, and the [README](../README.md).
 
 ## The five stages
 

@@ -144,7 +144,7 @@ needing a flag).
 npm install
 cp .env.example .env            # optional: add an Anthropic key for "describe your search"
 
-npm run sync                    # pull the eleven slug sources → data/slugs/
+npm run sync                    # pull the thirteen slug sources → data/slugs/
 npm run verify                  # probe slugs not yet resolved: real board / 404
 npm run sweep                   # fetch every live board → data/jobs.db (hours, first time)
 npm run derive                  # prose → columns
@@ -191,7 +191,7 @@ docs/                 design notes, measurements, dead ends
 
 - [`docs/design-notes.md`](docs/design-notes.md): what was established, what was ruled out and why, phase by phase
 - [`docs/pipeline.md`](docs/pipeline.md): sync, verify, sweep, derive. Commands, flags, and what each ATS actually does
-- [`docs/sources.md`](docs/sources.md): the eleven slug sources, what each one contributes, and attribution
+- [`docs/sources.md`](docs/sources.md): the thirteen slug sources, what each one contributes, and attribution
 - [`docs/filtering.md`](docs/filtering.md): the profile format, three-valued criteria, ranking
 - [`docs/app-and-accounts.md`](docs/app-and-accounts.md): the app, "describe your search", accounts and what secures them
 - [`docs/automation.md`](docs/automation.md): the daily run and the CI / laptop split

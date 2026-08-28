@@ -1,10 +1,11 @@
 {
   "$comment": [
     "Registry of upstream sources we pull ATS company slugs from. Adding a source is config, not code.",
-    "kind:   github-raw (repo + branch + files[].path) | http (files[].url, any host) | file (local path, for manual dumps / CSV exports)",
+    "kind:   github-raw (repo + branch + files[].path) | http (files[].url, any host) | file (local path, for manual dumps / CSV exports) | commoncrawl and wayback (files[].urlPattern, a web archive queried rather than downloaded — see src/lib/archives.mjs)",
     "format: json-array (array of strings) | json-objects (+slugKey) | json-keys | text-lines | csv (+column, optional where) | regex-scrape (+pattern, optional between)",
     "Optional per-file: jsonPath ('data.companies') to descend before parsing; where ({column: value}) to select rows of a mixed-ATS table; headers (supports ${ENV_VAR} so API keys stay out of this file).",
     "Slugs are extracted from full board URLs automatically, so pointing `column` at a board_url is usually the most robust choice.",
+    "incremental:true marks a source that reports what is new rather than the whole population. Its claims are never retracted for being absent from a run, because absence means \"not new\", not \"gone\" — see mergeStore in src/lib/slug-store.mjs.",
     "Set enabled:false to park a source without deleting its config."
   ],
   "sources": [
@@ -284,6 +285,44 @@
           "slugKey": "slug",
           "where": { "platform": "lever" }
         }
+      ]
+    },
+    {
+      "id": "commoncrawl",
+      "kind": "commoncrawl",
+      "name": "Common Crawl URL index",
+      "license": "CC BY 4.0 — Common Crawl Foundation",
+      "upstreamSchedule": "a new index roughly monthly; this source reads every index published since its own last run, so it never needs re-pointing",
+      "notes": "Not a list somebody maintains — an index of the open web, which is the point: it holds boards no list-maintainer has noticed. Each monthly index covers only that crawl (one month holds roughly a third of the Ashby boards we already know), so it reports increments, hence incremental:true. Measured on CC-MAIN-2026-34 against the store of 2026-08-28: 2,778 Ashby boards seen, 93 of them new, 81 of those live and carrying 683 open jobs. It is also the source that would have caught Lupa Pets, crawled 2026-08-17, six days after the one-time backfill froze. maxCrawls bounds a catch-up run after a long gap. Each regional host is its own pattern because the index is keyed by host: in CC-MAIN-2026-34 the EU Lever host carried 982 captures against 62 for the US one, so querying only jobs.lever.co finds almost nothing. job-boards.anz.greenhouse.io is deliberately absent — normalizeSlug has no pattern for the ANZ host, so every row it returned would be rejected.",
+      "enabled": true,
+      "optional": true,
+      "incremental": true,
+      "maxCrawls": 2,
+      "files": [
+        { "urlPattern": "jobs.ashbyhq.com/*", "ats": "ashby", "format": "text-lines" },
+        { "urlPattern": "boards.greenhouse.io/*", "ats": "greenhouse", "format": "text-lines" },
+        { "urlPattern": "job-boards.greenhouse.io/*", "ats": "greenhouse", "format": "text-lines" },
+        { "urlPattern": "boards.eu.greenhouse.io/*", "ats": "greenhouse", "format": "text-lines" },
+        { "urlPattern": "job-boards.eu.greenhouse.io/*", "ats": "greenhouse", "format": "text-lines" },
+        { "urlPattern": "jobs.lever.co/*", "ats": "lever", "format": "text-lines" },
+        { "urlPattern": "jobs.eu.lever.co/*", "ats": "lever", "format": "text-lines" }
+      ]
+    },
+    {
+      "id": "wayback",
+      "kind": "wayback",
+      "name": "Wayback Machine CDX index",
+      "license": "n/a — Internet Archive, queried through the public CDX API",
+      "upstreamSchedule": "continuous; this source reads captures recorded since its own last run",
+      "notes": "The same idea as commoncrawl and a genuinely different net: Wayback archives a page because a person or a bot visited it, so it catches boards Common Crawl never reached. Measured against the store of 2026-08-28, captures since 2026-08-11 held 39 new Ashby boards, only 9 of which Common Crawl also had. The CDX server is slow and moody on a prefix this wide — 15-40s for an answer, and identical queries time out under any sustained rate — so this source is optional: a failed run costs a day of freshness, never the slugs it has already contributed. `since` seeds the first run only; lowering it and re-running with --force reads deeper history, at the cost of a much slower query. The three highest-volume hosts (boards.greenhouse.io, job-boards.greenhouse.io, jobs.lever.co) are deliberately absent: the CDX server answers 504 after ~60s on those prefixes whatever the date window, because it scans the prefix's index blocks before applying the filter — a 2-day window fails exactly as a 17-day one does. Pagination would work (286 and 367 pages respectively) but not daily. commoncrawl already covers those hosts well, so this source keeps the hosts it can actually serve.",
+      "enabled": true,
+      "optional": true,
+      "incremental": true,
+      "files": [
+        { "urlPattern": "jobs.ashbyhq.com*", "ats": "ashby", "format": "text-lines", "since": "20260811" },
+        { "urlPattern": "boards.eu.greenhouse.io*", "ats": "greenhouse", "format": "text-lines", "since": "20260811" },
+        { "urlPattern": "job-boards.eu.greenhouse.io*", "ats": "greenhouse", "format": "text-lines", "since": "20260811" },
+        { "urlPattern": "jobs.eu.lever.co*", "ats": "lever", "format": "text-lines", "since": "20260811" }
       ]
     },
     {
