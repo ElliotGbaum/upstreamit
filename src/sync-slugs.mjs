@@ -56,6 +56,10 @@ async function main() {
     return { exitCode: 1 };
   }
 
+  // Sources that report only what is new rather than the full population, so a
+  // slug's absence from their reply must never retract an earlier claim.
+  const incrementalSources = new Set(sources.filter((source) => source.incremental).map((source) => source.id));
+
   // atsKey -> Map<slug, Set<sourceId>>  — this run's observed truth.
   const observed = new Map();
   // Sources whose contribution we could not refresh; their prior claims must be preserved.
@@ -136,6 +140,7 @@ async function main() {
       previous: previous.slugs ?? {},
       observed: observed.get(ats) ?? new Map(),
       carriedSources: carried,
+      incrementalSources,
       now: runAt,
       pruneAfter: options.pruneAfter ?? null,
     });

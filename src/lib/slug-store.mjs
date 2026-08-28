@@ -19,6 +19,7 @@
  * @param {object}              previous            prior store: slug -> record
  * @param {Map<string,Set>}     observed            this run: slug -> source ids
  * @param {Set<string>}         carriedSources      sources we could not re-read
+ * @param {Set<string>}         incrementalSources  sources that report only what is new
  * @param {string}              now                 ISO timestamp for this run
  * @param {number|null}         pruneAfter          days; null disables pruning
  */
@@ -26,6 +27,7 @@ export function mergeStore({
   previous,
   observed,
   carriedSources,
+  incrementalSources = new Set(),
   now,
   pruneAfter = null,
 }) {
@@ -38,7 +40,14 @@ export function mergeStore({
   // Carry forward prior records, keeping only source attributions we can still vouch for.
   for (const [slug, record] of Object.entries(previous)) {
     const keptSources = (record.sources ?? []).filter(
-      (sourceId) => carriedSources.has(sourceId) || observed.get(slug)?.has(sourceId),
+      (sourceId) =>
+        carriedSources.has(sourceId) ||
+        // An incremental source answers "what is new", not "what exists", so a
+        // slug missing from this run's reply is not evidence the board is gone —
+        // it is evidence the board is not new. Recomputing its claims would
+        // delete every board it has ever found on the very next run.
+        incrementalSources.has(sourceId) ||
+        observed.get(slug)?.has(sourceId),
     );
     slugs.set(slug, {
       sources: keptSources,

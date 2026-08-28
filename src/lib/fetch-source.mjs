@@ -2,7 +2,8 @@
  * Loading and parsing upstream slug files.
  *
  * Transport is decoupled from parsing: a source declares a `kind`
- * (github-raw | http | file) and a `format` (how to read the bytes). Any origin
+ * (github-raw | http | file | commoncrawl | wayback) and a `format` (how to read
+ * the bytes). Any origin
  * that can hand us bytes works — a GitHub repo, a plain URL, a gist, an S3 object,
  * a CSV you exported from a paid tech-lookup service and dropped in data/manual/.
  *
@@ -13,6 +14,8 @@
 
 import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+
+import { loadCommonCrawl, loadWayback } from './archives.mjs';
 
 const RAW_BASE = 'https://raw.githubusercontent.com';
 const API_BASE = 'https://api.github.com';
@@ -29,6 +32,10 @@ export function describeOrigin(source, file) {
       return file.url;
     case 'file':
       return `file://${file.path}`;
+    case 'commoncrawl':
+      return `Common Crawl index — ${file.urlPattern}`;
+    case 'wayback':
+      return `Wayback CDX — ${file.urlPattern}`;
     default:
       return `<unknown kind: ${source.kind}>`;
   }
@@ -46,6 +53,12 @@ export async function loadFile({ source, file, validators = {}, rootDir }) {
       return httpLoad(file.url, validators, file.headers ?? source.headers);
     case 'file':
       return localLoad(resolve(rootDir, file.path), validators);
+    // The archives are queried rather than downloaded: each answers with the URLs
+    // it has seen since we last asked, which the ATS URL patterns then unwrap.
+    case 'commoncrawl':
+      return loadCommonCrawl({ source, file, validators });
+    case 'wayback':
+      return loadWayback({ source, file, validators });
     default:
       return { status: 'error', error: `unknown source kind "${source.kind}"` };
   }

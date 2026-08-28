@@ -1,6 +1,6 @@
 # Slug sources
 
-Where UpstreamIt's company slugs come from: the eleven upstream lists in `sources.json`, what each one measurably contributes, the enumeration avenues that were tested and ruled out, how upstream changes are detected without a webhook, and the licence each source is recorded under. Measurements below were taken 2026-08-11 to 2026-08-22 unless a later date is given; the Ashby live/only counts are from the Ashby-only corpus of mid-August 2026 (4,297 verified boards). The live counts are on the site.
+Where UpstreamIt's company slugs come from: the eleven upstream lists in `sources.json`, the two web archives that now feed it on every run, what each one measurably contributes, the enumeration avenues that were tested and ruled out, how upstream changes are detected without a webhook, and the licence each source is recorded under. Measurements below were taken 2026-08-11 to 2026-08-22 unless a later date is given; the Ashby live/only counts are from the Ashby-only corpus of mid-August 2026 (4,297 verified boards). The live counts are on the site.
 
 Related: [pipeline.md](./pipeline.md) for the sync, verify and sweep stages that consume these lists, and the [README](../README.md).
 
@@ -84,6 +84,46 @@ No, and the non-GitHub sources turned out to be the stronger half:
 
 A single HuggingFace dataset out-yields all nine GitHub repos combined. The web sources also have a blind spot the repos cover: they harvest slugs with a URL regex, which mangles the boards whose token contains a space (`flock safety`, `tools for humanity`). Those come in via the repos.
 
+## The archives feed continuously, the lists do not
+
+Every list above is maintained by somebody else, which caps coverage at their diligence: most refresh monthly at best, several have stopped, and none of them owes this project anything. Common Crawl and the Wayback Machine are not lists. They are indexes of the open web that keep crawling whether or not anyone curates them, so a board that no list-maintainer has noticed still appears in them once somebody links to it.
+
+Both were queried once, on 2026-08-11, and the answers frozen into `data/backfill/ashby-nongithub-2026-08-11.txt`. That was the bug: the archives kept crawling and the store stopped asking. `jobs.ashbyhq.com/lupapets` was crawled by Common Crawl on 2026-08-17, six days after the freeze, and stayed invisible to the site until the archives became live sources.
+
+Measured on 2026-08-28 against a store holding 8,013 Ashby slugs:
+
+| Archive | Ashby boards seen | New to the store | Live | Open jobs behind them |
+| --- | --- | --- | --- | --- |
+| Common Crawl `CC-MAIN-2026-34` | 2,778 | 93 | 81 | 683 |
+| Wayback, captures since 2026-08-11 | 787 | 39 | not probed | — |
+
+Only 9 slugs appear in both, so they are close to independent nets: Common Crawl records what its crawler reached, Wayback records what a person or a bot actually visited. Their union was 120 new Ashby boards from two queries taking under a minute.
+
+Two properties make them different from every other source, and both are declared in `sources.json`:
+
+- **`incremental: true`.** Neither returns the whole population on any run — one Common Crawl month holds roughly a third of the Ashby boards already known. So a slug missing from a run means "not new", not "gone", and `mergeStore` must never retract an archive's claim for absence. Without that flag each source would delete its own findings on the following run.
+- **`optional: true`.** The Wayback CDX server is slow and moody on a prefix this wide — 15-40s for an answer, and identical queries time out under any sustained rate, whoever you say you are. A failed run must cost a day of freshness and nothing else. Each archive keeps its own bookmark and only advances it on success, so a bad day is simply re-read on the next.
+
+Wayback cannot serve the three highest-volume hosts at all. `boards.greenhouse.io`, `job-boards.greenhouse.io` and `jobs.lever.co` answer 504 after about 60 seconds, and narrowing the date window does not help: a 2-day window fails exactly as a 17-day one does, because the server scans the prefix's index blocks before applying the date filter. Since the bookmark only advances on success, leaving those patterns in would have wedged them permanently while costing about 13 minutes of every run. They are removed. Pagination is available (286 pages for Greenhouse, 367 for Lever) but not at a daily cadence, and `commoncrawl` already covers those hosts well. So Wayback runs on Ashby and the low-volume regional hosts, which is where its unique contribution was measured anyway.
+
+`filter=statuscode:200` would drop captures of dead and mistyped board URLs, but it makes the CDX server answer 504 on a prefix this wide. The junk is left in: `normalizeSlug` discards what is not slug-shaped, and `probe-boards.mjs` is what decides a board is live anyway.
+
+### Query every regional host, not just the obvious one
+
+These indexes are keyed by host, so a pattern only finds what that exact hostname served. Each ATS runs several, and coverage is not where you would guess. In `CC-MAIN-2026-34`:
+
+| Host | Captures | Real boards |
+| --- | --- | --- |
+| `jobs.eu.lever.co` | 982 | 75 |
+| `jobs.lever.co` | 62 | **0** |
+
+Every single capture under `jobs.lever.co` was `/robots.txt`. Querying only the US host — the obvious choice, and the first thing configured here — found one junk slug and no companies at all; Lever discovery works entirely through the EU host. Greenhouse splits the same way across `boards`, `job-boards` and their `.eu` variants, which together contributed 226 new boards against 121 for the two US hosts alone. So both archive sources list one pattern per regional host.
+
+Two consequences worth keeping:
+
+- `job-boards.anz.greenhouse.io` exists in the index and is deliberately **not** queried: `normalizeSlug` has no URL pattern for the ANZ host, so every row would be rejected. Adding the host means adding the pattern first.
+- `robots.txt`, `sitemap.xml` and `favicon.ico` are in `normalizeSlug`'s blocklist. Curated lists never contain them, so nothing needed it before; an archive reads raw crawl URLs, where a crawler fetches `/robots.txt` far more often than it reaches any one board, and `robots.txt` is slug-shaped enough to pass the pattern.
+
 ### Tested and ruled out
 
 Recorded so that none of it is re-litigated:
@@ -107,7 +147,7 @@ on:
 
 That daily cron does *not* refresh Feashliaa's company lists; it refreshes the job data and the trend snapshots. `data/ashby_companies.json` was last touched 2026-06-16, and the staleness is measurable: 22% of its Ashby slugs are dead boards, versus 4% for `kalil0321` and 1% for `datascry/openroles`. The refresh cadence recorded per source in `sources.json` (`upstreamSchedule`) is the cadence of the *slug list*, not of the repo.
 
-**A webhook is not an option.** Only a repo's owner can register a webhook on it; there is no subscribe-to-a-public-repo API. So the sync polls, using the mechanism that makes polling nearly free: a conditional request. Every fetch stores the file's `ETag` (and `Last-Modified` where offered) in `data/sync-state.json`. The next run sends it back as `If-None-Match`, and if nothing changed the origin replies `304 Not Modified` with a zero-byte body:
+**A webhook is not an option.** Only a repo's owner can register a webhook on it; there is no subscribe-to-a-public-repo API. So the sync polls, using the mechanism that makes polling nearly free: a conditional request. Every fetch stores the file's `ETag` (and `Last-Modified` where offered) in `data/sync-state.json`. The archives bookmark themselves the same way in the same file, with the identifier that suits each: Common Crawl stores the id of the newest index it has finished reading, and skips the run entirely when nothing newer has been published; Wayback stores a date, set one day behind the run so a capture recorded later the same day cannot fall into the gap between two queries. The next run sends it back as `If-None-Match`, and if nothing changed the origin replies `304 Not Modified` with a zero-byte body:
 
 ```
 · openroles    ashby          not modified upstream
@@ -119,7 +159,7 @@ A full no-change poll of all eleven sources transfers essentially nothing, so ch
 
 ## Adding a source
 
-`sources.json` is configuration, not code. Adding a source means appending an entry; nothing in `src/` changes. Transport (`kind`) is decoupled from parsing (`format`), so any origin that can hand over bytes works: a GitHub repo, a plain URL, a gist, an S3 object, a CSV exported from a paid tech-lookup service and dropped in `data/manual/`.
+`sources.json` is configuration, not code. Adding a source means appending an entry; nothing in `src/` changes. Transport (`kind`) is decoupled from parsing (`format`), so any origin that can hand over bytes works: a GitHub repo, a plain URL, a gist, an S3 object, a CSV exported from a paid tech-lookup service and dropped in `data/manual/`. The `commoncrawl` and `wayback` kinds are the exception to "nothing in `src/` changes": they are queried rather than downloaded, so they take a `urlPattern` instead of a path or URL and live in `src/lib/archives.mjs`.
 
 ```json
 {

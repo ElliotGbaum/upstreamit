@@ -50,6 +50,12 @@ const SLUG_PATTERNS = {
 const MAX_SLUG_LENGTH = 120;
 
 // Values that show up in scraped datasets as noise rather than companies.
+//
+// The well-known filenames matter to the archive sources specifically: those
+// read raw crawl URLs, and a crawler fetches /robots.txt on a host far more
+// often than it reaches any one board. In CC-MAIN-2026-34 every single capture
+// under jobs.lever.co was robots.txt, which is slug-shaped enough to pass the
+// pattern below and would otherwise enter the store as a company.
 const BLOCKLIST = new Set([
   'null',
   'undefined',
@@ -64,6 +70,9 @@ const BLOCKLIST = new Set([
   'careers',
   'search',
   'index',
+  'robots.txt',
+  'sitemap.xml',
+  'favicon.ico',
 ]);
 
 /**

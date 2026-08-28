@@ -87,7 +87,7 @@ the oracle that says which guesses are right.
 
 The pipeline is three steps:
 
-1. **Collect** — 11 sources, each in a different format. Config in `sources.json` says
+1. **Collect** — 13 sources, each in a different format. Config in `sources.json` says
    which column to read and how to parse it; adding a source needs no code change.
 2. **Normalize and dedupe** — `jobs.ashbyhq.com/Acme`, `Acme` and `acme` are one company.
    Everything collapses to a canonical form. Provenance is kept (which sources vouched for
@@ -101,7 +101,7 @@ The pipeline is three steps:
 - **Polling, not webhooks.** Only a repository's owner can register a webhook; there is no
   way to subscribe to pushes on someone else's public repo. Instead each fetch stores the
   file's ETag (a content fingerprint) and sends it back next time — unchanged files return
-  `304 Not Modified` with a zero-byte body. A full no-change poll of all 11 sources
+  `304 Not Modified` with a zero-byte body. A full no-change poll of all eleven list sources
   transfers essentially nothing.
 - **A source that fails keeps its prior claims.** Otherwise one upstream hiccup reads as
   thousands of deleted companies.
