@@ -331,6 +331,35 @@ try {
       check(`missing prose: \`${name}\` never reads the prose table`, readsRows, []);
     }
   }
+  // -------------------------------------------------- the location rules --
+  //
+  // The same rule as the description above, for the same reason. Workday's
+  // listing collapses a multi-location posting to "3 Locations" and only its
+  // detail names the cities, so an adapter that skipped the detail leaves the
+  // location fields absent — and absent must mean "not read", not "gone".
+  {
+    const place = () =>
+      db.prepare('SELECT location_raw, locations_all, country FROM jobs WHERE id = ?').get(ID);
+
+    upsertBoard(db, board([job({ country: 'United States' })]), day(19));
+    check('location: a stated location is stored', place().location_raw, 'New York, NY');
+
+    const unread = job();
+    delete unread.location_raw;
+    delete unread.locations_all;
+    delete unread.country;
+    upsertBoard(db, board([unread]), day(20));
+    check('location: an unread location keeps the stored one', place().location_raw, 'New York, NY');
+    check('location: ...and the list with it', place().locations_all, '["New York, NY"]');
+    check('location: ...and the country', place().country, 'United States');
+
+    // Read and found different is still an edit, not a gap.
+    upsertBoard(db, board([job({ location_raw: 'Austin, TX', locations_all: ['Austin, TX'] })]), day(21));
+    check('location: a move overwrites', place().location_raw, 'Austin, TX');
+
+    upsertBoard(db, board([job()]), day(22));
+  }
+
 } finally {
   db.close();
   rmSync(dir, { recursive: true, force: true });

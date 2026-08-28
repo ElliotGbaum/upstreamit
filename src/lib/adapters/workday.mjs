@@ -431,23 +431,36 @@ export function mapJob(row, detail, slug, board = parseSlug(slug)) {
   // multi-location posting to "3 Locations", which names no place at all. The
   // detail's `location` is the primary one; `additionalLocations` carries the
   // rest. Prefer the detail, fall back to the list.
-  const primary = detail?.location ?? row.locationsText ?? null;
-  job.location_raw = primary;
-
+  //
+  // The placeholder is refused everywhere, not just in the secondary slot. It
+  // used to reach `location_raw`, and because an incremental sweep does not
+  // re-read a description it already holds, `detail` is null on every sweep
+  // after the first — so a posting whose nine real cities were read during the
+  // backfill had them overwritten by "9 Locations" the following night.
+  // 50,220 postings were carrying it, none of them with a metro, and a job
+  // with no metro is excluded by no location filter: they were offered to
+  // everyone, wherever they were looking. Leaving the fields `undefined` is
+  // what `upsertBoard` coalesces onto the stored value rather than over it.
+  const primary = realPlace(detail?.location) ?? realPlace(row.locationsText);
   const places = new Set();
-  if (primary) places.add(String(primary));
-  // Only when it is a real place — "3 Locations" is a count, not a location.
-  if (row.locationsText && !/^\d+\s+locations?$/i.test(row.locationsText)) {
-    places.add(String(row.locationsText));
-  }
+  if (primary) places.add(primary);
+  const listed = realPlace(row.locationsText);
+  if (listed) places.add(listed);
   for (const extra of detail?.additionalLocations ?? []) {
-    if (typeof extra === 'string') places.add(extra);
-    else if (extra?.descriptor) places.add(String(extra.descriptor));
+    const place = realPlace(typeof extra === 'string' ? extra : extra?.descriptor);
+    if (place) places.add(place);
   }
-  job.locations_all = [...places].filter(Boolean);
+  if (primary) {
+    job.location_raw = primary;
+    job.locations_all = [...places];
+  } else {
+    delete job.location_raw;
+    delete job.locations_all;
+  }
 
   const country = detail?.country?.descriptor ?? detail?.jobRequisitionLocation?.country?.descriptor;
-  job.country = country ? String(country).trim() : null;
+  if (country) job.country = String(country).trim();
+  else delete job.country;
 
   job.employment_type = employmentType(detail?.timeType);
   // Verbatim, sparse, and never inferred from the location string. See header.
@@ -472,6 +485,20 @@ export function mapJob(row, detail, slug, board = parseSlug(slug)) {
   }
 
   return job;
+}
+
+/**
+ * "3 Locations" is a count of places, not a place. Workday renders it in the
+ * listing wherever a posting is open in more than one location, and only the
+ * detail request carries the cities themselves.
+ */
+const MULTI_LOCATION = /^\d+\s+locations?$/i;
+
+/** A location string, or null if it is the multi-location placeholder. */
+export function realPlace(value) {
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  return text && !MULTI_LOCATION.test(text) ? text : null;
 }
 
 /**

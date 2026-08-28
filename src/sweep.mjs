@@ -41,6 +41,11 @@
  * `lib/adapters/workday.mjs`. `--no-conditional` turns that off too, which is
  * the same weekly full re-read the paragraph above prescribes.
  *
+ * The one job a stored description does *not* excuse is one still carrying
+ * Workday's "3 Locations" placeholder. Only the detail request names those
+ * cities, so such a job is left out of the set and re-read once; after that it
+ * has a real location and costs nothing again.
+ *
  * Writes go through `upsertBoard` in batched transactions — one transaction per
  * board would fsync thousands of times; one for the whole sweep would hold a
  * write lock for minutes and lose everything on a crash.
@@ -201,7 +206,8 @@ async function main() {
           `SELECT j.id
              FROM jobs j
              JOIN job_content c ON c.job_id = j.id
-            WHERE j.company_id = ? AND c.description_text IS NOT NULL`,
+            WHERE j.company_id = ? AND c.description_text IS NOT NULL
+              AND (j.location_raw IS NULL OR j.location_raw NOT GLOB '[0-9]* Location*')`,
         )
       : null;
 
