@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-27T19:03:03.900Z
+Run: 2026-08-28T20:11:02.662Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-08-27T19:03:03.900Z
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 923 | 7 | `6670add` 2026-08-27 |
-| jobseek | greenhouse | fetched | 2521 | 22 | `6670add` 2026-08-27 |
-| jobseek | lever | fetched | 182 | 2 | `6670add` 2026-08-27 |
+| jobseek | ashby | fetched | 925 | 7 | `bd9aa0d` 2026-08-28 |
+| jobseek | greenhouse | fetched | 2521 | 22 | `bd9aa0d` 2026-08-28 |
+| jobseek | lever | fetched | 184 | 2 | `bd9aa0d` 2026-08-28 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -46,11 +46,11 @@ Run: 2026-08-27T19:03:03.900Z
 | --- | --- | --- | --- | --- |
 | ashby | 5844 | +0 | -0 | 8013 |
 | bamboohr | 11316 | +0 | -0 | 11316 |
-| greenhouse | 15229 | +1 | -0 | 15229 |
+| greenhouse | 15229 | +0 | -0 | 15229 |
 | icims | 10106 | +0 | -0 | 10106 |
 | lever | 8738 | +0 | -0 | 8738 |
 | paylocity | 10252 | +0 | -0 | 10252 |
-| workday | 12889 | +5 | -0 | 12889 |
+| workday | 12889 | +0 | -0 | 12889 |
 
 ### ashby — contribution by source
 
@@ -61,7 +61,7 @@ Run: 2026-08-27T19:03:03.900Z
 | kalil | 3447 | 30 |
 | feashliaa | 3161 | 5 |
 | openroles | 3100 | 11 |
-| jobseek | 923 | 9 |
+| jobseek | 925 | 9 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
 | jobsync | 120 | 0 |
@@ -87,8 +87,6 @@ Run: 2026-08-27T19:03:03.900Z
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
 
-Added: cambridgeconsultantslimited
-
 ### icims — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -104,7 +102,7 @@ Added: cambridgeconsultantslimited
 | kalil | 2400 | 133 |
 | openroles | 2135 | 4 |
 | outscal | 314 | 12 |
-| jobseek | 182 | 0 |
+| jobseek | 184 | 0 |
 | cryptojobs | 63 | 0 |
 | openjobsdata | 11 | 0 |
 
@@ -120,5 +118,3 @@ Added: cambridgeconsultantslimited
 | --- | --- | --- |
 | feashliaa | 12884 | 11487 |
 | workday-repair | 1402 | 5 |
-
-Added: conga|wd5|conga-external, cultura|wd3|cultura, embecta|wd1|embectacareers, fabletics|wd1|fabletics, novonesis|wd103|novonesis_careers
