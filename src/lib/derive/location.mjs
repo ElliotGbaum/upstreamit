@@ -21,8 +21,15 @@
 import { fold, slugify } from './text.mjs';
 import { COUNTRIES, SUPRANATIONAL, REGIONS, CITY_TO_METRO, METRO_BY_ID } from './geo.mjs';
 
-/** Split a fragment into components. Real separators seen in the data. */
-const SEPARATORS = /\s*(?:,|\||\/|;|·|•|•|\bor\b|\band\b|\+)\s*/g;
+/**
+ * Split a fragment into components. Real separators seen in the data.
+ *
+ * `>` and `:` are Workday's location hierarchy, which it publishes verbatim:
+ * `Mexico > Mexico City : Building B` is a country, a city and a room. Without
+ * them that is one six-word component, too long to be a city name, and the
+ * posting keeps no metro at all.
+ */
+const SEPARATORS = /\s*(?:,|\||\/|;|>|:|·|•|•|\bor\b|\band\b|\+)\s*/g;
 
 /** Words that decorate a place without changing it. `San Francisco Office` -> `San Francisco`. */
 const DECORATORS = new RegExp(
@@ -127,6 +134,16 @@ export function parseFragment(raw) {
       if (glued.country) out.countries.add(glued.country);
       continue;
     }
+    // A place buried inside a facility code — `Office MPS TX Lewisville 1`.
+    // See `resolveEmbedded`.
+    const embedded = resolveEmbedded(part, region, country);
+    if (embedded) {
+      out.metros.add(embedded.metro);
+      out.cities.push({ city: embedded.city, metro: embedded.metro, minted: embedded.minted });
+      const scope = embedded.country ?? country;
+      if (scope) out.countries.add(scope);
+      continue;
+    }
     // Unknown place name. Only treat it as a city — and mint a metro id from
     // it — when it looks like one: not a stray number, not a postal code, not
     // a single letter. Otherwise it is reported as unmatched.
@@ -228,6 +245,260 @@ function gluedWords(words, depth) {
 }
 
 /**
+ * The place buried inside a facility code.
+ *
+ * `resolveGlued` reads a component that is *exactly* a city and its own
+ * qualifier. Workday customers name their offices instead, and an office name
+ * is neither: `Office MPS TX Lewisville 1` is an org acronym, a state, a city
+ * and a building number in one string. The parser refused it outright — a
+ * digit anywhere blocks the mint — so those postings carried no metro at all
+ * and, since no filter excludes on a blank field, were offered to everyone
+ * regardless of where they were looking. Its sibling `Office MPS TN Nashville`
+ * was worse: no digit, so the whole string minted as `mps-tn-nashville`, a
+ * phantom metro that answers a confident *no* to a Nashville search.
+ *
+ * So look for the place *inside* the string rather than requiring it to be the
+ * whole of it. Two passes, in this order.
+ *
+ * **A known city, lifted out.** Any run of up to four words already in the
+ * table. Lifting a city out of a longer string is only safe when the words
+ * around it cannot be part of a city name themselves — otherwise `New York
+ * Mills, MN` reads as New York and `North Chicago` as Chicago, which is
+ * exactly the wrong *merge* this file exists to avoid. So the run must be
+ * bounded, each side, by the end of the component or by an **opaque** token:
+ * one carrying a digit, one with no vowel (`MPS`, `TX`, `DN` — an acronym,
+ * never a name), a venue word (`hospital`, `hotel`), or a region code. A
+ * component naming a street is refused outright: `829 Boston Post Road` is not
+ * in Boston, and its house number and `Road` would bound `boston` perfectly.
+ *
+ * **A better mint.** When nothing in the table matches, mint the run *beside*
+ * the state code rather than the whole string — `lewisville`, not
+ * `mps-tx-lewisville-1`, and not nothing. Three conditions, each protecting a
+ * reading that is already right:
+ *
+ *  - Exactly one contiguous run of qualifier tokens. `de la selva de mar` has
+ *    three (`de`, `la`, `de`) and is Catalan, not Delaware.
+ *  - Something must be left over once the qualifier and the city are taken
+ *    out. `Washington State`, `Costa Mesa` and `La Mesa` leave nothing, which
+ *    means `resolveGlued` already tried this exact reading and its guard
+ *    rejected it; minting the remainder here would undo that.
+ *  - The run must not itself be a known city. `Portland ME`, `Paris TX` and
+ *    `FL-Midtown` are the guard's own answers, and minting the bare city would
+ *    quietly merge them into the wrong metro.
+ */
+const CITY_WORDS_MAX = 4; // `ho chi minh city`
+
+/**
+ * Words that name a facility rather than a place. Used only to bound a lifted
+ * city, never to reject a component, so this list can be broad where
+ * `NOT_A_PLACE` has to be careful.
+ */
+const VENUE_WORDS = new Set([
+  'hotel', 'motel', 'resort', 'casino', 'hospital', 'medical', 'clinic', 'health',
+  'healthcare', 'university', 'college', 'school', 'academy', 'campus', 'institute',
+  'laboratory', 'lab', 'inc', 'llc', 'corp', 'ltd', 'gmbh', 'group', 'holdings',
+  'bank', 'store', 'shop', 'branch', 'warehouse', 'plant', 'factory', 'depot',
+  'terminal', 'garage', 'headquarters', 'hq', 'office', 'facility', 'center',
+  'centre', 'tower', 'building', 'bldg', 'plaza', 'complex', 'department',
+  'division', 'team', 'unit', 'district', 'region', 'site',
+]);
+
+/** Vowel-less words that *are* part of a name. `St Louis`, `Mt Vernon`. */
+const NAME_PARTICLES = new Set(['st', 'mt', 'ft']);
+
+/**
+ * A token that cannot be part of *any* name: a building number, or an acronym
+ * a company stamped on an office (`MPS`, `DN`, `SSM`, `PHL`). No city is
+ * vowel-less except the abbreviated particles above.
+ */
+function isHardBoundary(word) {
+  if (NAME_PARTICLES.has(word)) return false;
+  return /\d/.test(word) || !/[aeiou]/.test(word);
+}
+
+/**
+ * A token a city name may end against. Weaker than `isHardBoundary`: a venue
+ * word can equally well be part of what the *institution* is called, which is
+ * why an unqualified lift is not allowed to rest on one alone.
+ */
+function isOpaqueToken(word) {
+  return isHardBoundary(word) || VENUE_WORDS.has(word) || readQualifier(word) !== null;
+}
+
+/**
+ * The span of the component that could be a name at all, ignoring the building
+ * numbers a facility code carries at either end. `MPS TX Lewisville 1` ends at
+ * `Lewisville`, so that is where a city is allowed to end.
+ */
+function nameSpan(words) {
+  let start = 0;
+  let end = words.length;
+  while (start < end && /\d/.test(words[start])) start += 1;
+  while (end > start && /\d/.test(words[end - 1])) end -= 1;
+  return { start, end };
+}
+
+/**
+ * Contiguous runs of qualifier tokens, left to right, longest match first.
+ * `US FL` is one run, not two — a country followed by its own state is a chain,
+ * and the more specific end of it is the qualifier that matters.
+ */
+function qualifierRuns(words) {
+  const runs = [];
+  let i = 0;
+  while (i < words.length) {
+    let found = null;
+    for (let take = Math.min(QUALIFIER_WORDS_MAX, words.length - i); take >= 1; take--) {
+      const q = readQualifier(words.slice(i, i + take).join(' '));
+      if (q) { found = { q, start: i, end: i + take }; break; }
+    }
+    if (!found) { i += 1; continue; }
+    const last = runs[runs.length - 1];
+    if (last && last.end === found.start) {
+      last.end = found.end;
+      if (found.q.region || !last.q.region) last.q = found.q;
+    } else {
+      runs.push(found);
+    }
+    i = found.end;
+  }
+  return runs;
+}
+
+/** The qualifier governing a span: the nearest run in the component, if any. */
+function nearestRun(runs, start, end) {
+  let best = null;
+  let bestGap = Infinity;
+  for (const run of runs) {
+    const gap = run.end <= start ? start - run.end : run.start - end;
+    if (gap >= 0 && gap < bestGap) { best = run; bestGap = gap; }
+  }
+  return best;
+}
+
+function liftKnownCity(words, runs, outerQ, fragmentCountry) {
+  const inRun = (i) => runs.some((run) => i >= run.start && i < run.end);
+  const span = nameSpan(words);
+
+  for (let len = Math.min(CITY_WORDS_MAX, words.length); len >= 1; len--) {
+    for (let i = 0; i + len <= words.length; i++) {
+      // The whole component is what the caller already tried.
+      if (i === 0 && len === words.length) continue;
+      // A city buried between two facility words is part of the facility's
+      // name, not its address: `Columbia University Irving Medical Center` is
+      // in New York and the `Irving` in it is a person. Only a name that runs
+      // to one end of the component is the place.
+      if (i !== span.start && i + len !== span.end) continue;
+      let overlaps = false;
+      for (let k = i; k < i + len && !overlaps; k++) overlaps = inRun(k);
+      if (overlaps) continue;
+      const left = i > 0 ? words[i - 1] : null;
+      const right = i + len < words.length ? words[i + len] : null;
+      if (left !== null && !isOpaqueToken(left)) continue;
+      if (right !== null && !isOpaqueToken(right)) continue;
+
+      const city = words.slice(i, i + len).join(' ');
+      const q = nearestRun(runs, i, i + len)?.q ?? outerQ;
+      if (q) {
+        // Depth 1 so this reads the table only; the recursive strip has
+        // already had its turn on the whole component.
+        const hit = lookupQualified(city, q, 1);
+        if (hit && agreesWithFragment(hit.group, fragmentCountry)) {
+          return { metro: hit.metro, city, minted: false, country: hit.group?.country ?? null };
+        }
+        continue;
+      }
+      // Nothing in the fragment vouches for this reading, so the string itself
+      // has to: a venue word beside the city is as likely to mean the city is
+      // part of the *institution's* name (`Berkeley Medical Center` is in West
+      // Virginia; `Casino Hollywood` is in Florida). An acronym or a building
+      // number beside it cannot be a name, so it is a facility code.
+      if (!(left !== null && isHardBoundary(left)) && !(right !== null && isHardBoundary(right))) continue;
+      const metro = CITY_TO_METRO.get(city);
+      const group = metro ? METRO_BY_ID.get(metro) : null;
+      if (metro && agreesWithFragment(group, fragmentCountry)) {
+        return { metro, city, minted: false, country: group?.country ?? null };
+      }
+    }
+  }
+  return null;
+}
+
+/** The run of words beside a qualifier, stopping at the first opaque token. */
+function runBeside(words, run, after) {
+  const out = [];
+  if (after) {
+    for (let k = run.end; k < words.length && out.length < CITY_WORDS_MAX; k++) {
+      if (isOpaqueToken(words[k])) break;
+      out.push(words[k]);
+    }
+  } else {
+    for (let k = run.start - 1; k >= 0 && out.length < CITY_WORDS_MAX; k--) {
+      if (isOpaqueToken(words[k])) break;
+      out.unshift(words[k]);
+    }
+  }
+  return out;
+}
+
+function mintBesideQualifier(words, runs) {
+  if (runs.length !== 1) return null;
+  const [run] = runs;
+  // A state or province, never a bare country. `Beth Israel Deaconess Medical
+  // Center` is a Boston hospital whose second word is a country, and reading
+  // the acronym beside it as a city minted `beth` onto 430 postings.
+  if (!run.q.region) return null;
+  const span = nameSpan(words);
+  for (const after of [true, false]) {
+    const start = after ? run.end : run.start - 1;
+    const side = runBeside(words, run, after);
+    if (!side.length) continue;
+    // A name, like a lifted one, runs to an end of the component. In the
+    // middle it is part of whatever the facility is called.
+    if (after ? run.end + side.length !== span.end : start + 1 - side.length !== span.start) continue;
+    // Nothing left over means the qualifier and the city are the whole
+    // component — `resolveGlued` already read it that way and refused.
+    if ((run.end - run.start) + side.length >= words.length) continue;
+    const city = side.join(' ');
+    if (CITY_TO_METRO.has(city)) continue;
+    if (!isPlausibleCity(city)) continue;
+    const { q } = run;
+    return {
+      metro: slugify(city),
+      city,
+      minted: true,
+      country: q.region?.country ?? q.country ?? null,
+    };
+  }
+  return null;
+}
+
+/** A metro on another continent than the fragment's own country is not it. */
+function agreesWithFragment(group, fragmentCountry) {
+  if (!group?.country || !fragmentCountry) return true;
+  return group.country === fragmentCountry;
+}
+
+function resolveEmbedded(part, outerRegion, fragmentCountry) {
+  // A street address names a building, and the city it is in is not reliably
+  // one of the words around it. `829 Boston Post Road` is the case in point.
+  if (STREET_RE.test(part)) return null;
+  const words = part.split(/[-\s]+/).filter(Boolean);
+  if (words.length < 2) return null;
+
+  const runs = qualifierRuns(words);
+  const outerQ = outerRegion ? { region: outerRegion, country: null, token: outerRegion.code } : null;
+  const lifted = liftKnownCity(words, runs, outerQ, fragmentCountry);
+  if (lifted) return lifted;
+  // Minting a *fragment* of a name is worse than minting the whole of it —
+  // `Rio de Janeiro` must not become `janeiro` because `de` is also Delaware.
+  // So this only ever fills a vacuum: it runs where the component is not a
+  // plausible city at all and the parser was about to report it unmatched.
+  if (isPlausibleCity(part)) return null;
+  return mintBesideQualifier(words, runs);
+}
+
+/**
  * Tidy one component before lookup.
  *
  * Drops the preposition that survives decorator stripping (`in person in New
@@ -251,6 +522,13 @@ const NOT_A_CITY = /^(?:\d|[a-z]$|\d{4,}|.{1,2}$)/;
  * and `829-boston` — one Korean office block became three separate "metros"
  * carrying 97 jobs each.
  */
+/**
+ * Street words, including the abbreviations an address line actually uses.
+ * Broader than the `NOT_A_PLACE` list below because it only ever *disables*
+ * `resolveEmbedded`: a component naming a building says nothing reliable about
+ * which city the building is in.
+ */
+const STREET_RE = /\b(?:floor|suite|road|street|avenue|boulevard|parkway|po box|plaza|ave|av|blvd|rd|pkwy|hwy|ln|dr|route|rue|calle|avenida|paseo|strasse|str)\b/;
 const NOT_A_PLACE = /\b(?:center|centre|tower|building|floor|suite|plaza|complex|road|street|avenue|boulevard|parkway|po box|department|division|team|remote|various|multiple|tbd|none|worldwide|global)\b/;
 
 function isPlausibleCity(part) {

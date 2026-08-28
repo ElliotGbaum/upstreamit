@@ -186,7 +186,8 @@ export const METRO_GROUPS = [
   { id: 'austin', label: 'Austin', country: 'us', region: 'TX', cities: ['austin', 'round rock'] },
   { id: 'dallas', label: 'Dallas–Fort Worth', country: 'us', region: 'TX', cities: [
     'dallas', 'fort worth', 'plano', 'irving', 'richardson', 'frisco', 'arlington, tx',
-    'addison', 'dfw', 'dallas fort worth', 'dallas-fort worth', 'dallas-fort-worth', 'north dallas', 'south dallas' ] },
+    'addison', 'lewisville', 'mckinney', 'carrollton', 'garland', 'denton',
+    'dfw', 'dallas fort worth', 'dallas-fort worth', 'dallas-fort-worth', 'north dallas', 'south dallas' ] },
   { id: 'houston', label: 'Houston', country: 'us', region: 'TX', cities: ['houston', 'south houston', 'the woodlands', 'sugar land'] },
   { id: 'denver', label: 'Denver', country: 'us', region: 'CO', cities: [
     'denver', 'boulder', 'broomfield', 'lakewood', 'aurora, co', 'louisville, co', 'westminster, co' ] },

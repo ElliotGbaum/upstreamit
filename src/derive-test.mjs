@@ -118,6 +118,45 @@ check('underscore office code', metrosOf('AZ_Mesa_HQ'), ['phoenix']);
 check('hyphenated one-name city unharmed', metrosOf('Boulogne-Billancourt'), ['paris']);
 check('hyphenated region unharmed', metrosOf('Riederich, Baden-Wurttemberg'), ['stuttgart']);
 
+// Regression: Workday customers name their *offices*, and an office name is
+// neither a city nor a city plus its qualifier. `Office MPS TX Lewisville 1`
+// carried no metro at all — a digit anywhere blocks the mint — and since no
+// filter excludes on a blank field it was offered to everyone, wherever they
+// were looking. Its sibling `Office MPS TN Nashville` was worse: the whole
+// string minted, and `mps-tn-nashville` answers a confident no to Nashville.
+check('facility code: the city is lifted out', metrosOf('Office MPS TN Nashville'), ['nashville']);
+check('facility code: an unlisted city is minted beside the state', metrosOf('Office MPS TX Lewisville 1'), ['dallas']);
+check('facility code: an acronym and a building number bound the city', metrosOf('Gurugram 10 C'), ['delhi-ncr']);
+check('facility code: a bare parenthetical number', metrosOf('NYC (1285)'), ['nyc']);
+check('facility code: the region vouches for the city', metrosOf('Richmond University Medical Center (Staten Island, NY)'), ['nyc']);
+// Workday publishes its location hierarchy verbatim, separators included.
+check('workday hierarchy: country, city, room', metrosOf('Mexico > Mexico City : Building B'), ['mexico-city']);
+check('workday hierarchy: country, state, city', metrosOf('US > Arizona > Phoenix'), ['phoenix']);
+check('a colon separates like a comma', metrosOf('Campus: Tempe'), ['phoenix']);
+// Regression: `Remote: United States` read the whole string as one name and
+// minted `united-states` as a metro.
+check('a colon does not mint a country', metrosOf('Remote: United States'), []);
+
+// Lifting a city out of a longer string is the wrong-merge risk this file
+// exists to avoid, so it needs the words around it to be incapable of being
+// part of a name. A venue word is not: the city is as likely to be part of
+// what the institution is called.
+check('guard: a city between venue words is the institution', metrosOf('Columbia University Irving Medical Center'), []);
+check('guard: Berkeley Medical Center is in West Virginia', metrosOf('Berkeley Medical Center (BMC)'), []);
+check('guard: Casino Hollywood is in Florida', metrosOf('Seminole Hard Rock Hotel & Casino Hollywood'), []);
+check('guard: New York Mills is not New York', metrosOf('New York Mills, MN'), ['new-york-mills']);
+check('guard: North Chicago is not Chicago', metrosOf('North Chicago, IL'), ['north-chicago']);
+check('guard: a country abroad outranks a same-named metro', metrosOf('Newton College, Spain, Elche'), ['elche', 'newton-college']);
+// Minting a fragment of a name is worse than minting all of it, so the mint
+// beside a qualifier only ever fills a vacuum — and only beside a *state*.
+check('guard: Rio de Janeiro is not Delaware', metrosOf('Rio de Janeiro'), ['rio-de-janeiro']);
+check('guard: Paris La Défense stays whole', metrosOf('Paris La Défense'), ['paris-la-defense']);
+check('guard: a country beside a name mints nothing', metrosOf('Beth Israel Deaconess Medical Center'), []);
+check('guard: a street address is refused outright', metrosOf('Aurora St Lukes Medical Center - 2900 W Oklahoma Ave'), []);
+// `St` is vowel-less but it is half of a name, not an acronym: read as one,
+// the mint beside `MO` would keep `louis` and throw the saint away.
+check('an abbreviated saint is not an acronym', metrosOf('St Louis MO'), ['st-louis-mo']);
+
 // ----------------------------------------------------------------- workplace --
 const noLoc = { metros: [], remoteHint: false };
 check('enum wins', deriveWorkplace({ raw_workplace: 'Hybrid', raw_remote: 1 }, noLoc).workplace, 'hybrid');
