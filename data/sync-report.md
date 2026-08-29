@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-28T20:11:02.662Z
+Run: 2026-08-29T13:49:12.988Z
 
 ## Sources
 
