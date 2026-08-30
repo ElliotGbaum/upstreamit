@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-08-29T13:49:12.988Z
+Run: 2026-08-30T13:46:50.132Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-08-29T13:49:12.988Z
 | kalil | ashby | fetched | 3447 | 1 | `33635fc` 2026-07-23 |
 | kalil | greenhouse | fetched | 6028 | 3 | `7ac61d9` 2026-07-28 |
 | kalil | lever | fetched | 2400 | 2 | `5251c95` 2026-07-29 |
-| jobseek | ashby | fetched | 925 | 7 | `bd9aa0d` 2026-08-28 |
-| jobseek | greenhouse | fetched | 2521 | 22 | `bd9aa0d` 2026-08-28 |
-| jobseek | lever | fetched | 184 | 2 | `bd9aa0d` 2026-08-28 |
+| jobseek | ashby | fetched | 926 | 7 | `b4d7cb2` 2026-08-30 |
+| jobseek | greenhouse | fetched | 2522 | 22 | `b4d7cb2` 2026-08-30 |
+| jobseek | lever | fetched | 186 | 2 | `b4d7cb2` 2026-08-30 |
 | feashliaa | ashby | fetched | 3161 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | greenhouse | fetched | 8333 | 0 | `ddc438c` 2026-06-16 |
 | feashliaa | lever | fetched | 4368 | 0 | `8614881` 2026-04-01 |
@@ -61,7 +61,7 @@ Run: 2026-08-29T13:49:12.988Z
 | kalil | 3447 | 30 |
 | feashliaa | 3161 | 5 |
 | openroles | 3100 | 11 |
-| jobseek | 925 | 9 |
+| jobseek | 926 | 9 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
 | jobsync | 120 | 0 |
@@ -82,7 +82,7 @@ Run: 2026-08-29T13:49:12.988Z
 | feashliaa | 8333 | 171 |
 | kalil | 6028 | 448 |
 | openroles | 5137 | 59 |
-| jobseek | 2521 | 29 |
+| jobseek | 2522 | 29 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
@@ -102,7 +102,7 @@ Run: 2026-08-29T13:49:12.988Z
 | kalil | 2400 | 133 |
 | openroles | 2135 | 4 |
 | outscal | 314 | 12 |
-| jobseek | 184 | 0 |
+| jobseek | 186 | 0 |
 | cryptojobs | 63 | 0 |
 | openjobsdata | 11 | 0 |
 
