@@ -48,6 +48,7 @@
 
   <article class="prose">
 
+
     <p class="eyebrow">Methodology</p>
     <h1>How this was built, and what it does with your criteria</h1>
 
@@ -70,18 +71,12 @@
 
     <p>
       Almost every company runs its careers page on an <b>applicant tracking system</b>:
-      Ashby, Greenhouse, Lever and a dozen others. That is where the recruiter types the
-      posting, and where it disappears from when the role is filled. Each ATS publishes its
-      boards over a public, free, unauthenticated API, so if you know a company's <b>slug</b>,
-      the short name in <code>jobs.ashbyhq.com/&lt;slug&gt;</code>, you can pull its whole
-      open req list in one request.
-    </p>
-
-    <p>
-      A job board sits downstream of that. It re-indexes the same postings on its own
-      schedule, ranks them by criteria it does not publish, and usually sells placement in
-      that ranking. The gap between what a company has open and what a board shows you is
-      where stale listings and paid placement live.
+      Ashby, Greenhouse, Lever, Workday and a dozen others. Each publishes its boards over a
+      public, unauthenticated API, so if you know a company's <b>slug</b> — the short name in
+      <code>jobs.ashbyhq.com/&lt;slug&gt;</code> — you can pull its whole open req list in one
+      request. A job board sits downstream of that, re-indexing the same postings on its own
+      schedule, ranking them by criteria it does not publish, and selling placement in that
+      ranking.
     </p>
 
     <p class="callout">
@@ -90,71 +85,35 @@
     </p>
 
     <p>
-      The cost of that is worth stating up front. You get every company using an ATS we have
-      an adapter for, and no other company at all. A firm on Workday, on iCIMS, or on a
-      careers page it wrote itself is not ranked low here. It is absent.
+      The cost is worth stating up front. You get every company using an ATS we have an
+      adapter for, and no other company at all. A firm on iCIMS, on BambooHR, or on a careers
+      page it wrote itself is not ranked low here. It is absent.
     </p>
 
     <!-- ------------------------------------------------------------------ -->
     <h2 id="pipeline">The pipeline</h2>
 
     <p>
-      Seven stages. Each is a separate program writing to one SQLite database, and each can be
-      re-run on its own, so improving a rule about how a job title maps to a seniority band
-      re-runs stage four over data already on disk instead of re-crawling eleven thousand
-      boards.
+      Seven stages, each a separate program writing to one SQLite database and each re-runnable
+      alone — so improving a rule about seniority re-runs stage four over data already on disk
+      instead of re-crawling every board.
     </p>
 
     <ol class="stages">
-      <li>
-        <span class="n">1</span>
-        <div>
-          <b>Collect.</b> Gather candidate company slugs from public lists.
-          <span class="t">Output: names that <em>might</em> be boards.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">2</span>
-        <div>
-          <b>Verify.</b> Ask each ATS whether that slug is a real board.
-          <span class="t">Output: live, empty or dead, recorded with a date.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">3</span>
-        <div>
-          <b>Sweep.</b> Pull every open posting from every live board, daily.
-          <span class="t">Output: the corpus, plus a log of what changed.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">4</span>
-        <div>
-          <b>Derive.</b> Turn free text into columns a filter can reason about.
-          <span class="t">Location, salary, seniority, workplace, skills, degree, clearance, sponsorship. No network, no model.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">5</span>
-        <div>
-          <b>Read the company.</b> One model call per company over its own postings.
-          <span class="t">What it does, in a sentence and one of thirty sectors. The only stage that reads anything but an ATS.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">6</span>
-        <div>
-          <b>Filter.</b> Run your criteria over those columns, in memory.
-          <span class="t">Every criterion returns match, no, <em>or unknown</em>.</span>
-        </div>
-      </li>
-      <li>
-        <span class="n">7</span>
-        <div>
-          <b>Rank and show.</b> Order what survived, and say why each one is there.
-          <span class="t">Output: the page, and a link straight to the company's own posting.</span>
-        </div>
-      </li>
+      <li><span class="n">1</span><div><b>Collect.</b> Gather candidate slugs from public lists.
+        <span class="t">Names that <em>might</em> be boards.</span></div></li>
+      <li><span class="n">2</span><div><b>Verify.</b> Ask each ATS whether the slug is a real board.
+        <span class="t">Live, empty or dead, with a date.</span></div></li>
+      <li><span class="n">3</span><div><b>Sweep.</b> Pull every open posting from every live board, daily.
+        <span class="t">The corpus, plus a log of what changed.</span></div></li>
+      <li><span class="n">4</span><div><b>Derive.</b> Turn free text into columns a filter can reason about.
+        <span class="t">Location, salary, seniority, skills, degree, clearance, sponsorship. No network, no model.</span></div></li>
+      <li><span class="n">5</span><div><b>Read the company.</b> One model call per company over its own postings.
+        <span class="t">What it does, in a sentence and one of thirty sectors.</span></div></li>
+      <li><span class="n">6</span><div><b>Filter.</b> Run your criteria over those columns, in memory.
+        <span class="t">Every criterion returns match, no, <em>or unknown</em>.</span></div></li>
+      <li><span class="n">7</span><div><b>Rank and show.</b> Order what survived, and say why it is there.
+        <span class="t">A link straight to the company's own posting.</span></div></li>
     </ol>
 
     <!-- ------------------------------------------------------------------ -->
@@ -162,38 +121,18 @@
 
     <p>
       No ATS publishes a directory of its customers. Ashby has no sitemap, its collection
-      endpoints return <code>401</code>, and every board is a path on one shared host, so
-      there is nothing in DNS to enumerate either. The slugs have to be assembled from
-      elsewhere: eleven public datasets, a web-archive crawl, and a manual file for anything
-      found by hand. A source that fails to answer keeps its prior claims, because one
-      upstream outage should not read as thousands of companies going out of business
-      overnight.
+      endpoints return <code>401</code>, and every board is a path on one shared host, so there
+      is nothing in DNS to enumerate. The slugs are assembled from eleven public datasets, a
+      web-archive crawl and a manual file — and they saturate fast: counting only the live
+      boards a source contributed that <em>no other source had</em>, the crawl added 113, the
+      next best 45, then 11, 7, 3, 2, 1, 1, with the best-known repo adding <b>zero</b>.
     </p>
 
     <p>
-      Knowing when to stop adding sources is the harder half. Counting the live boards each
-      source contributed that <em>no other source had</em>, the web crawl added 113, the next
-      best 45, and the tail ran 11, 7, 3, 2, 1, 1, with the largest and best-known repo adding
-      <b>zero</b>. Web archives saturate about as fast: one month of Common Crawl found 2,820
-      slugs, and forty-nine months found 4,354.
-    </p>
-
-    <p>
-      A collected slug is only a claim until it is probed. Every one is asked of the live API
-      and sorted into <b>live</b> (the board exists and has openings), <b>empty</b> (it exists,
-      nobody is hiring right now) or <b>dead</b> (<code>404</code>), each stored with a date.
-      Of the Ashby candidates, 7,951 slugs resolved to 4,297 confirmed boards and 3,654
-      confirmed-absent ones. The empty ones are kept: a company with no openings this month
-      will hire again, and discarding it means re-discovering it later from a source that may
-      no longer list it.
-    </p>
-
-    <p class="caveat">
-      <b>A failure mode found in production.</b> A company can switch its hosted Ashby board
-      off while its postings stay in the API. The posting still comes back, and the
-      <code>jobUrl</code> in it now <code>404</code>s, which looks perfectly good until you
-      click it. Those boards are detected directly now, and their jobs link through the
-      company's own careers page instead.
+      A collected slug is a claim until it is probed. Every one is asked of the live API and
+      sorted into <b>live</b>, <b>empty</b> or <b>dead</b>, with a date. The empty ones are
+      kept: a company not hiring this month will hire again, and discarding it means
+      re-discovering it from a source that may no longer list it.
     </p>
 
     <!-- ------------------------------------------------------------------ -->
@@ -201,57 +140,49 @@
 
     <p>
       Every live board is pulled once a day. The ATSes read today are
-      <b id="s-ats">Ashby, Greenhouse and Lever</b>, each through an adapter whose only job is
-      turning that vendor's payload into the same shape as the others. They are not
-      equivalent, so the app says which board a job came from rather than pretending
-      otherwise.
-    </p>
-
-    <p>
-      Every posting is stored with a <b>content hash</b>, and every observation goes into an
-      event log. That is what makes it possible to say which jobs are new since yesterday,
-      which were edited without announcement (a salary band changed, a requirement added), and
-      which stopped being listed. A tool that only stores the current state can tell you what
-      is open. It cannot tell you what moved while you were not looking.
+      <b id="s-ats">Ashby, Greenhouse, Lever and Workday</b>, each through an adapter that
+      turns that vendor's payload into the same shape as the others. Every posting carries a
+      <b>content hash</b> and every observation goes into an event log, which is what makes it
+      possible to say which jobs are new, which were edited without announcement, and which
+      stopped being listed. Storing only the current state tells you what is open, never what
+      moved while you were not looking.
     </p>
 
     <p class="callout">
-      <b>Age is not evidence.</b> Nothing is pruned for being old. A posting a company still
-      publishes is still open whatever its date says, and 13.8% of live postings are more than
-      a year old right now. Date posted is a filter you can apply, never one applied on your
-      behalf.
+      <b>Age is not evidence.</b> Nothing is pruned for being old — a posting a company still
+      publishes is still open whatever its date says, and 13.8% of live postings are over a
+      year old. Date posted is a filter you can apply, never one applied for you.
     </p>
 
     <!-- ------------------------------------------------------------------ -->
     <h2 id="derive">Turning prose into columns</h2>
 
     <p>
-      An ATS payload gives you a title, a description and a handful of unreliable enums. It
-      does not give you "entry level in New York paying over $90k". Every criterion in the app
-      is inferred here, in a pass that touches no network and can be re-run whenever a rule
-      improves. Four of those inferences carry most of the weight:
+      An ATS payload gives you a title, a description and a few unreliable enums. It does not
+      give you "entry level in New York paying over $90k". Every criterion is inferred here, by
+      rules, touching no network. Four calls carry most of the weight:
     </p>
 
     <table class="calls">
       <thead>
-        <tr><th>The problem</th><th>The call, and what it cost</th></tr>
+        <tr><th>The problem</th><th>The call</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td><b>A posting states several different experience requirements.</b> 15.8% state more than one figure, and they disagree 82.5% of the time, with a median gap of three years.</td>
-          <td><b>The strictest one wins.</b> A posting wanting "5+ years in sales" and "1+ year with Salesforce" is a five-year job. Taking the smallest would have moved 23% more postings into the "two years or less" bucket, and the error is asymmetric: a junior job you miss is invisible to you, while a flood of senior ones makes the list useless.</td>
+          <td><b>A posting states several experience requirements.</b> 15.8% state more than one figure, disagreeing 82.5% of the time.</td>
+          <td><b>The strictest wins.</b> The error is asymmetric: a junior job you miss is invisible, a flood of senior ones makes the list useless.</td>
         </tr>
         <tr>
-          <td><b>The salary interval field lies.</b> 154 rows carried "per year" with a value under $1,000, and 54 exceeded $1M.</td>
-          <td><b>Every figure is re-read under whichever interval makes it plausible</b> ($5k to $2M a year; a range whose top is more than 8× its bottom is refused outright, and a reading under an interval the posting did not state is capped at $1M). If none does, the job is recorded as <em>salary unknown</em> rather than carrying a confidently wrong number into a filter.</td>
+          <td><b>The salary interval field lies.</b> 154 rows carried "per year" under $1,000; 54 exceeded $1M.</td>
+          <td><b>Each figure is re-read under whichever interval makes it plausible.</b> If none does, the job is <em>salary unknown</em> rather than carrying a wrong number into a filter.</td>
         </tr>
         <tr>
-          <td><b>Location strings are as often full addresses as city names.</b> Parsing them loosely minted metro areas out of building names: one Korean office block became three separate "metros" of 97 jobs each.</td>
-          <td><b>An unrecognised place yields no metro rather than a guess.</b> Fragments carrying digits, facility words, or more than four words are rejected and written to a report, which is the to-do list for the alias table.</td>
+          <td><b>Locations are as often addresses as city names.</b> Parsing loosely minted metros out of building names: one Korean office block became three "metros".</td>
+          <td><b>An unrecognised place yields no metro rather than a guess.</b> Rejects go to a report, the to-do list for the alias table.</td>
         </tr>
         <tr>
-          <td><b>No ATS has a seniority field</b>, so it has to come from the title and the description, which disagree.</td>
-          <td><b>Both have to agree.</b> Years alone lets <em>Senior Engineer</em> through whenever the description states no number, which is 44.1% of postings; the title alone lets <em>Associate Consultant, 8+ years required</em> through. Requiring both costs a couple of dozen senior-titled postings that claim two years or less.</td>
+          <td><b>No ATS has a seniority field</b>, so it comes from the title and the description, which disagree.</td>
+          <td><b>Both must agree.</b> Years alone lets <em>Senior Engineer</em> through whenever the description states no number (44.1% of postings); the title alone lets <em>Associate Consultant, 8+ years required</em>.</td>
         </tr>
       </tbody>
     </table>
@@ -260,36 +191,19 @@
     <h2 id="company">What the company does</h2>
 
     <p>
-      A posting says what the job is. It does not say what the company is, and that is the
-      thing most people look up before they apply: a data engineer at a bank and a data
-      engineer at a payments startup are the same posting and different careers. No ATS has
-      a field for it, so it is read the way a person would read it — from the "about us"
-      paragraph nearly every description carries, and from the list of roles the company has
-      open, which says what kind of organisation this is even when the prose does not.
-    </p>
-
-    <p>
-      That reading is done by a language model, once per <b>company</b> rather than once per
-      job, and stored on the company: a one-sentence description and one of thirty sectors
-      (fintech, healthcare providers, developer tools, defense, …). Every job on the board
-      inherits its company's answer. It is the one column in the corpus that came from a model
-      rather than a rule, and the detail pane says so on every job: which model, how sure it
-      was, and when.
+      A posting says what the job is, not what the company is — and a data engineer at a bank
+      and one at a payments startup are the same posting and different careers. No ATS has a
+      field for it, so a language model reads the "about us" paragraph and the open roles once
+      per <b>company</b>, storing a sentence and one of thirty sectors. It is the only column
+      that came from a model rather than a rule, and the detail pane says which model, how sure
+      it was, and when.
     </p>
 
     <p class="callout">
-      <b>Unsure is stored as unknown, not as a guess.</b> The model is asked how confident it
-      is, and a low answer is thrown away. A company it could not place is treated exactly like
-      a company nobody has read yet: unknown, kept in every search by default. So is
-      <em>"something else"</em>, unless you ask for it by name.
-    </p>
-
-    <p>
-      The sector filter has two halves and the second is the useful one. "Not finance" drops a
-      company the model <b>read as</b> a bank; it does not drop the one whose postings never
-      said, because that one has not been shown to be a bank. Right now the sector is known for
-      <b id="s-sector-jobs">—</b> of open jobs across <b id="s-sector-boards">—</b> live boards;
-      the rest are unknown and stay in.
+      <b>Unsure is stored as unknown, not as a guess.</b> "Not finance" drops a company the
+      model <b>read as</b> a bank; it never drops one whose postings did not say. The sector is
+      known for <b id="s-sector-jobs">—</b> of open jobs across
+      <b id="s-sector-boards">—</b> live boards.
     </p>
 
     <!-- ------------------------------------------------------------------ -->
@@ -301,9 +215,8 @@
     </p>
 
     <p>
-      That is the central design decision here. Every criterion returns one of <b>three</b>
-      answers rather than two: <b>match</b>, <b>no</b>, and <b>unknown</b>. Unknown is not
-      rare. For several criteria it is the most common answer.
+      That is the central design decision here. Every criterion returns <b>match</b>, <b>no</b>,
+      or <b>unknown</b> — and for several criteria unknown is the most common answer.
     </p>
 
     <table class="calls trio">
@@ -311,104 +224,58 @@
         <tr><th>Criterion</th><th>Silent</th><th>What happens to the silent ones by default</th></tr>
       </thead>
       <tbody>
-        <tr><td>Salary</td><td class="pct">74.1%</td><td><b>Kept.</b> Only 25.9% of postings publish a figure at all. A silently applied salary floor would hide most of the market and still look like a working search.</td></tr>
+        <tr><td>Salary</td><td class="pct">74.1%</td><td><b>Kept.</b> A silent salary floor would hide three quarters of the market and still look like a working search.</td></tr>
         <tr><td>Degree required</td><td class="pct">61.6%</td><td><b>Kept.</b> Three postings in five never mention school.</td></tr>
-        <tr><td>Visa sponsorship</td><td class="pct">96.8%</td><td><b>Kept.</b> The sparsest field in the corpus. "Only companies that say they sponsor" is a very narrow gate, and it is labelled as one.</td></tr>
-        <tr><td>Seniority</td><td class="pct">24.9%</td><td><b>Shown separately</b> in a "worth a look" list beside the confirmed matches. Too many to drop, too many to mix in.</td></tr>
-        <tr><td>Location</td><td class="pct">15.9%</td><td><b>Dropped</b>, the one deliberate exception. A job with no parseable location is not plausibly in your city, and keeping them would swamp any location filter. It is still a switch you can flip.</td></tr>
-        <tr><td>Workplace, employment type, date posted</td><td class="pct">≤ 1.1%</td><td><b>Kept.</b> Small enough not to matter either way.</td></tr>
-        <tr><td>Company sector</td><td class="pct" id="s-sector-silent">—</td><td><b>Kept.</b> The share of open jobs at companies nobody has read yet, or that the model would not commit on. Excluding a sector only ever removes a company the model placed in it.</td></tr>
+        <tr><td>Visa sponsorship</td><td class="pct">96.8%</td><td><b>Kept.</b> "Only companies that say they sponsor" is a very narrow gate, and it is labelled as one.</td></tr>
+        <tr><td>Seniority</td><td class="pct">24.9%</td><td><b>Shown separately</b>, in a "worth a look" list. Too many to drop, too many to mix in.</td></tr>
+        <tr><td>Location</td><td class="pct">15.9%</td><td><b>Dropped</b>, the one exception: a job with no parseable location is not plausibly in your city. Still a switch you can flip.</td></tr>
+        <tr><td>Company sector</td><td class="pct" id="s-sector-silent">—</td><td><b>Kept.</b> Companies nobody has read yet, or the model would not commit on.</td></tr>
+        <tr><td>Workplace, type, date posted</td><td class="pct">≤ 1.1%</td><td><b>Kept.</b> Small enough not to matter either way.</td></tr>
       </tbody>
     </table>
 
     <p>
-      Each of those is a control on the filter rail rather than a decision baked into the
-      code, and each prints the percentage of the corpus you would drop by changing it. In a
-      survey of sixty job boards, none had an equivalent. The closest anyone came was a single
-      "include jobs without salary" checkbox.
+      Each is a control on the filter rail, not a decision baked into the code, and each prints
+      the share of the corpus you would drop by changing it. In a survey of sixty job boards,
+      the closest anyone came was one "include jobs without salary" checkbox.
     </p>
-
-    <!-- ------------------------------------------------------------------ -->
-    <h2 id="show">What the interface has to do</h2>
-
-    <ul>
-      <li>
-        Show a count on every control. Someone who picks four criteria blind and gets nothing
-        needs to see which one was too narrow.
-      </li>
-      <li>
-        Build the controls from the data, so an option that would match nothing is never
-        drawn, and a new city or a fourth ATS grows a control with no code change.
-      </li>
-      <li>
-        Link straight to the company's own posting, with no page in between.
-      </li>
-      <li>
-        Say when a number changed. Where duplicate postings are collapsed, the count says so:
-        453 dropping to 291 with no explanation looks the same as a broken filter.
-      </li>
-      <li>
-        Sort without discarding. Sorting by salary sinks the jobs with no figure rather than
-        deleting them.
-      </li>
-    </ul>
 
     <!-- ------------------------------------------------------------------ -->
     <h2 id="rejected">Tried and rejected</h2>
 
-    <p>
-      These are measured results, written down so they do not get re-attempted:
-    </p>
+    <p>Measured results, written down so they do not get re-attempted:</p>
 
     <table class="calls">
       <thead><tr><th>Approach</th><th>Result</th></tr></thead>
       <tbody>
-        <tr><td>Ashby sitemap, robots, or a public directory</td><td>Does not exist. Collection endpoints return <code>401</code>.</td></tr>
-        <tr><td>Search-engine enumeration for board URLs</td><td>One engine serves a CAPTCHA, one returns zero results for the host, one blocks outright. <b>Zero slugs per page.</b></td></tr>
-        <tr><td>Technology-detection services (BuiltWith, Wappalyzer)</td><td><b>Neither tracks Ashby at all</b>, checked against the full 7,278-technology catalogue.</td></tr>
-        <tr><td>Guessing slugs from a startup directory</td><td>75 companies produced 125 guesses and <b>exactly one hit</b>.</td></tr>
-        <tr><td>Buying a vendor dataset (~$400)</td><td>Its headline company count counts posting <em>mentions</em>, not boards. Heavily inflated.</td></tr>
-        <tr><td>Filtering in SQL</td><td>Built, measured, replaced. Facet counts have to leave one criterion out, so every dimension needs its own near-duplicate query, and the title matcher would have had to exist twice. The hot columns are held in memory instead, and one pass produces the results and every facet count together.</td></tr>
+        <tr><td>Search-engine enumeration for board URLs</td><td>CAPTCHA, zero results, or blocked outright. <b>Zero slugs per page.</b></td></tr>
+        <tr><td>Technology detection (BuiltWith, Wappalyzer)</td><td><b>Neither tracks Ashby at all</b>, against the full 7,278-technology catalogue.</td></tr>
+        <tr><td>Buying a vendor dataset (~$400)</td><td>Its company count counts posting <em>mentions</em>, not boards. Heavily inflated.</td></tr>
+        <tr><td>A repo claiming to list Ashby boards</td><td>Rejected on safety: its archive carries an executable pair in the shape malware loaders use. Not downloaded, not wired in.</td></tr>
+        <tr><td>Filtering in SQL</td><td>Built, measured, replaced. Every facet count has to leave one criterion out, so each dimension needs its own near-duplicate query. The hot columns live in memory instead, and one pass produces the results and every count together.</td></tr>
       </tbody>
     </table>
-
-    <p class="caveat">
-      One avenue was rejected on safety rather than yield: a repository claiming to list Ashby
-      boards ships an archive containing an executable pair in the shape commonly used by
-      malware loaders. It was not downloaded and is not wired in.
-    </p>
 
     <!-- ------------------------------------------------------------------ -->
     <h2 id="limits">What this does not do</h2>
 
     <ul>
       <li>
-        It sees three ATSes. Companies hiring through Workday, iCIMS, BambooHR or a hand-built
-        careers page are absent entirely.
+        It sees four ATSes. Companies on iCIMS, BambooHR or a hand-built careers page are
+        absent entirely.
       </li>
       <li>
-        It cannot tell you a company's size, because no ATS publishes headcount. The app
-        offers "roles this company has open here", which is a proxy, and labels it as one.
+        It cannot tell you a company's size — no ATS publishes headcount. "Roles this company
+        has open here" is a proxy, and is labelled as one.
       </li>
       <li>
-        The sector is a model's reading of the company's own words, not a registry lookup.
-        A staffing agency's board is the agency; a job aggregator's board is the aggregator,
-        whoever the roles are really for. The detail pane names the model and its confidence
-        so a wrong one can be traced rather than trusted.
+        It cannot tell you a posting is genuinely open, only that the company still publishes it —
+        the strongest evidence available without asking the recruiter.
       </li>
       <li>
-        It cannot tell you a posting is genuinely open, only that the company still publishes
-        it. That is the strongest evidence available without asking the recruiter, and
-        postings do linger.
-      </li>
-      <li>
-        Inference has edges. Seniority, metro and skills are read out of prose by rules, and
-        every one of those rules can return unknown, which is treated as unknown rather than
-        as a "no".
-      </li>
-      <li>
-        The public slug lists are exhausted, not complete. Some boards nobody has published a
-        pointer to are not reachable by collecting more lists.
+        Inference has edges. Seniority, metro and skills are read out of prose by rules, the
+        sector by a model — a staffing agency's board reads as the agency, whoever the roles
+        are for. Each can return unknown, and unknown is never treated as a "no".
       </li>
     </ul>
 
@@ -416,14 +283,13 @@
     <h2 id="check">Where the numbers come from</h2>
 
     <p>
-      The four figures at the top of this page are read from the corpus as it loads. The rest
-      come from the reports each stage writes on every run, and the derivation and filtering
-      rules behind them are covered by <b>931</b> checks that need no database and no network.
-      Where a figure here is a snapshot rather than a live read, it says so.
+      The four figures at the top are read from the corpus as it loads; the rest come from the
+      reports each stage writes on every run, and the rules behind them are covered by
+      <b>989</b> checks that need no database and no network.
     </p>
 
     <p class="sig">
-      Last reviewed 2026-08-24 · <a href="/">Back to search</a>
+      Last reviewed 2026-08-29 · <a href="/">Back to search</a>
     </p>
 
   </article>
