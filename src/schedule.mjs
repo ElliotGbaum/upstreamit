@@ -137,6 +137,30 @@ function plist({ hour, minute }) {
  * `${ROOT}/src/daily.mjs` into two arguments, `.../My` and
  * `Projects/upstreamit/src/daily.mjs`, and the job fails every morning with a
  * confusing "Cannot find module .../My".
+ *
+ * ## caffeinate
+ *
+ * A sweep is hours of mostly waiting on the network, which reads to macOS as an
+ * idle machine, so it sleeps underneath the run. The process is not killed, it
+ * is suspended, and it resumes on the next wake — so the work still completes
+ * and nothing looks broken except the clock. The 2026-08-29 run is the example:
+ * Ashby took 37.2 hours against its usual 1.4, Greenhouse 13 hours, and both
+ * spanned nights with 120 recorded sleeps between them. The give-away that this
+ * is sleep rather than a slow sweep is Lever in the same run, three minutes at
+ * 10:30 on a woken machine, and Workday behind it holding its normal rate.
+ *
+ * Because each stage waits for the one before it, those suspended hours push
+ * the whole pipeline past 24 and into the next morning's slot — and launchd
+ * will not start a second copy of a label already running, so the next day's
+ * run does not happen at all. Two days of the sweep were lost that way before
+ * anyone noticed, which is the real cost: not a slow morning, a missing one.
+ *
+ * `-i` holds off idle sleep, `-m` keeps the disk spun up, and `-s` blocks system
+ * sleep outright while on AC. The assertion lives exactly as long as the child,
+ * so there is nothing to release and a crashed run leaves no machine pinned
+ * awake. What it cannot do is override a closed lid on battery: clamshell sleep
+ * is not an idle assertion and no flag reaches it. Leave the lid open, or run
+ * the morning on AC, and the pipeline keeps the machine up on its own.
  */
 function wrapper() {
   return `#!/bin/sh
@@ -159,7 +183,11 @@ else
   echo "slug store: could not fast-forward (local commits, or offline) — sweeping with what is on disk"
 fi
 
-exec "${process.execPath}" "${join(ROOT, 'src', 'daily.mjs')}" --quiet --skip-sync
+# caffeinate holds the machine awake for exactly as long as the pipeline runs.
+# A sweep is mostly waiting on the network, which macOS reads as idle, and a
+# suspended run still finishes — hours late, into the next day's slot, which
+# launchd then skips because this label is already running.
+exec /usr/bin/caffeinate -i -m -s "${process.execPath}" "${join(ROOT, 'src', 'daily.mjs')}" --quiet --skip-sync
 `;
 }
 
