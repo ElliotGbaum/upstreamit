@@ -17,27 +17,19 @@
  *
  * Loaded lazily so a broken or half-written adapter can't take down a sweep of
  * a different ATS.
+ *
+ * Only adapters that exist are registered. This list once named eighteen ATSes
+ * — every one worth an adapter someday — and the fourteen unwritten ones made
+ * `--ats=smartrecruiters` print "Known: … smartrecruiters …" in the same
+ * breath as failing to load it. Adding an ATS is the module plus one line
+ * here; the wish-list lives in docs/pipeline.md, not in code that claims it.
  */
 
 const MODULES = {
   ashby: () => import('./ashby.mjs'),
   greenhouse: () => import('./greenhouse.mjs'),
   lever: () => import('./lever.mjs'),
-  smartrecruiters: () => import('./smartrecruiters.mjs'),
-  workable: () => import('./workable.mjs'),
-  recruitee: () => import('./recruitee.mjs'),
-  breezy: () => import('./breezy.mjs'),
-  pinpoint: () => import('./pinpoint.mjs'),
-  rippling: () => import('./rippling.mjs'),
-  jazzhr: () => import('./jazzhr.mjs'),
-  teamtailor: () => import('./teamtailor.mjs'),
-  personio: () => import('./personio.mjs'),
   workday: () => import('./workday.mjs'),
-  bamboohr: () => import('./bamboohr.mjs'),
-  jobvite: () => import('./jobvite.mjs'),
-  paylocity: () => import('./paylocity.mjs'),
-  polymer: () => import('./polymer.mjs'),
-  dover: () => import('./dover.mjs'),
 };
 
 const cache = new Map();
@@ -55,15 +47,6 @@ export async function loadAdapter(ats) {
     cache.set(ats, null);
     return null;
   }
-}
-
-/** Adapter ids that actually resolve right now. */
-export async function availableAdapters() {
-  const out = [];
-  for (const key of Object.keys(MODULES)) {
-    if (await loadAdapter(key)) out.push(key);
-  }
-  return out;
 }
 
 export const ADAPTER_IDS = Object.keys(MODULES);
