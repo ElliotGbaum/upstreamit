@@ -194,12 +194,16 @@ The script is fully non-interactive and does five things:
 1. `VACUUM INTO` a compact copy at `data/jobs-deploy.db`. The working `data/jobs.db`
    is never modified or write-locked.
 2. `gzip -1` it (roughly a quarter of the size: 10 GB → 2.6 GB on 2026-08-27).
-3. `fly sftp put` the archive to `/data/jobs.db.new.gz` on the volume — *beside* the
-   live database, which keeps serving — and check its sha256 against the local copy.
+3. `fly sftp put` the archive to `/data/jobs.db.staging.gz` on the volume — *beside*
+   the live database, which keeps serving — and check its sha256 against the local
+   copy.
 4. Unpack it there and verify it with `deploy/verify-db.mjs` (uploaded alongside, since
    the image has no `sqlite3`): `PRAGMA quick_check`, a full-text query that must
    return hits, and the byte size and open-job count must equal the local copy's.
-   Anything off and the new file is deleted; the live site never sees it.
+   Anything off and the staging file is deleted; the live site never sees it. Only a
+   copy that passed all three checks is renamed to `/data/jobs.db.new` — the name the
+   entrypoint trusts — so an upload that dies half way can never leave a file a later
+   boot would swap in.
 5. `fly apps restart`. The swap itself happens in `deploy/entrypoint.sh` at boot,
    when nothing has the old file open: it deletes `jobs.db` and its write-ahead log
    and renames `jobs.db.new` into place. The site is down for the restart only.
@@ -215,8 +219,10 @@ that is easy to miss: the server keeps the database in WAL mode, so `jobs.db-wal
 holds pages that belong to the *old* file, and SQLite would replay them into
 whichever file is called `jobs.db` when it next opens it. The entrypoint deletes the
 log together with the file it belongs to. Because the swap lives in the image, the
-script first checks that the deployed entrypoint knows about `jobs.db.new` and refuses
-to start the upload if the image predates it — push `main` (or `fly deploy`) first.
+script first checks whether the deployed entrypoint knows about `jobs.db.new`. On an
+image from before the swap it still uploads and verifies everything — it just skips
+the restart and leaves the verified file waiting on the volume, where the next deploy
+(which boots the new entrypoint) swaps it in.
 
 The three checks exist because both ways an upload fails leave a file that looks
 fine: `fly sftp put` has cut a transfer short without saying so, and
@@ -227,10 +233,11 @@ The script finishes with `fly apps restart` and prints the last few log lines. I
 has to be done by hand instead, the equivalent is:
 
 ```
-fly sftp put data/jobs-deploy.db.gz /data/jobs.db.new.gz
+fly sftp put data/jobs-deploy.db.gz /data/jobs.db.staging.gz
 fly sftp put deploy/verify-db.mjs /data/verify-db.mjs
-fly ssh console -C "gzip -d /data/jobs.db.new.gz"
-fly ssh console -C "node /data/verify-db.mjs /data/jobs.db.new"   # must print "quick_check":"ok"
+fly ssh console -C "gzip -d /data/jobs.db.staging.gz"
+fly ssh console -C "node /data/verify-db.mjs /data/jobs.db.staging"   # must print "quick_check":"ok"
+fly ssh console -C "mv /data/jobs.db.staging /data/jobs.db.new"       # only after it did
 fly apps restart
 fly logs
 ```

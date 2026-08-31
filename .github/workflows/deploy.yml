@@ -5,13 +5,14 @@
 # hours ahead of GitHub while the repo sat on stale code. Now the push is the
 # deploy.
 #
-# **The paths filter is the interesting part.** `daily.yml` commits a slug
-# refresh to main every single morning, and `data/` is in `.dockerignore` — it
-# never reaches the image. Deploying on *every* push would therefore rebuild and
-# restart the machine daily to ship a byte-identical container. So this lists
-# what the Dockerfile actually copies, plus the two files that describe the
-# machine itself, and ignores everything else. Adding a `COPY` to the Dockerfile
-# means adding its source here too.
+# **The paths filter is the interesting part.** The bot's daily slug commits
+# could never trigger this — GitHub creates no workflow runs from pushes made
+# with the workflow's own GITHUB_TOKEN — so the filter is for human pushes:
+# a README, docs or notes change should not rebuild and restart the machine to
+# ship a byte-identical container. It lists what the Dockerfile actually
+# copies, plus the two files that describe the machine itself, and ignores
+# everything else. Adding a `COPY` to the Dockerfile means adding its source
+# here too.
 #
 # The database is not part of a deploy and never has been. It lives on the
 # volume at /data and is uploaded by hand with ./deploy/upload-db.sh; a deploy

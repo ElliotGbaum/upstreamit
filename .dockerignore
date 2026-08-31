@@ -14,8 +14,9 @@ node_modules/
 *.MD
 *.md
 
-# Tests and the CLI-only entrypoints. The server imports src/lib/, src/find.mjs
-# and src/server.mjs; the sweep and sync tools run on a laptop, not in here.
+# The tests. The sweep and sync entrypoints do ship (COPY src/ takes the whole
+# directory) — they are inert in the container, and excluding them one by one
+# buys nothing but a list to forget to maintain.
 src/*-test.mjs
 
 # Secrets. On Fly the key arrives as a real environment variable (`fly secrets

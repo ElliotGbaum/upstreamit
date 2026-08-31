@@ -71,10 +71,10 @@ So each now does the half it is actually good at, and the rule that keeps them f
 | Owns | `data/slugs/` and `data/sync-report.md` | `data/jobs.db` |
 | Runs | `node src/sync-slugs.mjs`, then commits the slug store as `job-finder-bot` and pushes | `git pull --ff-only`, then `node src/daily.mjs --quiet --skip-sync` |
 | When | `15 8 * * *` — 08:15 UTC year-round; GitHub's cron has no timezone field, so it drifts relative to local time across daylight saving | 08:15 local (`--at`) |
-| Needs a database | no — `sync-slugs.mjs` only reads upstream company lists and writes JSON, so there is no cache step and nothing to restore | yes; this is the only process that maintains it |
+| Needs a database | no — `sync-slugs.mjs` only reads upstream company lists and writes JSON. The one thing carried between runs is `data/sync-state.json`, restored by the `Restore the sync bookmarks` cache step (keyed `sync-state-`, rewritten every run) | yes; this is the only process that maintains it |
 | Runs when the laptop is asleep | yes — and it has a reliable network | no — missed runs are dropped, not queued |
 | Setup | commit and push the workflow; needs a GitHub repository | `npm run schedule -- --install`, one command, no account |
-| Budget | `timeout-minutes: 20`; a few dozen HTTP gets and a handful of JSON writes, seconds rather than the 11+ minutes the full pipeline cost | the full sweep; hours, see the run table above |
+| Budget | `timeout-minutes: 30`; a few dozen conditional gets plus a few minutes of paging against the archive index servers, which answer slowly and retry on 503 | the full sweep; hours, see the run table above |
 | Also | uploads `data/sync-report.md` as a workflow artifact, kept 30 days; `workflow_dispatch` for a manual run | logs to `data/daily.log`; `RunAtLoad` is false; `ProcessType Background`, `LowPriorityIO` |
 
 Turning the sync back on locally, or the sweep back on in CI, re-creates the conflict.
@@ -91,7 +91,7 @@ Slug stores are small and worth keeping in git — they are the part that accumu
 
 `.github/workflows/deploy.yml` deploys to Fly on every push to `main` that changes something the image ships. Before it existed, `git push` and `fly deploy` were two separate things to remember, and forgetting the second is how the live site ended up two hours ahead of GitHub while the repository sat on stale code. Now the push is the deploy.
 
-The paths filter is the interesting part. `daily.yml` commits a slug refresh to `main` every morning, and `data/` is in `.dockerignore` — it never reaches the image. Deploying on *every* push would therefore rebuild and restart the machine daily to ship a byte-identical container. So the workflow lists what the Dockerfile actually copies (`src/**`, `app/**`, `profiles/**`, `deploy/**`, `package.json`, `package-lock.json`, `Dockerfile`, `.dockerignore`) plus the two files that describe the machine (`fly.toml`, the workflow itself), and ignores everything else. Adding a `COPY` to the Dockerfile means adding its source here too.
+The paths filter is the interesting part. Not because of the bot — its daily slug commits are pushed with the workflow's own `GITHUB_TOKEN`, and GitHub creates no workflow runs from those, so they could never deploy — but because a README, docs or notes push should not rebuild and restart the machine to ship a byte-identical container. The workflow lists what the Dockerfile actually copies (`src/**`, `app/**`, `profiles/**`, `deploy/**`, `package.json`, `package-lock.json`, `Dockerfile`, `.dockerignore`) plus the two files that describe the machine (`fly.toml`, the workflow itself), and ignores everything else. Adding a `COPY` to the Dockerfile means adding its source here too.
 
 The steps are checkout, Node 24, `npm ci`, **`npm test`**, then `flyctl deploy --remote-only` with `FLY_API_TOKEN` from the repository secrets. The test run is the gate: every test is self-contained — no network, no API key, no `jobs.db` — so it costs about a minute and is the only thing standing between a bad commit and the public URL. `--remote-only` builds on Fly's builder rather than needing Docker on the runner; the context is ~5 MB after `.dockerignore`, so the upload is trivial.
 
