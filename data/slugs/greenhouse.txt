@@ -2390,6 +2390,7 @@ calif
 californiaacademyofsciences
 californiaassociationoffoodbanks
 californiaautismcenter
+californiainstituteofartsandtechnology
 californiapsychics
 caliva
 callibrity
@@ -4847,6 +4848,7 @@ fareharbor
 farelinc
 farmersbusinessnetwork
 farmersfridge
+farmersmutualhailinsurancecompany
 farmsanctuary
 farmsave
 farmstead
@@ -5800,7 +5802,6 @@ goop
 goose
 gooten
 gooutdoors
-goprocareers
 gorascal
 goremutualinsurance
 gorjana
@@ -6635,6 +6636,7 @@ illinoistech
 illinoistitleloansinc
 illumio
 iloanbyspringleaf
+iluminere
 imafinancialgroup
 imagendarystudios
 imagentechnologies
@@ -7722,6 +7724,7 @@ letgo
 letmeplay
 letote
 letsgetchecked
+lettrlabs
 lev
 levanta
 level
@@ -8734,6 +8737,7 @@ monad
 monarchtractors
 mondayvc
 mondo
+monecoadvisors
 monetizemore
 monetserviceinc
 moneyherogroup
@@ -9378,6 +9382,7 @@ nowaday
 nowsta
 nowthis
 noxgroup
+noxinnovations
 noyocareers
 nozominetworks
 nscaleoperationsukltd
@@ -10122,6 +10127,7 @@ patientpop
 patientslikeme
 patreon
 patriotenvironmental
+patronusaiinc
 pattern89
 patternbioscience
 patterncareers
@@ -11115,6 +11121,7 @@ recurrency
 recurrent
 recurrentmotors
 recursionpharmaceuticals
+recycleye
 red
 redapt
 redbadger
@@ -11759,6 +11766,7 @@ sconley
 scootscience
 scope3pbc
 scopely
+scorability
 scoremediaandgaminginc
 scorewarrior
 scorpionenterprisesllc
@@ -13411,6 +13419,7 @@ thelearningexperienceuk
 thelearningvine
 thelibragroup
 theloomaproject
+theloomisagency
 themacleangroup
 themanual
 themany
@@ -14082,7 +14091,6 @@ unqork
 unrealsnacks
 unspoiledexploitdismantle
 unstoppabledomains
-unsupervisedai
 untapped
 untuckit
 unybrands
@@ -14388,6 +14396,7 @@ vgw-canada
 vgw-eu
 vhsys
 via
+via99
 viaduct
 viagogo
 vialogic
@@ -15184,6 +15193,7 @@ zinnia
 zinniacanada
 zinniaintern
 zinnov
+ziosk
 zip
 zipcolimited
 zipgeneralapplicants
