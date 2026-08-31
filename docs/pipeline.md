@@ -112,11 +112,10 @@ Measured mid-August 2026, before the sweep was extended past Ashby:
 | **greenhouse** | **15,197** | **8,272** (54.4%) | yes |
 | **lever** | **8,721** | **2,611** (29.9%) | yes |
 | **workday** | 12,884 (6,834 distinct boards; see the repair note below) | **5,747** (84.1% of the distinct boards; verified 2026-08-26) | yes, since 2026-08-27 |
-| bamboohr | 11,316 | not yet probed | — |
-| paylocity | 10,252 | not yet probed | — |
-| icims | 10,106 | not yet probed | — |
 
-On 2026-08-24 the live lists held 4,355 Ashby, 8,299 Greenhouse and 2,611 Lever slugs (`data/slugs/<ats>-live.txt`); the four unprobed ATSes were unchanged. Workday identifiers are `tenant|wdN|site` triples rather than one slug, so they keep the pipes and are not yet directly comparable across sources.
+On 2026-08-24 the live lists held 4,355 Ashby, 8,299 Greenhouse and 2,611 Lever slugs (`data/slugs/<ats>-live.txt`). Workday identifiers are `tenant|wdN|site` triples rather than one slug, so they keep the pipes and are not yet directly comparable across sources.
+
+Bamboohr, icims and paylocity slugs (roughly 10,000 each) used to be collected from Feashliaa too, and were dropped in August 2026: no adapter can sweep them, nothing read the three stores, and their daily `last_seen` churn was 40% of every bot commit. The lists are one `sources.json` entry away if an adapter ever lands — that entry, plus the adapter module, plus a registry line in `src/lib/adapters/index.mjs`, is what adding an ATS costs.
 
 ## Sweep
 

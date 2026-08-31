@@ -152,16 +152,13 @@
       "branch": "main",
       "license": "MIT",
       "upstreamSchedule": "none for slug lists — regenerated manually every 1-2 months (ashby list last touched 2026-06-16). The repo's daily 07:33 UTC cron only refreshes job data and trend snapshots, NOT these company lists.",
-      "notes": "Biggest single dump of slugs by volume, and the only source here covering bamboohr / icims / paylocity. Flat JSON arrays of strings. Workday entries are pipe-encoded tenant|wdN|site triples.",
+      "notes": "Biggest single dump of slugs by volume. Flat JSON arrays of strings. Workday entries are pipe-encoded tenant|wdN|site triples. Its bamboohr / icims / paylocity lists are not collected: no adapter can sweep those ATSes, and the three stores they fed were 40% of every daily bot commit for data nothing read.",
       "enabled": true,
       "files": [
         { "path": "data/ashby_companies.json", "ats": "ashby", "format": "json-array" },
         { "path": "data/greenhouse_companies.json", "ats": "greenhouse", "format": "json-array" },
         { "path": "data/lever_companies.json", "ats": "lever", "format": "json-array" },
-        { "path": "data/workday_companies.json", "ats": "workday", "format": "json-array" },
-        { "path": "data/bamboohr_companies.json", "ats": "bamboohr", "format": "json-array" },
-        { "path": "data/icims_companies.json", "ats": "icims", "format": "json-array" },
-        { "path": "data/paylocity_companies_clean.json", "ats": "paylocity", "format": "json-objects", "slugKey": "guid" }
+        { "path": "data/workday_companies.json", "ats": "workday", "format": "json-array" }
       ]
     },
     {
