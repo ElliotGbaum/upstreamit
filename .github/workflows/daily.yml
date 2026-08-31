@@ -20,8 +20,8 @@
 # of src/schedule.mjs.
 #
 # No database is needed here at all — `sync-slugs.mjs` only reads upstream
-# company lists and writes JSON — so there is no cache step and nothing to
-# restore.
+# company lists and writes JSON. The one thing worth carrying between runs is
+# `data/sync-state.json`; see the cache step for why.
 name: daily
 
 on:
@@ -35,15 +35,36 @@ permissions:
 jobs:
   slugs:
     runs-on: ubuntu-latest
-    # Minutes, not the 90 the full pipeline needed. This is a few dozen HTTP
-    # gets against raw.githubusercontent.com and a handful of JSON writes.
-    timeout-minutes: 20
+    # Minutes, not the 90 the full pipeline needed. Most of it is a few dozen
+    # conditional gets against raw.githubusercontent.com; the archive sources
+    # add a few minutes of paging against two index servers that answer slowly
+    # and retry on a 503. A timeout here kills the run before the commit step,
+    # so the slug store would go unwritten for the day — hence the headroom.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+
+      # `data/sync-state.json` is gitignored runtime state, which on a laptop
+      # simply persists. A runner starts from a fresh checkout every morning, so
+      # without this it starts blind: every ETag re-downloaded, every Common
+      # Crawl index re-read, and the Wayback window measured from the seed date
+      # instead of yesterday. None of that is wrong — the slugs dedupe — but it
+      # is minutes of work and load on other people's servers for nothing.
+      #
+      # The key carries the run id so it never hits and the cache is therefore
+      # rewritten every run; `restore-keys` matches the prefix and restores the
+      # newest one. Losing it is safe by design: sync-slugs treats a missing
+      # validator as a first run, and the archives floor their own lookback.
+      - name: Restore the sync bookmarks
+        uses: actions/cache@v4
+        with:
+          path: data/sync-state.json
+          key: sync-state-${{ github.run_id }}
+          restore-keys: sync-state-
 
       - name: Sync the slug store
         run: node src/sync-slugs.mjs
