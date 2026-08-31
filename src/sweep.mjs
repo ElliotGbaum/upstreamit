@@ -223,7 +223,7 @@ async function main() {
 
   const totals = {
     boards: 0, live: 0, empty: 0, dead: 0, errors: 0,
-    jobs: 0, added: 0, changed: 0, closed: 0, bytes: 0, unchanged: 0,
+    jobs: 0, added: 0, changed: 0, closed: 0, bytes: 0, unchanged: 0, dropped: 0,
   };
 
   // Results queue drained into SQLite in batches; the network is the bottleneck
@@ -233,21 +233,32 @@ async function main() {
     if (!pending.length) return;
     const batch = pending;
     pending = [];
-    transact(db, () => {
-      for (const item of batch) {
-        if (item.kind === 'board') {
-          const stats = upsertBoard(db, item.board, startedAt);
-          totals.jobs += stats.seen;
-          totals.added += stats.added;
-          totals.changed += stats.changed;
-          totals.closed += stats.closed;
-        } else if (item.kind === 'unchanged') {
-          touchBoard(db, args.ats, item.slug, startedAt);
-        } else {
-          markBoard(db, args.ats, item.slug, item.status, startedAt);
+    try {
+      transact(db, () => {
+        for (const item of batch) {
+          if (item.kind === 'board') {
+            const stats = upsertBoard(db, item.board, startedAt);
+            totals.jobs += stats.seen;
+            totals.added += stats.added;
+            totals.changed += stats.changed;
+            totals.closed += stats.closed;
+          } else if (item.kind === 'unchanged') {
+            touchBoard(db, args.ats, item.slug, startedAt);
+          } else {
+            markBoard(db, args.ats, item.slug, item.status, startedAt);
+          }
         }
-      }
-    });
+      });
+    } catch (err) {
+      // transact rolled back, so nothing in the batch landed — and the batch
+      // was detached from `pending` before the write, so without this it would
+      // simply vanish: the worker's try/catch covers only fetchBoard, and pool
+      // converts an escaped throw into a value nobody reads. Real ways here:
+      // SQLITE_BUSY outlasting the 30 s busy_timeout, a malformed job tripping
+      // a NOT NULL. Count it and say so; the boards are re-swept tomorrow.
+      totals.dropped += batch.length;
+      console.error(`  ! flush failed — ${batch.length} boards' results dropped: ${err?.message ?? err}`);
+    }
   };
 
   await pool(slugs, concurrency, async (slug) => {
@@ -344,7 +355,8 @@ async function main() {
   logEvent(
     `sweep ${args.ats} done: ${totals.jobs.toLocaleString()} jobs · ${totals.added.toLocaleString()} new · ` +
       `${totals.closed.toLocaleString()} closed · ${totals.unchanged.toLocaleString()} unchanged (304) · ` +
-      `${totals.dead} dead boards · ${totals.errors} errors · ${(totals.bytes / 1e6).toFixed(0)} MB`,
+      `${totals.dead} dead boards · ${totals.errors} errors · ${(totals.bytes / 1e6).toFixed(0)} MB` +
+      (totals.dropped ? ` · ${totals.dropped} boards dropped in failed flushes` : ''),
   );
 
   console.log(
