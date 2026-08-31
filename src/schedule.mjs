@@ -35,8 +35,16 @@
  *                    GitHub found this morning rather than last week's.
  *
  * The rule that keeps them from fighting: **exactly one writer per file.**
- * GitHub owns `data/slugs/`; the laptop owns `data/jobs.db`. Turning the sync
- * back on locally, or the sweep back on in CI, re-creates the conflict.
+ * At file granularity, not directory granularity: GitHub owns the slug stores
+ * — `data/slugs/<ats>.json` and `<ats>.txt` — plus `data/sync-report.md`. The
+ * laptop owns `data/jobs.db` *and* the probe output that sits beside the
+ * stores, `<ats>-verified.json` and `<ats>-live.txt`, which its verify stages
+ * rewrite most mornings. That is why the workflow's commit step adds the
+ * stores by pattern rather than the whole directory, and why this checkout
+ * usually shows the probe files as modified: they are committed by hand when
+ * a probe is worth keeping (the Workday backfill was), by neither runner.
+ * Turning the sync back on locally, or the sweep back on in CI, re-creates
+ * the conflict.
  *
  * `launchd` misses runs when the machine is asleep rather than queueing them.
  * That is the right behaviour here: the sweep is a full refresh, not an
@@ -180,7 +188,7 @@ echo "=== daily $(date '+%Y-%m-%d %H:%M:%S') ==="
 if /usr/bin/git pull --ff-only --quiet 2>&1; then
   echo "slug store: up to date with origin"
 else
-  echo "slug store: could not fast-forward (local commits, or offline) — sweeping with what is on disk"
+  echo "slug store: could not fast-forward (local commits, uncommitted probe output, or offline) — sweeping with what is on disk. git's own message above names the cause."
 fi
 
 # caffeinate holds the machine awake for exactly as long as the pipeline runs.
@@ -211,9 +219,12 @@ function workflow({ hour, minute }) {
 # syncing the same slugs to a different answer and fighting this one for the
 # file every morning.
 #
-# So: this owns \`data/slugs/\`, and the laptop's launchd job runs with
-# \`--skip-sync\` and owns \`data/jobs.db\`. One writer per file. See the header
-# of src/schedule.mjs.
+# So: this owns the slug stores — \`data/slugs/<ats>.json\` / \`<ats>.txt\` —
+# and \`data/sync-report.md\`. The laptop's launchd job runs with \`--skip-sync\`
+# and owns \`data/jobs.db\` plus the probe output beside the stores
+# (\`*-verified.json\`, \`*-live.txt\`). One writer per file, and the commit
+# step below adds exactly the files this job writes. See the header of
+# src/schedule.mjs.
 #
 # No database is needed here at all — \`sync-slugs.mjs\` only reads upstream
 # company lists and writes JSON. The one thing worth carrying between runs is
@@ -282,7 +293,13 @@ jobs:
         run: |
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
-          git add data/slugs data/sync-report.md || true
+          # By pattern, not the directory: \`*-verified.json\` and \`*-live.txt\`
+          # are the laptop's probe output, which this run never writes. A
+          # directory-wide add would sweep them in the day one is committed
+          # from another machine, and the laptop's morning pull would then
+          # refuse to fast-forward past its own dirty copies.
+          git add data/sync-report.md || true
+          git add data/slugs ':(exclude)data/slugs/*-verified.json' ':(exclude)data/slugs/*-live.txt' || true
           if git diff --staged --quiet; then
             echo "slug store unchanged — nothing to commit"
             exit 0

@@ -15,9 +15,12 @@
 # syncing the same slugs to a different answer and fighting this one for the
 # file every morning.
 #
-# So: this owns `data/slugs/`, and the laptop's launchd job runs with
-# `--skip-sync` and owns `data/jobs.db`. One writer per file. See the header
-# of src/schedule.mjs.
+# So: this owns the slug stores — `data/slugs/<ats>.json` / `<ats>.txt` —
+# and `data/sync-report.md`. The laptop's launchd job runs with `--skip-sync`
+# and owns `data/jobs.db` plus the probe output beside the stores
+# (`*-verified.json`, `*-live.txt`). One writer per file, and the commit
+# step below adds exactly the files this job writes. See the header of
+# src/schedule.mjs.
 #
 # No database is needed here at all — `sync-slugs.mjs` only reads upstream
 # company lists and writes JSON. The one thing worth carrying between runs is
@@ -86,7 +89,13 @@ jobs:
         run: |
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
-          git add data/slugs data/sync-report.md || true
+          # By pattern, not the directory: `*-verified.json` and `*-live.txt`
+          # are the laptop's probe output, which this run never writes. A
+          # directory-wide add would sweep them in the day one is committed
+          # from another machine, and the laptop's morning pull would then
+          # refuse to fast-forward past its own dirty copies.
+          git add data/sync-report.md || true
+          git add data/slugs ':(exclude)data/slugs/*-verified.json' ':(exclude)data/slugs/*-live.txt' || true
           if git diff --staged --quiet; then
             echo "slug store unchanged — nothing to commit"
             exit 0
