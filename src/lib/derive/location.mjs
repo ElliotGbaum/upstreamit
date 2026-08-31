@@ -16,6 +16,9 @@
  * metro rather than a guess — it lands in the unmatched report instead, where
  * it can be turned into a real alias. Silent wrong answers are worse than
  * visible gaps in a filter people trust to not hide jobs.
+ *
+ * The title is read last, and only when the location fields named no country
+ * at all. See `placeInTitle` for why it is read so much more strictly.
  */
 
 import { fold, slugify } from './text.mjs';
@@ -547,10 +550,133 @@ function isPlausibleCity(part) {
 }
 
 /**
+ * A place named in the title, read only when the location fields named none.
+ *
+ * `Enterprise Sales Representative – Saudi Arabia` was posted with the
+ * location `Remote`. Nothing in the location fields placed it, so it carried
+ * no country — and a job with no country is *unknown* to a New York search,
+ * offered rather than hidden, because no filter excludes on a blank field.
+ * The title said where it was the whole time. Measured on 60,000 open jobs
+ * the location fields could not place, one title in 23 names a place the
+ * tables recognise.
+ *
+ * A title is prose, not a location field, so this reads it far more strictly
+ * than `parseFragment` reads a fragment:
+ *
+ *  - Only what the tables already know: a country by name, a supranational
+ *    region, a state or province by name, a city in the metro table. Nothing
+ *    is minted. `Product Manager - Growth` must not become a `growth` metro
+ *    that answers a confident *no* to every metro search.
+ *  - A bare two-letter code is never a place on its own. `Senior Network
+ *    Engineer, IT` is not in Italy, `Physical Therapist, PT` is not in
+ *    Portugal, and `PE`, `MD`, `AR`, `QC` are job words before they are
+ *    provinces. The exceptions are `US`, `UK` and `EU`, which a title uses as
+ *    a place (`Remote US`) and for nothing else.
+ *  - A code does count in the `City, ST` shape — `Indianapolis, IN`, `Tulsa,
+ *    OK`, `Ottawa, ON`: after a comma, a state or province, and something
+ *    before it that could be a city. Measured across the corpus that shape
+ *    is a real place all but a few dozen times in five thousand. It yields
+ *    the state's country, and a metro only if the table knows the city
+ *    under that qualifier — `Portland, ME` is still not Portland, Oregon.
+ *  - `resolveGlued` and `resolveEmbedded` are not consulted. They exist to
+ *    read office codes, and on prose they read `Sign On Bonus` as Ontario
+ *    and the French `de` as Delaware.
+ *
+ * The parentheticals and the dash-separated pieces of the title are each
+ * read as a segment, because that is where a title puts a place. Within a
+ * segment only a comma joins a city to its qualifier: `MD/DO`, `LC/MS` and
+ * `Kältetechniker:in` all put a code after a separator, and none is a place.
+ */
+const TITLE_DASHES = /\s+-\s*|\s*-\s+/;
+const TITLE_PARENS = /\(([^()]*)\)/g;
+const TITLE_CLAUSES = /\s*(?:\||\/|;|>|:|·|•|•|\bor\b|\band\b|\+)\s*/;
+/** Short tokens a title uses as a place and for nothing else. */
+const BARE_PLACE_CODES = new Set(['us', 'uk', 'eu']);
+/**
+ * A code that follows a comma in a title without being a province. Measured:
+ * `, PE` closes `Structural Engineer, PE` — a licensed engineer — forty times
+ * for every once it is Prince Edward Island. `, QC` is mostly Quebec and stays.
+ */
+const TITLE_NOT_A_QUALIFIER = new Set(['pe']);
+
+export function placeInTitle(title) {
+  const out = { metros: new Set(), countries: new Set(), supra: new Set(), cities: [] };
+  let text = fold(title);
+  if (!text) return out;
+  const segments = [];
+  text = text.replace(TITLE_PARENS, (_, inner) => { segments.push(inner); return ' '; });
+  segments.push(text);
+  for (const segment of segments) {
+    for (const piece of segment.split(TITLE_DASHES)) readTitleSegment(piece, out);
+  }
+  return out;
+}
+
+function readTitleSegment(segment, out) {
+  const text = segment
+    .replace(new RegExp(REMOTE_RE.source, 'g'), ' ')
+    .replace(DECORATORS, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return;
+  const addMetro = (metro, city) => {
+    out.metros.add(metro);
+    out.cities.push({ city, metro, minted: false });
+    const country = METRO_BY_ID.get(metro)?.country;
+    if (country) out.countries.add(country);
+  };
+  for (const clause of text.split(TITLE_CLAUSES)) {
+    const parts = clause.split(/\s*,\s*/).map(cleanComponent).filter(Boolean);
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const short = part.length <= 2;
+      const country = COUNTRIES[part];
+      // City-states fall through to the city pass, as in `parseFragment`.
+      if (country && !CITY_TO_METRO.has(part)) {
+        if (!short || BARE_PLACE_CODES.has(part)) out.countries.add(country);
+        continue;
+      }
+      if (SUPRANATIONAL.has(part)) {
+        if (!short || BARE_PLACE_CODES.has(part)) out.supra.add(part);
+        continue;
+      }
+      if (short) continue;
+      // A city, known or merely plausible, with its qualifier after the comma.
+      // This is read before the state-name pass because `New Brunswick, NJ`
+      // is a city in New Jersey, not a province. The qualifier is not
+      // consumed: it adds its own country on the next pass, and a city-state
+      // (`Sales Lead, Hong Kong`) keeps its metro.
+      const q = i + 1 < parts.length && !TITLE_NOT_A_QUALIFIER.has(parts[i + 1])
+        ? readQualifier(parts[i + 1]) : null;
+      if (q && (q.region || parts[i + 1].length > 2 || BARE_PLACE_CODES.has(parts[i + 1]))) {
+        if (CITY_TO_METRO.has(part) || isPlausibleCity(part)) {
+          // Depth 1: the table only, never the glued reading.
+          const hit = lookupQualified(part, q, 1);
+          if (hit) addMetro(hit.metro, part);
+          out.countries.add(q.region?.country ?? q.country);
+          continue;
+        }
+      }
+      const region = REGIONS.get(part);
+      if (region && !CITY_TO_METRO.has(part)) {
+        out.countries.add(region.country);
+        continue;
+      }
+      const metro = CITY_TO_METRO.get(part);
+      if (metro) {
+        addMetro(metro, part);
+        if (country) out.countries.add(country);
+      }
+    }
+  }
+}
+
+/**
  * Resolve every location signal on a job into canonical sets.
  *
  * @param {object} job  needs `locations_all` (array or JSON string), `location_raw`,
- *                      and the structured `city` / `region` / `country` columns.
+ *                      the structured `city` / `region` / `country` columns, and
+ *                      `title`, which is read only when the rest named no country.
  */
 export function deriveLocation(job) {
   const fragments = [];
@@ -582,6 +708,15 @@ export function deriveLocation(job) {
     cities.push(...parsed.cities);
     unmatched.push(...parsed.unmatched);
     remote = remote || parsed.remote;
+  }
+
+  // The title, only when nothing above named a country. See `placeInTitle`.
+  if (!countries.size) {
+    const titled = placeInTitle(job.title);
+    titled.metros.forEach((m) => metros.add(m));
+    titled.countries.forEach((c) => countries.add(c));
+    titled.supra.forEach((s) => supra.add(s));
+    cities.push(...titled.cities);
   }
 
   return {

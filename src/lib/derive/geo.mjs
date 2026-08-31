@@ -44,6 +44,7 @@ export const COUNTRIES = {
   serbia: 'rs', ukraine: 'ua', moldova: 'md', belarus: 'by', russia: 'ru',
   turkey: 'tr', turkiye: 'tr', cyprus: 'cy', malta: 'mt', luxembourg: 'lu',
   israel: 'il', 'united arab emirates': 'ae', uae: 'ae', 'saudi arabia': 'sa',
+  saudi: 'sa', ksa: 'sa',
   qatar: 'qa', kuwait: 'kw', bahrain: 'bh', oman: 'om', jordan: 'jo', lebanon: 'lb',
   egypt: 'eg', morocco: 'ma', tunisia: 'tn', algeria: 'dz', nigeria: 'ng',
   kenya: 'ke', ghana: 'gh', 'south africa': 'za', ethiopia: 'et', uganda: 'ug',

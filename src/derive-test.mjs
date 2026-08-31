@@ -14,7 +14,7 @@
  * milliseconds and can be run before every re-derive.
  */
 
-import { parseFragment, deriveLocation } from './lib/derive/location.mjs';
+import { parseFragment, deriveLocation, placeInTitle } from './lib/derive/location.mjs';
 import { deriveWorkplace } from './lib/derive/workplace.mjs';
 import { deriveSalary } from './lib/derive/salary.mjs';
 import { extractYears, collapseYears, seniorityFromTitle } from './lib/derive/seniority.mjs';
@@ -84,6 +84,58 @@ check('street abbreviation not overblocked', metrosOf('St Louis, MO'), ['st-loui
 check('unions across all signals', deriveLocation({
   locations_all: '["Remote","Brooklyn, NY"]', location_raw: 'Remote', city: 'NYC', region: 'NY',
 }).metros, ['nyc']);
+
+// The title, read only when the location fields named no country. A posting
+// titled `… – Saudi Arabia` with the location `Remote` carried no country and
+// so was offered to a New York search as an unknown.
+const titleCountries = (t) => [...placeInTitle(t).countries].sort();
+const titleMetros = (t) => [...placeInTitle(t).metros].sort();
+check('title: country after a dash', titleCountries('Enterprise Sales Representative – Saudi Arabia'), ['sa']);
+check('title: country in a parenthetical', titleCountries('Business Development Representative - MENA (Saudi Arabia)'), ['sa']);
+check('title: unknown city, known country', titleCountries('Sports Data Collector (Football) - Abha, Saudi Arabia'), ['sa']);
+check('title: unknown city is not minted', titleMetros('Sports Data Collector (Football) - Abha, Saudi Arabia'), []);
+check('title: known city', titleMetros('Real Estate Associate - Los Angeles'), ['la']);
+check('title: known city carries its country', titleCountries('Structurer (Structured Products) - New York'), ['us']);
+check('title: two cities either side of "or"', titleMetros('Field Application Engineer – Smartcard (Munich OR Paris based)'), ['munich', 'paris']);
+check('title: City, ST gives the country', titleCountries('RTV Returns Inspector - Indianapolis, IN'), ['us']);
+check('title: City, ST for a province', titleCountries('Applied AI Sr. Web Developer - Ottawa, ON'), ['ca']);
+check('title: City, ST keeps the guard', titleMetros('District Sales Manager - Portland, ME'), []);
+check('title: city-state keeps its metro', titleMetros('Sales Lead, Hong Kong'), ['hong-kong']);
+check('title: Remote US', titleCountries('Full Stack .Net - UI Focus - Remote US'), ['us']);
+check('title: state by name', titleCountries('Medical Science Liaison, Pennsylvania'), ['us']);
+check('title: province name before a state code is a city', titleCountries('Field Reimbursement Manager - New Brunswick, NJ'), ['us']);
+check('title: short spelling of Saudi Arabia', titleCountries('Brokerage Operations Manager - Saudi'), ['sa']);
+check('title: KSA', titleCountries('Account Manager - KSA'), ['sa']);
+check('title: City, UK keeps the guard', titleMetros('Software Engineer - Cambridge, UK'), []);
+check('title: City, UK gives the country', titleCountries('Software Engineer - Cambridge, UK'), ['gb']);
+// What a title must never yield. Each of these read as a place under the
+// fragment parser's looser rules.
+check('title: nothing is minted', titleMetros('Product Manager - Growth'), []);
+check('title: bare code is not a country', titleCountries('Senior Network Engineer, IT'), []);
+check('title: bare code after a comma is not a country', titleCountries('Physical Therapist, PT - Home Health'), []);
+check('title: bare code after a slash is not a place', titleCountries('MD/DO - Orthopedics'), []);
+check('title: bare code after a colon is not a place', titleCountries('Elektroniker: in Betriebstechnik'), []);
+check('title: PE and Dance is not Prince Edward Island', titleCountries('Part Time Faculty Interest Pool - PE and Dance'), []);
+check('title: a licensed engineer is not in Prince Edward Island', titleCountries('Sr. Mechanical Engineer, PE'), []);
+check('title: Sign On Bonus is not Ontario', titleCountries('RN Case Manager - FT - Days - $10K Sign on Bonus - MHP'), []);
+check('title: French de is not Delaware', titleCountries('CDD - Technicien de recherches en synthèse organique (F/H)'), []);
+check('title: nothing', titleCountries('Senior Software Engineer, Backend'), []);
+check('title: empty', titleCountries(''), []);
+check('title: missing', titleCountries(undefined), []);
+// And through `deriveLocation`: read when the fields said nothing, ignored
+// when they answered.
+check('title read when the location is only Remote', deriveLocation({
+  locations_all: '["Remote"]', location_raw: 'Remote', title: 'Enterprise Sales Representative – Saudi Arabia',
+}).countries, ['sa']);
+check('title read when the location is a phantom', deriveLocation({
+  locations_all: '["Statistician Network"]', title: 'Sports Data Collector (Football) - Abha, Saudi Arabia',
+}).countries, ['sa']);
+check('title ignored when the location answered', deriveLocation({
+  locations_all: '["New York, NY"]', title: 'Account Executive - Saudi Arabia',
+}).countries, ['us']);
+check('remote hint survives a title read', deriveLocation({
+  locations_all: '["Remote"]', title: 'Enterprise Sales Representative – Saudi Arabia',
+}).remoteHint, true);
 
 // Regression: "Dallas, TX" resolved but "Dallas TX" minted a phantom
 // `dallas-tx` metro — and a job whose only metro is the phantom answers a
