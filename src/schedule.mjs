@@ -91,7 +91,7 @@ function parseArgs(argv) {
   return args;
 }
 
-function plist({ hour, minute }) {
+export function plist({ hour, minute }) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -170,7 +170,7 @@ function plist({ hour, minute }) {
  * is not an idle assertion and no flag reaches it. Leave the lid open, or run
  * the morning on AC, and the pipeline keeps the machine up on its own.
  */
-function wrapper() {
+export function wrapper() {
   return `#!/bin/sh
 # Written by \`node src/schedule.mjs\` — edit that, not this.
 #
@@ -199,7 +199,7 @@ exec /usr/bin/caffeinate -i -m -s "${process.execPath}" "${join(ROOT, 'src', 'da
 `;
 }
 
-function workflow({ hour, minute }) {
+export function workflow({ hour, minute }) {
   // GitHub cron is UTC with no timezone support, so the comment has to say so
   // or the job silently drifts by an hour twice a year.
   return `# Daily slug refresh.
