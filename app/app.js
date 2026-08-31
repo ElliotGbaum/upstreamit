@@ -699,7 +699,7 @@ function render() {
   how.href = '/methodology';
   how.textContent = 'how this corpus is built';
   $('footer').replaceChildren(
-    `${fmt(meta?.open)} open jobs from ${fmt(meta?.boards_live)} live boards · ` +
+    `${fmt(meta?.open)} open jobs from ${fmt(meta?.boards_live)} companies · ` +
     `swept ${stamp(meta?.last_sweep)} · derived ${stamp(meta?.last_derive)} · ` +
     `filters read derived columns only, so improving a rule is a re-derive, never a re-sweep · `,
     how,
@@ -2152,7 +2152,7 @@ async function boot() {
   }
 
   $('corpus').textContent =
-    `${fmt(meta.open)} jobs · ${fmt(meta.boards_live)} live boards`;
+    `${fmt(meta.open)} jobs · ${fmt(meta.boards_live)} companies`;
 
   // The sort menu is generated from what the engine says it can sort by, not
   // from a list kept here — the same rule as the metro dropdown and the unknown
