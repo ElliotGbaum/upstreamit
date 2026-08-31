@@ -36,6 +36,14 @@ const DEFAULT_WAYBACK_LIMIT = 200_000;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DAY_MS = 86_400_000;
 
+// How far back Wayback may be asked to look when the bookmark is missing. The
+// CDX server's failure mode on a wide prefix is a 504 after a minute, and the
+// window is what decides whether we get one: a query that reaches back further
+// than this returns nothing at all, which is worse than a shorter one that
+// returns something. So a lost bookmark costs a bounded re-read rather than a
+// source that fails every morning until someone edits `since` by hand.
+const DEFAULT_MAX_LOOKBACK_DAYS = 90;
+
 /* -------------------------------------------------------------------------- */
 /* Pure helpers — the parts worth testing, kept free of fetch and of the clock  */
 /* -------------------------------------------------------------------------- */
@@ -140,6 +148,30 @@ export function toCdxDate(date) {
  */
 export function nextWaybackFrom(date) {
   return toCdxDate(new Date(date.getTime() - DAY_MS));
+}
+
+/**
+ * Where this run should start reading Wayback.
+ *
+ * The bookmark if we have one, the source's `since` seed if we do not, and in
+ * either case no further back than the lookback floor. Both inputs are plain
+ * YYYYMMDD, so the later of two dates is the greater string.
+ *
+ * The floor matters because the bookmark does not survive a GitHub Actions run
+ * on its own — `data/sync-state.json` is gitignored, and the cache that carries
+ * it between runs is best-effort. Without a floor, a lost bookmark means asking
+ * for every capture since the `since` seed, a window that widens by a day every
+ * day until the CDX server times out on it permanently.
+ */
+export function waybackFrom({
+  bookmark = null,
+  since = null,
+  maxLookbackDays = DEFAULT_MAX_LOOKBACK_DAYS,
+  now = new Date(),
+} = {}) {
+  const floor = toCdxDate(new Date(now.getTime() - maxLookbackDays * DAY_MS));
+  const requested = bookmark ?? since ?? null;
+  return requested && requested > floor ? requested : floor;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -293,7 +325,14 @@ export async function loadWayback({ source, file, validators = {} }) {
   const result = await fetchText(
     waybackUrl(urlPattern, {
       // `since` seeds the very first run; after that the bookmark takes over.
-      from: validators.from ?? file.since ?? null,
+      // Either way the window is floored, so a bookmark lost between runs costs
+      // a re-read of the last few months and not the whole archive.
+      from: waybackFrom({
+        bookmark: validators.from ?? null,
+        since: file.since ?? null,
+        maxLookbackDays: file.maxLookbackDays ?? source.maxLookbackDays ?? DEFAULT_MAX_LOOKBACK_DAYS,
+        now: startedAt,
+      }),
       limit: file.limit ?? source.limit ?? DEFAULT_WAYBACK_LIMIT,
     }),
     { timeoutMs: file.timeoutMs ?? 90_000 },

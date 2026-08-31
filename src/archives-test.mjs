@@ -17,6 +17,7 @@ import {
   parseWaybackRows,
   pickCrawls,
   toCdxDate,
+  waybackFrom,
   waybackUrl,
 } from './lib/archives.mjs';
 import { normalizeSlug } from './lib/normalize.mjs';
@@ -126,6 +127,28 @@ test('nextWaybackFrom rewinds a day so a same-day capture cannot fall in the gap
 
 test('nextWaybackFrom crosses a month boundary correctly', () => {
   assert.equal(nextWaybackFrom(new Date('2026-09-01T00:30:00Z')), '20260831');
+});
+
+const NOW = new Date('2026-09-01T12:00:00Z');
+
+test('waybackFrom prefers the bookmark over the seed', () => {
+  assert.equal(waybackFrom({ bookmark: '20260830', since: '20260811', now: NOW }), '20260830');
+});
+
+test('waybackFrom falls back to the seed when there is no bookmark', () => {
+  assert.equal(waybackFrom({ bookmark: null, since: '20260811', now: NOW }), '20260811');
+});
+
+test('waybackFrom floors a window the CDX server would time out on', () => {
+  // A bookmark lost a year ago, or a seed nobody has touched since: either way
+  // the query has to stay inside the lookback or it returns nothing at all.
+  assert.equal(waybackFrom({ bookmark: '20250101', now: NOW }), '20260603');
+  assert.equal(waybackFrom({ since: '20250101', now: NOW }), '20260603');
+});
+
+test('waybackFrom still bounds a run that has neither bookmark nor seed', () => {
+  assert.equal(waybackFrom({ now: NOW }), '20260603');
+  assert.equal(waybackFrom({ now: NOW, maxLookbackDays: 30 }), '20260802');
 });
 
 /*
