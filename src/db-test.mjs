@@ -148,6 +148,34 @@ try {
     check('hashJob: with no override, absent and empty hash alike', hashJob(bare), hashJob(job({ description_text: '' })));
   }
 
+  // ------------------------------------------------------ the derive stamp --
+  // A posting that moves overwrites the raw columns the derive pass reads, so
+  // the `d_*` columns beside them are stale. `derive.mjs --only-new` selects on
+  // `d_derived_at IS NULL`, so unless the edit clears the stamp the job keeps
+  // its first day's derivation forever — which is how a Chainalysis role that
+  // moved to Tokyo kept answering a New York search.
+  {
+    const stamp = () => db.prepare('SELECT d_derived_at FROM jobs WHERE id = ?').get(ID)?.d_derived_at;
+    const mark = () => db.prepare('UPDATE jobs SET d_derived_at = 1234 WHERE id = ?').run(ID);
+
+    mark();
+    upsertBoard(db, board([job()]), day(11));
+    check('derive stamp: an unchanged job keeps its derivation', stamp(), 1234);
+
+    // The adapter skipped the prose. Nothing moved, so nothing is re-derived.
+    const unread = job();
+    delete unread.description_text;
+    upsertBoard(db, board([unread]), day(12));
+    check('derive stamp: an unread description is not an edit', stamp(), 1234);
+
+    upsertBoard(db, board([job({ location_raw: 'Tokyo', locations_all: ['Tokyo'] })]), day(13));
+    check('derive stamp: a moved job is queued for re-derivation', stamp(), null);
+
+    // Back to New York, and stamped, so the blocks below start from a known job.
+    upsertBoard(db, board([job()]), day(14));
+    mark();
+  }
+
   // ------------------------------------------------------- the board name --
   {
     check('name: stated by the API', company(), { name: 'Acme', name_source: 'api' });

@@ -277,7 +277,17 @@ export function upsertBoard(db, board, now = Date.now()) {
       comp_currency     = excluded.comp_currency,
       comp_interval     = excluded.comp_interval,
       comp_text         = excluded.comp_text,
-      has_equity        = excluded.has_equity
+      has_equity        = excluded.has_equity,
+      -- An edited posting overwrites every column the derive pass reads, so the
+      -- d_* columns beside them are now answers to the old question. Clearing
+      -- the stamp is what puts the job back in front of derive.mjs --only-new,
+      -- whose whole selector is "d_derived_at IS NULL"; without this a job that
+      -- moves keeps its first day's derivation for the rest of its life. Found
+      -- on a Chainalysis role that moved Seoul to Tokyo and kept a country of
+      -- kr, and on its neighbour, which kept no metro at all and so answered
+      -- "not New York? cannot say" to a New York search.
+      d_derived_at      = CASE WHEN jobs.content_hash IS NOT excluded.content_hash
+                               THEN NULL ELSE jobs.d_derived_at END
   `);
 
   // Two statements, because an absent description and an empty one mean
