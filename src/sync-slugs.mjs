@@ -10,6 +10,9 @@
  *   node src/sync-slugs.mjs --force         # ignore ETags, re-download everything
  *   node src/sync-slugs.mjs --sources=a,b   # limit to specific source ids
  *   node src/sync-slugs.mjs --prune-after=60  # drop slugs absent from all sources for 60+ days
+ *       (deliberately manual, run by nobody on a schedule: a retracted record
+ *       keeps its first_seen and stops a dead slug being re-added as new, so
+ *       the tracked-vs-active gap in the report is provenance, not cruft)
  *
  * Output:
  *   data/slugs/<ats>.json   canonical store, slug -> { sources, first_seen, last_seen }

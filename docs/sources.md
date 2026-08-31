@@ -104,6 +104,8 @@ Two properties make them different from every other source, and both are declare
 - **`incremental: true`.** Neither returns the whole population on any run — one Common Crawl month holds roughly a third of the Ashby boards already known. So a slug missing from a run means "not new", not "gone", and `mergeStore` must never retract an archive's claim for absence. Without that flag each source would delete its own findings on the following run.
 - **`optional: true`.** The Wayback CDX server is slow and moody on a prefix this wide — 15-40s for an answer, and identical queries time out under any sustained rate, whoever you say you are. A failed run must cost a day of freshness and nothing else. Each archive keeps its own bookmark and only advances it on success, so a bad day is simply re-read on the next.
 
+For Wayback, "a bad day" is currently every day the bot runs: GitHub's hosted runners cannot reach the CDX API at all — every pattern fails at the connection level in the daily job while Common Crawl succeeds in the same run — so the sync report's wayback rows read `skipped` there. The measured yield above is real but comes from runs on an ordinary network; a laptop `npm run sync -- --sources=wayback` still collects it, and the source stays enabled because parking it would retract the claims on the boards only it has seen.
+
 Wayback cannot serve the three highest-volume hosts at all. `boards.greenhouse.io`, `job-boards.greenhouse.io` and `jobs.lever.co` answer 504 after about 60 seconds, and narrowing the date window does not help: a 2-day window fails exactly as a 17-day one does, because the server scans the prefix's index blocks before applying the date filter. Since the bookmark only advances on success, leaving those patterns in would have wedged them permanently while costing about 13 minutes of every run. They are removed. Pagination is available (286 pages for Greenhouse, 367 for Lever) but not at a daily cadence, and `commoncrawl` already covers those hosts well. So Wayback runs on Ashby and the low-volume regional hosts, which is where its unique contribution was measured anyway.
 
 `filter=statuscode:200` would drop captures of dead and mistyped board URLs, but it makes the CDX server answer 504 on a prefix this wide. The junk is left in: `normalizeSlug` discards what is not slug-shaped, and `probe-boards.mjs` is what decides a board is live anyway.
@@ -215,6 +217,9 @@ Licences as recorded in `sources.json`. The slug store under `data/slugs/` is de
 | `crypto-jobs-fyi/crawler` | GitHub | Apache-2.0 |
 | `outscal/OpenJobs` | GitHub | MIT |
 | `ConorsCode/open-jobs-data` | GitHub | MIT |
+| `commoncrawl` (live source) | Common Crawl index | CC BY 4.0 — Common Crawl Foundation |
+| `wayback` (live source) | Wayback CDX API | n/a — Internet Archive, public CDX API |
+| `workday-repair` | local file | n/a — derived from `Feashliaa` by probing the live Workday API |
 | `backfill` (2026-08-11 capture) | Common Crawl index, Wayback CDX, a Kaggle ATS directory, urlscan.io, hiring.cafe | mixed; each avenue's own terms |
 | `manual` | local file | n/a |
 
