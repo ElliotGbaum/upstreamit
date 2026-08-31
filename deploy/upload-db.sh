@@ -7,9 +7,17 @@
 #
 #   1. VACUUM INTO a compact copy    (your working database is never modified)
 #   2. gzip it                        (about a quarter of the size)
-#   3. upload it beside the live database, as /data/jobs.db.new.gz
-#   4. unpack and verify it there     (the live database is untouched)
+#   3. upload it beside the live database, as /data/jobs.db.staging.gz
+#   4. unpack and verify it there, then rename it to /data/jobs.db.new
 #   5. restart — the entrypoint swaps the verified file in at boot
+#
+# The staging name is load-bearing. The entrypoint swaps in whatever sits at
+# jobs.db.new, on the filename alone — it deletes the live database first and
+# verifies nothing, because this script already did. So jobs.db.new must never
+# exist unverified, and an upload that dies half way (a dropped ssh session, a
+# closed laptop, a machine restart mid-unpack) must leave nothing a later boot
+# would trust. Everything up to the last rename happens under a name the
+# entrypoint does not know; the rename is on one filesystem and is atomic.
 #
 # The live site keeps serving the old database until the last step, and a bad
 # upload never reaches it: the new file is checked for size, integrity and
@@ -27,6 +35,7 @@ OUT=data/jobs-deploy.db
 GZ=$OUT.gz
 REMOTE=/data/jobs.db
 NEW=$REMOTE.new
+STAGE=$REMOTE.staging
 VERIFY=/data/verify-db.mjs
 
 [ -f "$SRC" ] || { echo "No $SRC here. Run this from the project root." >&2; exit 1; }
@@ -69,35 +78,38 @@ echo "    $(du -h "$GZ" | cut -f1)  sha256 $LOCAL_SHA"
 
 echo
 echo "==> 3/5  Uploading to the volume (the long one)"
-remote rm -f "$NEW.gz" "$NEW" "$VERIFY"
-fly sftp put "$GZ" "$NEW.gz"
+remote rm -f "$STAGE.gz" "$STAGE" "$NEW.gz" "$NEW" "$VERIFY"
+fly sftp put "$GZ" "$STAGE.gz"
 fly sftp put deploy/verify-db.mjs "$VERIFY"
-REMOTE_SHA=$(remote sha256sum "$NEW.gz" | cut -d' ' -f1 | tr -dc 'a-f0-9')
+REMOTE_SHA=$(remote sha256sum "$STAGE.gz" | cut -d' ' -f1 | tr -dc 'a-f0-9')
 if [ "$REMOTE_SHA" != "$LOCAL_SHA" ]; then
   echo "    Upload did not arrive intact (remote sha256 '$REMOTE_SHA'). The live site is unchanged; run this again." >&2
-  remote rm -f "$NEW.gz"
+  remote rm -f "$STAGE.gz"
   exit 1
 fi
 echo "    sha256 matches"
 
 echo
 echo "==> 4/5  Unpacking and verifying on the machine"
-remote gzip -d "$NEW.gz"
-RESULT=$(remote node "$VERIFY" "$NEW" | grep '^{' | tail -1)
+remote gzip -d "$STAGE.gz"
+RESULT=$(remote node "$VERIFY" "$STAGE" | grep '^{' | tail -1)
 echo "    $RESULT"
 REMOTE_BYTES=$(printf '%s' "$RESULT" | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p')
 REMOTE_OPEN=$(printf '%s' "$RESULT" | sed -n 's/.*"open":\([0-9]*\).*/\1/p')
 case "$RESULT" in *'"quick_check":"ok"'*) ;; *)
   echo "    The unpacked database failed its integrity check. The live site is unchanged." >&2
-  remote rm -f "$NEW" "$NEW.gz"
+  remote rm -f "$STAGE" "$STAGE.gz"
   exit 1 ;;
 esac
 if [ "$REMOTE_BYTES" != "$LOCAL_BYTES" ] || [ "$REMOTE_OPEN" != "$LOCAL_OPEN" ]; then
   echo "    Unpacked database does not match the local copy ($REMOTE_BYTES vs $LOCAL_BYTES bytes, $REMOTE_OPEN vs $LOCAL_OPEN open jobs). The live site is unchanged." >&2
-  remote rm -f "$NEW" "$NEW.gz"
+  remote rm -f "$STAGE" "$STAGE.gz"
   exit 1
 fi
-echo "    verified: $LOCAL_BYTES bytes, $LOCAL_OPEN open jobs"
+# Only a database that has passed all three checks ever wears the name the
+# entrypoint swaps in.
+remote mv "$STAGE" "$NEW"
+echo "    verified: $LOCAL_BYTES bytes, $LOCAL_OPEN open jobs — promoted to $NEW"
 
 echo
 if [ "$CAN_SWAP" = "yes" ]; then
