@@ -465,6 +465,45 @@ try {
     check('delete: leaves other accounts alone', findByEmail(db, 'elliot@example.com')?.id, elliot.id);
     check('delete: and the corpus knows nothing about any of it', getUser(db, doomed.id), null);
   }
+  // -------------------------------------------- the login scrypt budget --
+  // The composite ip|email key stops grinding one account, but varying the
+  // email minted a fresh 12-attempt budget per address — one client's total
+  // scrypt work was uncapped. The per-IP gate is the cap; this drives the
+  // handler the way a fan-out attack would, with a fresh email every time.
+  {
+    const accounts = createAccounts({
+      usersDb: db,
+      jobsDb: null,
+      limits: { loginIp: rateLimiter({ limit: 2, windowMs: 60_000 }) },
+    });
+    const attempt = async (email) => {
+      const captured = {};
+      const res = {
+        writeHead(status) { captured.status = status; },
+        end(payload) { captured.body = payload; },
+      };
+      const path = '/api/auth/login';
+      await accounts.handle(
+        {
+          method: 'POST',
+          url: path,
+          headers: { 'content-type': 'application/json' },
+          socket: { remoteAddress: '127.0.0.1' },
+          async *[Symbol.asyncIterator]() { yield Buffer.from(JSON.stringify({ email, password: 'wrong' })); },
+        },
+        res,
+        path,
+        new URL(path, 'http://localhost'),
+      );
+      return captured.status;
+    };
+    check('login cap: wrong passwords across emails are answered while budget lasts', [
+      await attempt('a@example.com'),
+      await attempt('b@example.com'),
+    ], [401, 401]);
+    check('login cap: a fresh email is not a fresh budget', await attempt('c@example.com'), 429);
+  }
+
   // ------------------------------------------------- the export endpoint --
   // The one route a program reaches rather than a browser. Tested through
   // `handle` rather than against the store, because the things that can go

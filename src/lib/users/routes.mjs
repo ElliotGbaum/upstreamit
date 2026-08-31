@@ -95,12 +95,24 @@ const WORKING_PROFILE = 'working_profile';
  * saved view can render. The account store deliberately cannot reach the
  * corpus, so the join happens at this layer, where both are in scope.
  */
-export function createAccounts({ usersDb, jobsDb }) {
+export function createAccounts({ usersDb, jobsDb, limits = {} }) {
   const db = usersDb ?? openUsersDb();
 
   // Two limiters rather than one: a shared counter would let a signup flood
   // lock out logins, which is a denial of service with extra steps.
   const loginLimit = rateLimiter({ limit: 12, windowMs: 15 * 60 * 1000 });
+  // The cap on total scrypt work one client can demand, whatever emails it
+  // types. loginLimit's composite ip|email key stops grinding one account,
+  // but varying the email minted a fresh 12-attempt budget per address — so
+  // one client's attempts were uncapped, and each one costs a real scrypt
+  // (~95 ms, 16 MB) on the same four-thread pool every stat() of every static
+  // request shares. Sixty per quarter hour is loose enough for a shared NAT
+  // and still bounds the pool damage; successful logins spend from it too,
+  // and it is deliberately never cleared — a success must not refill an
+  // attacker's grinding budget.
+  // `limits.loginIp` is a test seam: the window is minutes long, and a test
+  // cannot wait it out — nor should it pay sixty real scrypts to reach it.
+  const loginIpLimit = limits.loginIp ?? rateLimiter({ limit: 60, windowMs: 15 * 60 * 1000 });
   const signupLimit = rateLimiter({ limit: 6, windowMs: 60 * 60 * 1000 });
   // Generous: a sheet polling every ten minutes needs six an hour.
   const exportLimit = rateLimiter({ limit: 120, windowMs: 60 * 60 * 1000 });
@@ -238,13 +250,15 @@ export function createAccounts({ usersDb, jobsDb }) {
 
     if (path === '/api/auth/login' && req.method === 'POST') {
       const body = await readBody(req, 10_000);
-      // Keyed by address as well as address+ip, so someone grinding one account
-      // from many addresses is still stopped.
+      // Two gates: the composite key stops grinding one account, and the bare
+      // address stops one client fanning out across emails (see loginIpLimit).
       const key = `${clientIp(req)}|${String(body.email ?? '').toLowerCase()}`;
       const gate = loginLimit.take(key);
-      if (!gate.ok) {
+      const ipGate = gate.ok ? loginIpLimit.take(clientIp(req)) : gate;
+      if (!gate.ok || !ipGate.ok) {
+        const wait = Math.max(gate.retryAfterMs, ipGate.retryAfterMs);
         json(res, 429, {
-          error: `too many attempts — try again in ${Math.ceil(gate.retryAfterMs / 60_000)} minutes`,
+          error: `too many attempts — try again in ${Math.ceil(wait / 60_000)} minutes`,
         });
         return true;
       }
@@ -272,6 +286,15 @@ export function createAccounts({ usersDb, jobsDb }) {
         return true;
       }
       const body = await readBody(req, 10_000);
+      // The same scrypt-work cap as login: this route verifies a password too,
+      // and a session holder must not get an unmetered grinding oracle.
+      const ipGate = loginIpLimit.take(clientIp(req));
+      if (!ipGate.ok) {
+        json(res, 429, {
+          error: `too many attempts — try again in ${Math.ceil(ipGate.retryAfterMs / 60_000)} minutes`,
+        });
+        return true;
+      }
       // An account with a password must prove the old one. An account created
       // through Google has none, so setting the first one is allowed from an
       // already-authenticated session.
