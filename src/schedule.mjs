@@ -269,9 +269,16 @@ jobs:
       # accumulates, and a diff on them shows which sources moved. This is the
       # commit the laptop fast-forwards to before its own sweep.
       #
+      # \`if: always()\` because a failed source must not cost the day: the
+      # sync writes every store to disk before it decides its exit code, and a
+      # store missing one source is still correct — a file the run could not
+      # read keeps the claims it made last time. So commit what was written and
+      # let the red run report which source failed.
+      #
       # \`data/sync-state.json\` is deliberately not in the add list: it is
       # gitignored runtime state, so adding it was always a no-op.
       - name: Commit the slug store
+        if: always()
         run: |
           git config user.name  "job-finder-bot"
           git config user.email "job-finder-bot@users.noreply.github.com"
