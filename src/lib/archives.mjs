@@ -140,6 +140,21 @@ export function parseWaybackRows(body) {
     .filter((value) => typeof value === 'string' && value);
 }
 
+/**
+ * The validators a Wayback read should record.
+ *
+ * The CDX server truncates silently at `limit` and returns oldest-first, so a
+ * reply at the limit has dropped the *newest* captures — exactly the ones the
+ * next run's bookmark would then skip past forever, and `nextWaybackFrom`'s
+ * one-day rewind cannot reach a hole weeks wide. So: keep the slugs, hold the
+ * bookmark, and let the next run re-read the window. The slugs dedupe, so a
+ * held bookmark costs one repeated query and loses nothing.
+ */
+export function waybackValidators({ rowCount, limit, previousFrom = null, startedAt }) {
+  if (rowCount >= limit) return { truncated: true, validators: { from: previousFrom } };
+  return { truncated: false, validators: { from: nextWaybackFrom(startedAt) } };
+}
+
 /** CDX bookmarks are plain YYYYMMDD. */
 export function toCdxDate(date) {
   return date.toISOString().slice(0, 10).replace(/-/g, '');
@@ -330,6 +345,7 @@ export async function loadWayback({ source, file, validators = {} }) {
   if (!urlPattern) return { status: 'error', error: 'kind "wayback" requires "urlPattern"' };
 
   const startedAt = new Date();
+  const limit = file.limit ?? source.limit ?? DEFAULT_WAYBACK_LIMIT;
   const result = await fetchText(
     waybackUrl(urlPattern, {
       // `since` seeds the very first run; after that the bookmark takes over.
@@ -341,15 +357,24 @@ export async function loadWayback({ source, file, validators = {} }) {
         maxLookbackDays: file.maxLookbackDays ?? source.maxLookbackDays ?? DEFAULT_MAX_LOOKBACK_DAYS,
         now: startedAt,
       }),
-      limit: file.limit ?? source.limit ?? DEFAULT_WAYBACK_LIMIT,
+      limit,
     }),
     { timeoutMs: file.timeoutMs ?? 90_000 },
   );
   if (!result.ok) return { status: 'error', error: result.error };
 
-  return {
-    status: 'ok',
-    body: parseWaybackRows(result.body).join('\n'),
-    validators: { from: nextWaybackFrom(startedAt) },
-  };
+  const rows = parseWaybackRows(result.body);
+  const outcome = waybackValidators({
+    rowCount: rows.length,
+    limit,
+    previousFrom: validators.from ?? null,
+    startedAt,
+  });
+  // The same shape the Common Crawl loader uses for a partial read: a
+  // truncated window is safe but not obvious, so say so.
+  if (outcome.truncated) {
+    console.warn(`  ! wayback ${urlPattern}: reply truncated at ${limit} rows, bookmark held`);
+  }
+
+  return { status: 'ok', body: rows.join('\n'), validators: outcome.validators };
 }

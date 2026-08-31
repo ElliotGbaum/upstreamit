@@ -16,6 +16,7 @@ import {
   parseCommonCrawlPage,
   parseWaybackRows,
   pickCrawls,
+  waybackValidators,
   toCdxDate,
   waybackFrom,
   waybackUrl,
@@ -160,6 +161,28 @@ test('waybackFrom floors a window the CDX server would time out on', () => {
 test('waybackFrom still bounds a run that has neither bookmark nor seed', () => {
   assert.equal(waybackFrom({ now: NOW }), '20260603');
   assert.equal(waybackFrom({ now: NOW, maxLookbackDays: 30 }), '20260802');
+});
+
+test('waybackValidators advances the bookmark on a reply under the limit', () => {
+  const { truncated, validators } = waybackValidators({
+    rowCount: 787,
+    limit: 200_000,
+    previousFrom: '20260810',
+    startedAt: new Date('2026-08-28T12:00:00Z'),
+  });
+  assert.equal(truncated, false);
+  assert.equal(validators.from, '20260827');
+});
+
+test('waybackValidators holds the bookmark when the reply hit the row limit', () => {
+  const { truncated, validators } = waybackValidators({
+    rowCount: 200_000,
+    limit: 200_000,
+    previousFrom: '20260810',
+    startedAt: new Date('2026-08-28T12:00:00Z'),
+  });
+  assert.equal(truncated, true);
+  assert.equal(validators.from, '20260810');
 });
 
 /*
