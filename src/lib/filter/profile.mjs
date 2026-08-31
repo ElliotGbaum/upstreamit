@@ -269,6 +269,27 @@ export function blankProfile() {
     // `unknown` — see `matchAts` — so it carries no entry in `unknowns`.
     ats: [],
 
+    // --- listing status ---------------------------------------------------
+    // Whether to include postings the board has stopped listing.
+    //
+    // A job leaves its board and the next sweep marks it `is_open = 0`; its
+    // public page then renders "Job not found" for anyone who follows the link.
+    // 43,834 of the 1,109,140 jobs in the corpus are in that state today
+    // (workday 15,153 · greenhouse 14,559 · ashby 8,886 · lever 5,236), and
+    // until now they were not merely excluded but unreachable — the index held
+    // open jobs only, so no profile could ask for one.
+    //
+    // Default false, because a dead link is the worst thing a job board can
+    // hand someone. `true` is for the reader who wants them anyway: a company
+    // that just closed a role is a company that was hiring for it last week,
+    // and that is a reason to write to them rather than a reason to hide.
+    // Results carry `listed: false` so the page can say which ones they are —
+    // an unlabelled dead link would be the same failure with extra steps.
+    //
+    // This is the only criterion whose default makes it *active*, which is why
+    // it reads as a positive ("also include") rather than as a filter to set.
+    include_unlisted: false,
+
     // --- companies --------------------------------------------------------
     companies: [], // allow-list, slug or display name
     // What the company does — its industry, read off its own postings by the
@@ -461,6 +482,8 @@ export function normalizeProfile(input = {}) {
   profile.ats = subsetOf(input.ats, ATS_KEYS);
   drop('ats', asStrings(input.ats), profile.ats);
 
+  profile.include_unlisted = Boolean(input.include_unlisted);
+
   profile.companies = asStrings(input.companies);
   // The company exclusion list was removed. A profile saved with one says so
   // rather than losing the entries silently.
@@ -611,6 +634,10 @@ export function activeCriteria(profile) {
   if (profile.salary_stated_only) push('salary_source', 'pay published as stated');
   if (profile.posted_within_days != null) push('posted', `posted within ${profile.posted_within_days} days`);
   if (profile.ats.length) push('ats', `from ${profile.ats.join(' / ')}`);
+  // The one chip raised by a field being *true* rather than by a list being
+  // non-empty: the default already filters these out, so what is worth saying
+  // out loud is that the default has been lifted.
+  if (profile.include_unlisted) push('include_unlisted', 'including jobs no longer listed');
   if (profile.companies.length) push('companies', `${profile.companies.length} companies only`);
   if (profile.company_size.length) push('company_size', `company posts ${profile.company_size.join(' / ')} roles`);
   if (profile.sectors.length) push('sector', `company in ${profile.sectors.join(' / ')}`);

@@ -52,6 +52,7 @@ import {
   matchCompanySize,
   matchAts,
   matchSector,
+  matchListed,
 } from './lib/filter/match.mjs';
 import { scoreJob, sortByScore, sortRows, salaryLabel } from './lib/filter/rank.mjs';
 import { ageBandsFor, AGE_BANDS, salaryLadder, SALARY_BANDS, textQuery } from './lib/filter/index.mjs';
@@ -98,6 +99,11 @@ function job(overrides = {}) {
     salary_src: null,
     company_size: '6-20',
     sector: null,
+    // Still on its board. The default, because it is the case every other test
+    // in this file is about — and because `listed` is the one criterion an
+    // empty profile asks, so a fixture without it would fail every `screen`
+    // case here for a reason none of them are testing.
+    listed: true,
     title_norm: 'implementation specialist',
     age_days: 10,
     quality: 0.5,
@@ -183,10 +189,50 @@ check('a floor rules out bands that top out below it', allowedSeniority({ ...bla
   check('metro: no location at all is unknown', matchMetro(job({ metros: [] }), p, c), 'unknown');
   check('metro: one of several counts', matchMetro(job({ metros: ['sf-bay', 'nyc'] }), p, c), 'match');
   check('metro: remote is excluded by default', matchMetro(job({ metros: [], workplace: 'remote' }), p, c), 'unknown');
+  // Regression: a Tokyo job whose metro failed to derive still published `jp`
+  // as its country, and Japan is not where New York is. Silence about the
+  // metro is not silence about the place — this surfaced a hybrid Tokyo role
+  // in a New York search.
+  check('metro: a published foreign country is a no even with no metro',
+    matchMetro(job({ metros: [], countries: ['jp'] }), p, c), 'no');
+  check('metro: the same country with no metro stays unknown',
+    matchMetro(job({ metros: [], countries: ['us'] }), p, c), 'unknown');
+  check('metro: one country of several agreeing is enough to stay unknown',
+    matchMetro(job({ metros: [], countries: ['jp', 'us'] }), p, c), 'unknown');
+  check('metro: no country published either is still unknown',
+    matchMetro(job({ metros: [], countries: [] }), p, c), 'unknown');
+  check('metro: a remote job in the wrong country is a no too',
+    matchMetro(job({ metros: [], countries: ['jp'], workplace: 'remote' }), p, c), 'no');
+}
+{
+  // Two metros, two countries: either one satisfies the inference.
+  const [p, c] = withProfile({ metros: ['nyc', 'london'] });
+  check('metro: the inference unions every asked metro',
+    matchMetro(job({ metros: [], countries: ['gb'] }), p, c), 'unknown');
+  check('metro: and still refuses a country neither sits in',
+    matchMetro(job({ metros: [], countries: ['jp'] }), p, c), 'no');
+}
+{
+  // A metro minted from an unrecognised city name carries no country in the
+  // curated table, so the asked-for set could sit anywhere and no country
+  // inference is safe. Falling back to `unknown` is the whole policy.
+  const [p, c] = withProfile({ metros: ['nyc', 'kawasaki'] });
+  check('metro: a minted metro in the ask disables the country inference',
+    matchMetro(job({ metros: [], countries: ['jp'] }), p, c), 'unknown');
 }
 {
   const [p, c] = withProfile({ metros: ['nyc'], remote_counts_as_match: true });
   check('metro: remote counts when asked', matchMetro(job({ metros: [], workplace: 'remote' }), p, c), 'match');
+  // "Remote – Saudi Arabia" is not open to someone in New York. Same rule as
+  // the office branch: a country that contradicts the ask is a no, a blank
+  // one is not.
+  check('metro: remote scoped to the asked-for country', matchMetro(job({ metros: [], workplace: 'remote', countries: ['us'] }), p, c), 'match');
+  check('metro: remote scoped to another country', matchMetro(job({ metros: [], workplace: 'remote', countries: ['sa'] }), p, c), 'no');
+}
+{
+  // A minted metro in the ask disables the inference here too.
+  const [p, c] = withProfile({ metros: ['nyc', 'kawasaki'], remote_counts_as_match: true });
+  check('metro: remote, no country inference on a minted ask', matchMetro(job({ metros: [], workplace: 'remote', countries: ['sa'] }), p, c), 'match');
 }
 {
   const [p, c] = withProfile({ countries: ['us'] });
@@ -288,6 +334,55 @@ check('metro: no criterion means everything matches', matchMetro(job(), ...withP
   const [p, c] = withProfile({ ats: ['ashby', 'greenhouse'] });
   check('ats: both selected matches either', matchAts(job({ ats: 'greenhouse' }), p, c), 'match');
   check('ats: still excludes a third', matchAts(job({ ats: 'lever' }), p, c), 'no');
+}
+// ---------------------------------------------------------------- listed --
+//
+// The criterion that keeps dead links out of the results, and the only one in
+// the table that a blank profile asks. Every case below is about that
+// inversion: the field is named for what it *lets in*, so `false` — the
+// default — is the criterion being active.
+{
+  const [p, c] = withProfile({});
+  check('listed: a listed job matches by default', matchListed(job(), p, c), 'match');
+  check('listed: an unlisted job is a no by default', matchListed(job({ listed: false }), p, c), 'no');
+  check('listed: active on a blank profile', c.activeKeys.includes('listed'), true);
+}
+{
+  const [p, c] = withProfile({ include_unlisted: true });
+  check('listed: include_unlisted admits it', matchListed(job({ listed: false }), p, c), 'match');
+  check('listed: and still admits a listed job', matchListed(job(), p, c), 'match');
+  // Lifted, so it is no longer a criterion at all — which is what keeps the
+  // unfiltered scan from paying for a test whose answer cannot change.
+  check('listed: include_unlisted deactivates it', c.activeKeys.includes('listed'), false);
+  check(
+    'listed: shows up as an active criterion',
+    activeCriteria(p).some((a) => a.key === 'include_unlisted'),
+    true,
+  );
+}
+{
+  // The whole point, at the level the scan actually runs: a closed posting is
+  // out by default and in when asked for, with nothing else about it changed.
+  const closed = job({ listed: false });
+  const out = { titleHits: null, failures: 0, failedKey: null, bucket: null, unknownOn: null };
+
+  const [hide, hideC] = withProfile({});
+  screen(closed, hide, hideC, out);
+  check('listed: screen drops an unlisted job', out.bucket, null);
+  // Named, so the leave-one-out rule can see it is the only thing in the way —
+  // and `listed` maps to no facet dimension, so it counts towards nothing.
+  check('listed: screen names it as the failure', out.failedKey, 'listed');
+
+  const [show, showC] = withProfile({ include_unlisted: true });
+  screen(closed, show, showC, out);
+  check('listed: screen keeps it when asked', out.bucket, 'in');
+}
+{
+  // A profile saved before this field existed loads with the safe answer
+  // rather than with `undefined`, which would read as "include" everywhere.
+  const { profile } = normalizeProfile({ name: 'old' });
+  check('listed: absent from an old profile means hide', profile.include_unlisted, false);
+  check('listed: a truthy value coerces', normalizeProfile({ include_unlisted: 1 }).profile.include_unlisted, true);
 }
 {
   // A typo'd ATS must be visible for the same reason a typo'd metro is: it
@@ -485,7 +580,12 @@ check('hits returns terms in list order', hits(fold('Product AI Analyst'), compi
   check(
     'roster: only never-unknown criteria are off it',
     missing.sort(),
-    ['ats', 'clearance', 'company', 'company_size', 'flags'].filter((k) => criteria.includes(k)).sort(),
+    //   listed        a record of what our last sweep of the board saw, not a
+    //                 field the posting publishes. The board either still
+    //                 returned the job or it did not; there is no silence.
+    ['ats', 'clearance', 'company', 'company_size', 'flags', 'listed']
+      .filter((k) => criteria.includes(k))
+      .sort(),
   );
 }
 

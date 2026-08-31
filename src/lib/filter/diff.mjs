@@ -82,9 +82,15 @@ export function changedSince(db, since) {
 }
 
 /**
- * Jobs that stopped being listed. Returned with their stored row rather than an
- * id set, because they are no longer `is_open` and so are not in the in-memory
- * index the filter scans — a closed job cannot come back through `search`.
+ * Jobs that stopped being listed, on the days they stopped. Returned with their
+ * stored row rather than an id set, because this is a history view: it answers
+ * "what closed this week", which is a question about `job_events` and not about
+ * the current corpus.
+ *
+ * `search` can now reach a closed job too — `include_unlisted` lifts the
+ * `listed` criterion, and the index holds them. The two are different questions
+ * and both are worth asking: this one is ordered by the day it went away, that
+ * one ranks a closed posting beside the open ones it competes with.
  */
 export function goneSince(db, since) {
   const { from, latest } = resolveSince(db, since);

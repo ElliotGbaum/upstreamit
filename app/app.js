@@ -968,6 +968,21 @@ function jobCard(row, i) {
 
   const metaRow = document.createElement('div');
   metaRow.className = 'meta';
+  // First chip on the row, and the only one that is a warning rather than a
+  // fact about the job: this posting is off its board, and the link above leads
+  // to the board's own "Job not found". Only ever drawn when the reader ticked
+  // "also show jobs the board has stopped listing" — the default filters these
+  // out — so it is here to keep that choice visible on every row it produced,
+  // rather than letting someone rediscover it one dead link at a time.
+  if (row.listed === false) {
+    const gone = document.createElement('span');
+    gone.className = 'chip warn';
+    gone.textContent = 'no longer listed';
+    gone.title =
+      'The board stopped listing this posting, so its page will read "Job not found". ' +
+      'The company was hiring for this recently — the careers page or a direct approach may still be worth it.';
+    metaRow.append(gone);
+  }
   for (const text of jobChips(row)) {
     const chip = document.createElement('span');
     chip.className = 'chip soft';
@@ -1420,7 +1435,11 @@ const stamp = (ms) => (ms ? new Date(ms).toISOString().slice(0, 10) : '—');
  * its own clear button cannot take down.
  */
 const PANELS = {
-  ats: { badge: 'n-ats', fields: ['ats'] },
+  // `include_unlisted` is quiet rather than a counted field: the badge counts
+  // boards picked, and "also show the closed ones" is a modifier on that pick
+  // the same way remote-counts is a modifier on a metro. Clearing the panel
+  // still takes it down, which is the property `quiet` exists for.
+  ats: { badge: 'n-ats', fields: ['ats'], quiet: ['include_unlisted'] },
   text: { badge: null, fields: ['text'] },
   title: { badge: 'n-title', fields: ['title_keywords'], quiet: ['title_match'] },
   description: { badge: 'n-desc', fields: ['description_keywords'], quiet: ['description_match'] },
@@ -1515,6 +1534,7 @@ function fillControls() {
   $('title-all').checked = profile.title_match === 'all';
   $('desc-all').checked = profile.description_match === 'all';
   $('remote-counts').checked = Boolean(profile.remote_counts_as_match);
+  $('include-unlisted').checked = Boolean(profile.include_unlisted);
   $('include-intern').checked = Boolean(profile.include_intern);
   $('max-years').value = profile.max_years_experience ?? '';
   $('min-years').value = profile.min_years_experience ?? '';
@@ -1587,6 +1607,12 @@ function bindControls() {
   });
   $('include-intern').addEventListener('change', () => {
     profile.include_intern = $('include-intern').checked;
+    runSearch({ delay: 0 });
+  });
+  // The one control that *widens* the corpus rather than narrowing it: ticked,
+  // the postings whose boards have dropped them come back, badged.
+  $('include-unlisted').addEventListener('change', () => {
+    profile.include_unlisted = $('include-unlisted').checked;
     runSearch({ delay: 0 });
   });
 

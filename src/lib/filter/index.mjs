@@ -61,6 +61,7 @@ export { COMPANY_SIZE_BANDS, PAY_PERIODS, REMOTE_SCOPES, SECTORS } from '../sche
  */
 const HOT_COLUMNS = `
   j.id, j.ats, j.title, j.title_norm, j.company_name, j.company_slug, j.employment_type,
+  j.is_open,
   j.d_workplace, j.d_workplace_src, j.d_remote_scope, j.d_metros, j.d_countries,
   j.d_salary_min, j.d_salary_max, j.d_salary_known, j.d_salary_src,
   j.comp_interval, j.comp_currency, j.has_equity,
@@ -100,6 +101,12 @@ function corpusGeneration(db, key, { fresh = false } = {}) {
     // sweep moved the open count.
     db.prepare("SELECT value FROM meta WHERE key = 'last_enrich'").get()?.value ?? '0',
     db.prepare('SELECT COUNT(*) n FROM jobs WHERE is_open = 1').get().n,
+    // The closed half, watched for the same reason as the open half: the index
+    // now holds both, so a sweep that only closes jobs has to rebuild it. Both
+    // counts move together on an ordinary close, but not on a sweep that closes
+    // as many as it opens — and that sweep would otherwise serve a job the
+    // board has already dropped.
+    db.prepare('SELECT COUNT(*) n FROM jobs WHERE is_open = 0').get().n,
     db.prepare('SELECT COUNT(*) n FROM jobs WHERE d_derived_at IS NOT NULL').get().n,
   ].join(':');
   generationCache.set(key, { value, at: Date.now() });
@@ -191,12 +198,34 @@ export function getIndex(db, { force = false } = {}) {
    * grown by `push` instead of pre-allocated. That is a far cheaper thing to pay
    * for than headroom.
    */
+  /**
+   * Closed jobs are in here too, and the `listed` flag below is what separates
+   * them.
+   *
+   * They were excluded by the `WHERE` that used to be on this query, which made
+   * them not merely filtered but unreachable — no profile could ask for one,
+   * because the only rows any search ever saw were the open ones. `matchListed`
+   * now does that job as a criterion, which is the same move `matchAts`
+   * documents: a row set narrowed before evaluation is a row set every facet
+   * count in the UI then lies about.
+   *
+   * The cost is 43,834 extra rows against 1,065,306 — about 4% more index, and
+   * the same 4% more scanning on a search that does not want them. That is the
+   * price of the counts being true, and it is the right way round: the
+   * alternative was a second index, a second cache and a second generation key.
+   */
   const jobs = [];
   const byId = new Map();
-  for (const r of db.prepare(`SELECT ${HOT_COLUMNS} FROM jobs j WHERE j.is_open = 1`).iterate()) {
+  let openCount = 0;
+  for (const r of db.prepare(`SELECT ${HOT_COLUMNS} FROM jobs j`).iterate()) {
+    if (r.is_open === 1) openCount++;
     const job = {
       id: r.id,
       ats: r.ats,
+      // Whether the board still lists this posting as of our last sweep of it.
+      // The whole of what `matchListed` reads, and the flag the page badges a
+      // result with — see `present`.
+      listed: r.is_open === 1,
       title: r.title,
       title_norm: r.title_norm,
       tf: fold(r.title), // pre-folded: the title gate runs over every row
@@ -244,7 +273,10 @@ export function getIndex(db, { force = false } = {}) {
     byId.set(job.id, job);
   }
 
-  const index = { jobs, byId, generation, builtAt: Date.now(), buildMs: Date.now() - started };
+  // `openCount` rather than `jobs.length` is what the funnel reports as
+  // `open_jobs`, and the two stopped being the same number when the closed
+  // postings joined the index.
+  const index = { jobs, byId, openCount, generation, builtAt: Date.now(), buildMs: Date.now() - started };
   cache.set(key, index);
   return index;
 }
@@ -603,7 +635,10 @@ function rank(run) {
     aside: shownAside.slice(0, limit).map(present(links, blurbs)),
     facets: facets ? finishFacets(facets, db, profile) : null,
     funnel: {
-      open_jobs: index.jobs.length,
+      // The open ones only. The index holds the closed postings beside them —
+      // see `getIndex` — and a corpus size that silently grew by 43,834 dead
+      // links would be the funnel's first dishonest number.
+      open_jobs: index.openCount,
       considered: scanned,
       passed_title_gate: titleGated,
       matched,
@@ -725,6 +760,12 @@ const present = (links, blurbs) => (row) => {
     // from is a row you can go and check, and it is the one fact about a
     // posting that the posting itself never states.
     ats: j.ats,
+    // Whether the board still listed this posting at our last sweep of it. Only
+    // ever false when the reader asked for these (`include_unlisted`), and the
+    // page badges those rows: the link still resolves, it just renders the
+    // board's own "Job not found". Shipping a dead link without saying so is
+    // the failure this whole flag exists to prevent.
+    listed: j.listed,
     title: j.title,
     company: j.company_name,
     company_slug: j.company_slug,
@@ -1358,8 +1399,11 @@ function descriptionIndex(db, profile, warnings) {
 }
 
 /**
- * Open jobs with no description text at all — the rows the gate must answer
- * `unknown` for rather than `no`.
+ * Jobs with no description text at all — the rows the gate must answer
+ * `unknown` for rather than `no`. Closed postings are in the index too (the
+ * `listed` flag is what separates them), so this set is bounded by index
+ * membership, never by `is_open`: a `WHERE is_open = 1` here would turn a
+ * missing description into a silent `no` for every unlisted job.
  *
  * It has been empty every time it was checked — every open job carried a body.
  * It is still computed, because "there are none right now" is not a property
@@ -1383,15 +1427,16 @@ function descriptionIndex(db, profile, warnings) {
  * the corpus. `db-test.mjs` pins the query plans.
  */
 export const MISSING_DESCRIPTION_SQL = {
-  // Open jobs with no `job_content` row at all. Every row the sweep writes has
+  // Jobs with no `job_content` row at all. Every row the sweep writes has
   // one, so this is the guard for a database that was not written by the
-  // sweep; it is a covering-index probe per open job either way.
+  // sweep; it is a covering-index probe per job either way. Membership in the
+  // in-memory index is checked by the caller, not with `is_open` here, because
+  // the index holds closed postings too.
   no_row: `SELECT j.id FROM jobs j
-            WHERE j.is_open = 1
-              AND NOT EXISTS (SELECT 1 FROM job_content c WHERE c.job_id = j.id)`,
+            WHERE NOT EXISTS (SELECT 1 FROM job_content c WHERE c.job_id = j.id)`,
   // Rows whose text is null or blank. The WHERE is written exactly as the
-  // partial index's is, which is what lets SQLite use it; open-ness is checked
-  // against the in-memory index rather than by joining `jobs` here.
+  // partial index's is, which is what lets SQLite use it; index membership is
+  // checked against the in-memory index rather than by joining `jobs` here.
   empty: `SELECT c.job_id FROM job_content c
            WHERE c.description_text IS NULL OR c.description_text = ''`,
 };
@@ -1400,7 +1445,9 @@ function missingDescriptions(db) {
   const index = getIndex(db);
   if (missingDescriptionCache.generation !== index.generation) {
     const ids = new Set();
-    for (const row of db.prepare(MISSING_DESCRIPTION_SQL.no_row).iterate()) ids.add(row.id);
+    for (const row of db.prepare(MISSING_DESCRIPTION_SQL.no_row).iterate()) {
+      if (index.byId.has(row.id)) ids.add(row.id);
+    }
     for (const row of db.prepare(MISSING_DESCRIPTION_SQL.empty).iterate()) {
       if (index.byId.has(row.job_id)) ids.add(row.job_id);
     }

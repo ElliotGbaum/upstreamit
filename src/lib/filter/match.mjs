@@ -20,6 +20,7 @@
  */
 
 import { fold, termPattern, termRegex } from '../derive/text.mjs';
+import { METRO_BY_ID } from '../derive/geo.mjs';
 import { allowedSeniority } from './profile.mjs';
 
 const MATCH = 'match';
@@ -90,6 +91,8 @@ export function compileProfile(profile, index = {}) {
     seniority: allowedSeniority(profile),
     metros: new Set(profile.metros),
     countries: new Set(profile.countries),
+    // The countries the asked-for metros sit in. See `impliedCountries`.
+    metroCountries: impliedCountries(profile.metros),
     workplace: new Set(profile.workplace),
     employmentType: new Set(profile.employment_type),
     job_functions: new Set(profile.job_functions),
@@ -133,7 +136,16 @@ export function matchMetro(job, profile, c) {
   if (!c.metros.size && !c.countries.size) return MATCH;
 
   if (profile.remote_counts_as_match && job.workplace === 'remote') {
-    if (!c.countries.size) return MATCH;
+    if (!c.countries.size) {
+      // Remote counts — but "Remote – Saudi Arabia" is not open to someone
+      // in New York. A remote job scoped to a country none of the asked-for
+      // metros are in is a confident no, on the same rule as the metro
+      // branch below: a filled field that contradicts the ask. A remote job
+      // with no scope at all still matches.
+      if (c.metroCountries && job.countries.length
+        && !job.countries.some((x) => c.metroCountries.has(x))) return NO;
+      return MATCH;
+    }
     if (!job.countries.length) return UNKNOWN;
     return job.countries.some((x) => c.countries.has(x)) ? MATCH : NO;
   }
@@ -142,10 +154,44 @@ export function matchMetro(job, profile, c) {
     if (job.metros.some((m) => c.metros.has(m))) return MATCH;
     // No metro at all is genuinely unknown. A metro that simply isn't the one
     // asked for is a confident no.
-    if (!job.metros.length) return c.countries.size ? checkCountry(job, c) : UNKNOWN;
+    if (!job.metros.length) {
+      if (c.countries.size) return checkCountry(job, c);
+      // Nothing placed it in a metro, but the posting did name a country, and
+      // that country is not one the asked-for metros are in. The blank field
+      // is `metros`; `countries` is filled, and it contradicts the ask.
+      if (c.metroCountries && job.countries.length
+        && !job.countries.some((x) => c.metroCountries.has(x))) return NO;
+      return UNKNOWN;
+    }
     if (!c.countries.size) return NO;
   }
   return checkCountry(job, c);
+}
+
+/**
+ * The countries a set of asked-for metros sits in — a metro filter is
+ * implicitly a country filter, and saying so is what keeps a job the derive
+ * pass failed to place from leaking into a search on the other side of the
+ * world.
+ *
+ * This only reads `countries` when the job has some. A job with no metro *and*
+ * no country is still `unknown`, because then the data genuinely did not say;
+ * the rule here fires on a filled field that disagrees, never on a blank one.
+ *
+ * Returns `null` — no inference at all — when any asked-for metro is one the
+ * derive pass minted from an unrecognised city name, because those carry no
+ * country in the curated table and could sit anywhere. Half an answer would be
+ * worse than none: it would rule out exactly the jobs in the country the
+ * minted metro belongs to.
+ */
+function impliedCountries(metros) {
+  const out = new Set();
+  for (const id of metros ?? []) {
+    const country = METRO_BY_ID.get(id)?.country;
+    if (!country) return null;
+    out.add(country);
+  }
+  return out.size ? out : null;
 }
 
 function checkCountry(job, c) {
@@ -281,6 +327,32 @@ export function matchEmploymentType(job, profile, c) {
 export function matchAts(job, profile, c) {
   if (!c.ats.size) return MATCH;
   return c.ats.has(job.ats) ? MATCH : NO;
+}
+
+/**
+ * Whether the board still lists this posting.
+ *
+ * The second criterion here that can never answer `unknown`, and for a stronger
+ * reason than `matchAts`: `listed` is not a property of the posting at all, it
+ * is a record of what our own last sweep of that board saw. The board either
+ * still returned the job or it did not. There is no silence to interpret.
+ *
+ * **Why this is the only way to know.** A closed posting's page does not answer
+ * 404. Checked against a job Adaptive pulled on 2026-08-25,
+ * `jobs.ashbyhq.com/adaptive/fe73bf85…` answers **HTTP 200** with an empty
+ * JavaScript shell, and the words "Job not found" are painted by the client
+ * after load — `curl` sees no trace of them anywhere in the body. Link-checking
+ * the corpus would mean running a browser a million times to learn what one
+ * board listing already tells us for free. The sweep is the detector; this
+ * criterion is that detection reaching the reader.
+ *
+ * Inverted relative to every other criterion in the table — it is active when
+ * the profile field is *false* — because the honest default is to hide a link
+ * that leads nowhere, and `include_unlisted` is the reader lifting that.
+ */
+export function matchListed(job, profile, c) {
+  if (profile.include_unlisted) return MATCH;
+  return job.listed ? MATCH : NO;
 }
 
 /**
@@ -618,6 +690,9 @@ export function matchTitle(job, profile, c) {
  * actually asked for, and the unfiltered case does no per-criterion work at all.
  */
 export const CRITERIA = [
+  // First, because it is the cheapest test in the table and — uniquely — the
+  // one a default profile asks. See `matchListed`.
+  { key: 'listed', test: matchListed, asked: (p) => !p.include_unlisted },
   { key: 'ats', test: matchAts, asked: (p, c) => c.ats.size > 0 },
   { key: 'description', test: matchDescription, asked: (p) => p.description_keywords.length > 0 },
   { key: 'metro', test: matchMetro, asked: (p, c) => c.metros.size > 0 || c.countries.size > 0 },
