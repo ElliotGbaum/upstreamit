@@ -26,9 +26,11 @@
  * never sees `data/jobs.db` and leaves nothing behind.
  */
 
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { openDb, upsertBoard, hashJob, recordSector, migrate, setMeta } from './lib/db.mjs';
 import { blankJob, jobId } from './lib/schema.mjs';
@@ -359,6 +361,40 @@ try {
       check(`missing prose: \`${name}\` never reads the prose table`, readsRows, []);
     }
   }
+  // ------------------------------------------------ the metro registry --
+  //
+  // `derive.mjs --only-new` opens its registry rebuild with DELETE FROM metros
+  // and repopulates from that run's tallies alone, so every nightly run used to
+  // replace the corpus-wide registry with one describing a few thousand jobs —
+  // 45% of the corpus's metros had no row. rebuild-metros.mjs reconstructs it
+  // from `job_metros`, which derive maintains per job and never truncates, and
+  // the daily pipeline now runs it after every derive. This pins the recovery:
+  // a registry describing one job, rebuilt, describes them all again.
+  {
+    db.prepare('INSERT OR IGNORE INTO job_metros (job_id, metro) VALUES (?, ?)').run(ID, 'nyc');
+    db.prepare(
+      "INSERT OR REPLACE INTO metros (id, label, country, region, job_count) VALUES ('stale', 'Stale', 'us', NULL, 1)",
+    ).run();
+    db.prepare("DELETE FROM metros WHERE id != 'stale'").run();
+
+    const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+    execFileSync(
+      process.execPath,
+      ['--disable-warning=ExperimentalWarning', join(ROOT, 'src', 'rebuild-metros.mjs'), `--db=${join(dir, 'jobs.db')}`],
+      { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+
+    const metros = db.prepare('SELECT id, label, job_count FROM metros ORDER BY id').all();
+    check('metro registry: rebuilt from job_metros, not from the last run', metros, [
+      { id: 'nyc', label: 'New York City', job_count: 1 },
+    ]);
+    check(
+      'metro registry: every linked metro has a row',
+      db.prepare('SELECT COUNT(*) n FROM (SELECT DISTINCT metro FROM job_metros WHERE metro NOT IN (SELECT id FROM metros))').get().n,
+      0,
+    );
+  }
+
   // -------------------------------------------------- the location rules --
   //
   // The same rule as the description above, for the same reason. Workday's

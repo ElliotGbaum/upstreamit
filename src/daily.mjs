@@ -82,6 +82,13 @@ const STAGES = [
     args: [`--ats=${ats}`],
   })),
   { key: 'derive', label: 'Normalize', script: 'derive.mjs', args: ['--only-new'] },
+  // `derive.mjs --only-new` replaces the metro registry with one describing
+  // only that morning's jobs — its own header, and rebuild-metros.mjs's,
+  // explain why. This puts the full-corpus registry back from `job_metros`,
+  // which derive maintains per job and never truncates. It shares the
+  // `derive` key deliberately: skipping the derivation skips the repair of
+  // what the derivation would have broken.
+  { key: 'derive', label: 'Rebuild metro registry', script: 'rebuild-metros.mjs', args: [] },
   // The one stage that spends money: one model call per company the sweep
   // found that nobody has read yet — a handful a night after the first full
   // run. With no API key it prints one line and exits clean, so a machine
