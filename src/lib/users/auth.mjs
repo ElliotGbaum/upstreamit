@@ -224,8 +224,18 @@ export function rateLimiter({ limit = 10, windowMs = 15 * 60 * 1000 } = {}) {
   };
 }
 
-/** Best-effort client address; `x-forwarded-for` only matters behind a proxy. */
+/**
+ * Best-effort client address, and every rate limiter's whole key — which is
+ * why it must not be the *leftmost* X-Forwarded-For entry. That entry is
+ * whatever the client typed; each proxy appends its view of the peer to the
+ * right. Reading the left end let one header per request mint a fresh bucket
+ * and walk past the signup, login and export limits entirely. Behind Fly the
+ * proxy states its verdict outright in Fly-Client-IP, so prefer that; a bare
+ * localhost request has neither header and falls through to the socket.
+ */
 export function clientIp(req) {
-  const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
+  const fly = String(req.headers['fly-client-ip'] ?? '').trim();
+  if (fly) return fly;
+  const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',').at(-1).trim();
   return forwarded || req.socket?.remoteAddress || 'unknown';
 }

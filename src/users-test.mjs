@@ -75,6 +75,7 @@ import {
   clearedCookie,
   sameOrigin,
   rateLimiter,
+  clientIp,
   validEmail,
   normalizeEmail,
 } from './lib/users/auth.mjs';
@@ -204,6 +205,18 @@ try {
     check('csrf: another origin is refused', sameOrigin(req({ origin: 'http://evil.example', host: 'localhost:7799' })), false);
     check('csrf: no Origin header (curl, the CLI) passes', sameOrigin(req({ host: 'localhost:7799' })), true);
     check('csrf: a malformed Origin is refused', sameOrigin(req({ origin: '://', host: 'localhost:7799' })), false);
+  }
+
+  // --------------------------------------------------------- client ip --
+  // The limiter key. The leftmost X-Forwarded-For entry is client-typed, so
+  // reading it let one header per request mint a fresh bucket; only the proxy's
+  // own verdict (Fly-Client-IP, or the entry the proxy appended on the right)
+  // may key a limit.
+  {
+    const req = (headers, remoteAddress = '10.0.0.9') => ({ headers, socket: { remoteAddress } });
+    check('ip: a spoofed leftmost XFF entry does not win', clientIp(req({ 'x-forwarded-for': '6.6.6.6, 203.0.113.7' })), '203.0.113.7');
+    check('ip: fly-client-ip beats the XFF chain', clientIp(req({ 'fly-client-ip': '203.0.113.7', 'x-forwarded-for': '6.6.6.6' })), '203.0.113.7');
+    check('ip: no proxy headers falls through to the socket', clientIp(req({})), '10.0.0.9');
   }
 
   // --------------------------------------------------------- rate limiter --
