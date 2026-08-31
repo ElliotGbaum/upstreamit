@@ -22,6 +22,7 @@
 
 import { decodeEntitiesOnce, htmlToText } from './lib/adapters/html.mjs';
 import { countryName } from './lib/adapters/iso-countries.mjs';
+import { mapJob as mapAshbyJob } from './lib/adapters/ashby.mjs';
 import { mapJob } from './lib/adapters/greenhouse.mjs';
 import {
   mapJob as mapLeverJob,
@@ -118,6 +119,39 @@ const row = (overrides = {}) => ({
   content: '&lt;p&gt;Build things &amp;amp; ship them.&lt;/p&gt;',
   ...overrides,
 });
+
+// ------------------------------------------------------------------- ashby --
+
+/** A posting-API row, trimmed to what mapJob reads. */
+const ashbyRow = (overrides = {}) => ({
+  id: 'f3a9c2d1-1234-4cde-9f00-abc123def456',
+  title: '  Solutions Engineer ',
+  department: 'Engineering',
+  location: 'New York',
+  secondaryLocations: [{ location: 'Toronto' }],
+  jobUrl: 'https://jobs.ashbyhq.com/acme/f3a9c2d1',
+  publishedAt: '2026-08-01T09:00:00-04:00',
+  isRemote: false,
+  ...overrides,
+});
+
+{
+  const j = mapAshbyJob(ashbyRow(), 'acme', 'Acme');
+  check('ashby: id is stable and namespaced', j.id, 'ashby:acme:f3a9c2d1-1234-4cde-9f00-abc123def456');
+  check('ashby: title is trimmed', j.title, 'Solutions Engineer');
+  check('ashby: board name rides along', j.company_name, 'Acme');
+  check('ashby: locations union primary and secondary', j.locations_all, ['New York', 'Toronto']);
+
+  // The refusals the other three adapters already make, and Ashby did not:
+  // a blank title or a stringified-undefined id must be a rejected row, not a
+  // permanent unlabelled one — the store's NOT NULL accepts '' happily.
+  check('ashby: a blank title is a rejected row', mapAshbyJob(ashbyRow({ title: '   ' }), 'acme', 'Acme'), null);
+  check('ashby: a missing title is a rejected row', mapAshbyJob(ashbyRow({ title: undefined }), 'acme', 'Acme'), null);
+  check('ashby: a missing id is a rejected row', mapAshbyJob(ashbyRow({ id: undefined, jobId: undefined }), 'acme', 'Acme'), null);
+  check('ashby: a literal "undefined" id is a rejected row', mapAshbyJob(ashbyRow({ id: 'undefined' }), 'acme', 'Acme'), null);
+}
+
+// -------------------------------------------------------------- greenhouse --
 
 {
   const j = mapJob(row(), 'stripe');

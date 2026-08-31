@@ -158,7 +158,7 @@ export function externalJobUrl(careersUrl, nativeId) {
   return `${careersUrl}${careersUrl.includes('?') ? '&' : '?'}ashby_jid=${encodeURIComponent(nativeId)}`;
 }
 
-function mapJob(row, slug, boardName) {
+export function mapJob(row, slug, boardName) {
   if (!row || typeof row !== 'object') return null;
   const job = blankJob();
 
@@ -166,11 +166,15 @@ function mapJob(row, slug, boardName) {
   job.company_slug = slug;
   job.company_name = boardName;
   job.native_id = String(row.id ?? row.jobId ?? '');
-  if (!job.native_id) return null;
+  if (!job.native_id || job.native_id === 'undefined') return null;
   job.id = jobId('ashby', slug, job.native_id);
 
   // 405 of 4,760 sampled titles carried stray whitespace.
   job.title = String(row.title ?? '').trim();
+  // The same refusal the other three adapters make: a blank title would pass
+  // the store's NOT NULL as an empty string and live forever as an unlabelled
+  // row nothing can match and nothing prunes.
+  if (!job.title) return null;
   job.title_norm = normText(job.title);
   job.department = row.department ?? null;
   job.team = row.team ?? null;
