@@ -21,7 +21,13 @@
  *     nothing there" explicit and cheap to filter on.
  */
 
-/** ATS keys this project knows how to sweep. Order is display order. */
+/**
+ * Every ATS key the filters and profile validation recognise, in display
+ * order. Only the first four have adapters and are actually swept — see
+ * src/lib/adapters/index.mjs, which registers exactly what exists. The rest
+ * stay so a saved profile or an imported row naming one survives validation
+ * instead of being silently dropped.
+ */
 export const ATS_KEYS = [
   'ashby',
   'greenhouse',
