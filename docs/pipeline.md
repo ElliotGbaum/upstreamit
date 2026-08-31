@@ -29,7 +29,7 @@ npm run enrich         # read the sector of every hiring company not yet read (n
 npm run enrich:all     # re-read every hiring company — after a prompt or vocabulary change
 npm run enrich:dry     # print the first three dossiers and the estimated bill; spend nothing
 npm run refresh        # sync → verify → sweep → derive → enrich
-npm test               # 931 checks, about a second, no database and no network
+npm test               # 1,126 checks, a couple of seconds, no database and no network
 ```
 
 Per-ATS variants: `npm run verify:ashby`, `verify:greenhouse`, `verify:lever`, `verify:workday`, `sweep:ashby`, `sweep:greenhouse`, `sweep:lever`, `sweep:workday`.
@@ -45,7 +45,7 @@ npm run vacuum         # checkpoint the WAL and VACUUM data/jobs.db (stop the se
 npm run progress       # static server for progress/index.html on :7788, separate from the app
 ```
 
-The test count is 931: 132 derivation, 234 filter, 190 adapter, 54 store, 133 account, 19 sheet-sync, 113 interpret and 56 enrich checks, run by `npm test` in that order.
+The test count is 1,126: 186 derivation, 262 filter, 211 adapter, 77 store, 151 account, 14 in-browser account, 5 schedule, 32 archive, 19 sheet-sync, 113 interpret and 56 enrich checks, run by `npm test` in that order.
 
 ## Sync
 

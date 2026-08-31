@@ -37,14 +37,14 @@ Measured 2026-08-27, the day Workday landed; the live counts are on the site.
 | ATSes | Ashby, Greenhouse, Lever and Workday, swept daily. Workday's first backfill, overnight on 2026-08-26, brought 627,436 jobs from 5,747 boards and made it two thirds of the corpus; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
 | Metros | 54,017, built from the location strings actually observed |
 | A full filter run | a few seconds over the whole corpus, every facet counted, in memory |
-| Tests | 795, covering derivation, filter, adapters, the store, accounts and AI interpret. No database, no network, ~1 s |
+| Tests | 1,126, covering derivation, filter, adapters, the store, accounts, the schedule, the archives and AI interpret. No database, no network, ~2 s |
 | Dependencies | one (`@anthropic-ai/sdk`, for the optional "describe your search"). Everything else is Node built-ins, including SQLite |
 
 ## How it works
 
 ```mermaid
 flowchart LR
-  A[11 public slug sources] -->|sync| B[Slug store<br/>data/slugs/]
+  A[13 public slug sources] -->|sync| B[Slug store<br/>data/slugs/]
   B -->|verify: real board / 404| C[Live boards]
   C -->|sweep, daily<br/>ETag-conditional| D[(jobs.db<br/>SQLite + FTS5)]
   D -->|derive: prose → columns| D
@@ -57,7 +57,7 @@ Six stages, each a separate program that can be re-run on its own. The first two
 the slug store under `data/slugs/`, the next two write one SQLite database, and the last
 two read it:
 
-1. **Collect** merges company slugs from ten public datasets and a web-archive harvest,
+1. **Collect** merges company slugs from eleven public datasets and two web-archive indexes,
    keeping provenance per slug. ETags detect upstream changes, so a poll that finds
    nothing new transfers nothing. → [`docs/sources.md`](docs/sources.md)
 2. **Verify** asks each ATS whether a slug is a real board. Live and dead are recorded
@@ -106,7 +106,7 @@ scrypt for passwords, built-in `fetch` with conditional requests for the sweep. 
 no build step and no framework; the app is three served HTML pages and plain ES modules.
 
 **One writer per file.** The daily run is split between GitHub Actions, which owns the
-slug store and commits it, and a laptop launchd job, which owns the 3.5 GB database and
+slug store and commits it, and a laptop launchd job, which owns the ~10 GB database and
 re-uploads it to the host by hand with `deploy/upload-db.sh`. Before the split both ran
 the whole pipeline and fought over the same files every morning.
 → [`docs/automation.md`](docs/automation.md)
@@ -144,7 +144,7 @@ needing a flag).
 npm install
 cp .env.example .env            # optional: add an Anthropic key for "describe your search"
 
-npm run sync                    # pull the thirteen slug sources → data/slugs/
+npm run sync                    # pull every source in sources.json → data/slugs/
 npm run verify                  # probe slugs not yet resolved: real board / 404
 npm run sweep                   # fetch every live board → data/jobs.db (hours, first time)
 npm run derive                  # prose → columns
@@ -152,7 +152,7 @@ npm run enrich                  # what each company does, one model call per com
 
 npm run serve                   # http://localhost:7799
 npm run find                    # the same search, in the terminal
-npm test                        # 931 checks, ~1 s
+npm test                        # 1,126 checks, ~2 s
 ```
 
 To try it without a multi-hour sweep, pull one ATS with a cap:
@@ -166,7 +166,7 @@ To try it without a multi-hour sweep, pull one ATS with a cap:
 
 One Fly.io machine with a persistent volume for the database, accounts and profiles.
 Pushing to `main` runs the tests and deploys the code; the database is uploaded
-separately with `./deploy/upload-db.sh` because a 3.5 GB file does not belong in a
+separately with `./deploy/upload-db.sh` because a ~10 GB file does not belong in a
 container image. → [`docs/deploy.md`](docs/deploy.md)
 
 ## Layout
@@ -179,7 +179,7 @@ src/
   derive.mjs          run the derivation pass                  lib/users/      accounts, sessions, Google
   find.mjs            run a profile from the terminal          lib/interpret.mjs  "describe your search"
   server.mjs          the web app and its JSON API             lib/db.mjs, schema.mjs
-  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 931 checks
+  daily.mjs           sweep + derive + "what's new"            *-test.mjs      the 1,126 checks
 app/                  three served HTML pages (landing.html is kept, not routed), plain ES modules, no build
 profiles/             filter profiles: portable JSON, read by the app, the CLI and the daily run
 data/slugs/           the slug store (tracked; refreshed nightly by CI)
