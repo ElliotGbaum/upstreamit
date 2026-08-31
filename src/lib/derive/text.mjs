@@ -114,18 +114,6 @@ export function hasTerm(foldedText, term) {
   return new RegExp(termPattern(term)).test(foldedText);
 }
 
-/**
- * Which of `terms` appear in `foldedText`, deduped, in the order given.
- * Returns the matched terms rather than a count — the UI shows *which*
- * keywords hit, and ranking by number of distinct keywords is what separates
- * `AI Deployment Strategist` from `Product Designer`.
- */
-export function matchedTerms(foldedText, terms) {
-  if (!foldedText) return [];
-  const out = [];
-  for (const term of terms) if (hasTerm(foldedText, term)) out.push(term);
-  return out;
-}
 
 /** Number words that appear in experience requirements. "two years of experience". */
 const NUMBER_WORDS = {

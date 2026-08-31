@@ -127,8 +127,3 @@ function extractFromUrl(url, ats) {
   }
   return null;
 }
-
-/** ATS keys we know how to unwrap URLs for. Informational. */
-export function knownAtsKeys() {
-  return Object.keys(URL_PATTERNS);
-}

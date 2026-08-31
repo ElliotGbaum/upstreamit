@@ -1052,14 +1052,6 @@ function newFacets(profile) {
 }
 
 /**
- * Count one job into every facet it is eligible for.
- *
- * Eligibility is the leave-one-out rule: a job counts towards dimension D when
- * the only thing standing between it and the result list is D. `failed` is
- * already the list of criteria that would exclude it, so this is a set-size
- * check rather than a re-evaluation.
- */
-/**
  * Which dimensions a job failing exactly one criterion can still count towards.
  *
  * The leave-one-out rule says a job that fails only criterion K counts towards
@@ -1077,6 +1069,14 @@ for (const dim of FACET_DIMENSIONS) {
   else DIMENSIONS_BY_CRITERION.set(dim.criterion, [dim]);
 }
 
+/**
+ * Count one job into every facet it is eligible for.
+ *
+ * Eligibility is the leave-one-out rule: a job counts towards dimension D when
+ * the only thing standing between it and the result list is D. `failedKey` is
+ * already the one criterion that would exclude it, so this is a lookup rather
+ * than a re-evaluation.
+ */
 function tallyFacets(facets, job, failedKey, profile) {
   // `failedKey` is null when the job cleared everything and the name of the one
   // criterion it did not otherwise. The two-or-more case never gets here: the
@@ -1503,13 +1503,6 @@ export function getJob(db, id) {
 }
 
 /**
- * Everything the UI needs to draw its controls before any filter is applied.
- *
- * All of it comes from the data. The metro list is the registry the derive pass
- * built from observed location strings, not a hardcoded array — when the corpus
- * grows a new city the dropdown grows an option with no code change.
- */
-/**
  * The oldest `last_sweep_<ats>` timestamp, or null if nothing has ever swept.
  *
  * Deliberately the minimum. "When was this data last refreshed" has one honest
@@ -1553,6 +1546,13 @@ export function corpusMeta(db) {
   return value;
 }
 
+/**
+ * Everything the UI needs to draw its controls before any filter is applied.
+ *
+ * All of it comes from the data. The metro list is the registry the derive pass
+ * built from observed location strings, not a hardcoded array — when the corpus
+ * grows a new city the dropdown grows an option with no code change.
+ */
 function buildCorpusMeta(db) {
   const meta = Object.fromEntries(db.prepare('SELECT key, value FROM meta').all().map((r) => [r.key, r.value]));
   // Three counts, three queries, on purpose. As one `SELECT` with a `CASE` in

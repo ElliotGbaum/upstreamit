@@ -517,14 +517,6 @@ function cleanComponent(part) {
     .trim();
 }
 
-const NOT_A_CITY = /^(?:\d|[a-z]$|\d{4,}|.{1,2}$)/;
-
-/**
- * Facility and street words. A structured address whose `addressLine` leaked
- * into the city slot was minting metros like `pangyo-software-dream-center`
- * and `829-boston` — one Korean office block became three separate "metros"
- * carrying 97 jobs each.
- */
 /**
  * Street words, including the abbreviations an address line actually uses.
  * Broader than the `NOT_A_PLACE` list below because it only ever *disables*
@@ -532,11 +524,16 @@ const NOT_A_CITY = /^(?:\d|[a-z]$|\d{4,}|.{1,2}$)/;
  * which city the building is in.
  */
 const STREET_RE = /\b(?:floor|suite|road|street|avenue|boulevard|parkway|po box|plaza|ave|av|blvd|rd|pkwy|hwy|ln|dr|route|rue|calle|avenida|paseo|strasse|str)\b/;
+/**
+ * Facility and street words. A structured address whose `addressLine` leaked
+ * into the city slot was minting metros like `pangyo-software-dream-center`
+ * and `829-boston` — one Korean office block became three separate "metros"
+ * carrying 97 jobs each.
+ */
 const NOT_A_PLACE = /\b(?:center|centre|tower|building|floor|suite|plaza|complex|road|street|avenue|boulevard|parkway|po box|department|division|team|remote|various|multiple|tbd|none|worldwide|global)\b/;
 
 function isPlausibleCity(part) {
   if (!part || part.length < 3 || part.length > 40) return false;
-  if (NOT_A_CITY.test(part)) return false;
   if (/^\d[\d\s-]*$/.test(part)) return false;          // postal codes
   if (/\d/.test(part)) return false;                     // street numbers, `829 boston`
   if (/^(?:full|part)[- ]time$/.test(part)) return false; // employment type leaking in

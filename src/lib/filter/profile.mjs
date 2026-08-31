@@ -40,22 +40,6 @@ import {
 export const UNKNOWN_POLICIES = ['include', 'exclude', 'separate'];
 
 /**
- * Criteria that can come back unknown.
- *
- * Served to the UI so the include/exclude/separate controls are generated from
- * this list rather than duplicated in the page — the same rule the metro
- * dropdown follows. `share` is measured over the full open corpus (how and when
- * is noted above `UNKNOWNABLE`), sorted worst-first, and printed next to each
- * control on purpose: `exclude` on salary silently discards most of the market,
- * and the number is the only thing standing between someone and that choice.
- *
- * Every criterion whose column can be absent belongs on this list. `degree`,
- * `visa`, `skills` and `job_function` were missing from it and were therefore hard
- * `no`s on silence — a degree filter dropped 75.6% of the corpus for never
- * mentioning school. The rule is now uniform: a criterion may only rule a job
- * out on evidence, never on the absence of it.
- */
-/**
  * The default policy per criterion — the single source of truth for it.
  * `blankProfile` spreads this, `UNKNOWNABLE` publishes it to the UI, and the
  * page's Reset button restores it, so none of the three can drift.
@@ -101,6 +85,22 @@ const DEFAULT_UNKNOWN_POLICIES = {
   sector: 'include',
 };
 
+/**
+ * Criteria that can come back unknown.
+ *
+ * Served to the UI so the include/exclude/separate controls are generated from
+ * this list rather than duplicated in the page — the same rule the metro
+ * dropdown follows. `share` is measured over the full open corpus (how and when is
+ * noted in the measurement comment below), sorted worst-first, and printed next to each
+ * control on purpose: `exclude` on salary silently discards most of the market,
+ * and the number is the only thing standing between someone and that choice.
+ *
+ * Every criterion whose column can be absent belongs on this list. `degree`,
+ * `visa`, `skills` and `job_function` were missing from it and were therefore hard
+ * `no`s on silence — a degree filter dropped 75.6% of the corpus for never
+ * mentioning school. The rule is now uniform: a criterion may only rule a job
+ * out on evidence, never on the absence of it.
+ */
 // Re-measured 2026-08-22 over the full 337,487-job Ashby + Greenhouse + Lever
 // corpus, by activating one criterion at a time and counting the jobs the engine
 // itself answers `unknown` for. That is the number this column means: what the

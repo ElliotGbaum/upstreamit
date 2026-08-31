@@ -54,7 +54,11 @@ export const COUNTRIES = {
   korea: 'kr', singapore: 'sg', malaysia: 'my', indonesia: 'id', thailand: 'th',
   vietnam: 'vn', 'viet nam': 'vn', philippines: 'ph', cambodia: 'kh', myanmar: 'mm',
   australia: 'au', 'new zealand': 'nz', fiji: 'fj',
-  armenia: 'am', georgia_country: 'ge', azerbaijan: 'az', kazakhstan: 'kz',
+  armenia: 'am', azerbaijan: 'az', kazakhstan: 'kz',
+  // Not an alias — no folded fragment ever equals this key. It exists to seed
+  // the bare code `ge` via the loop below, while "georgia" itself stays the US
+  // state, the same call as bare "ca"/"in"/"de" staying codes.
+  georgia_country: 'ge',
   uzbekistan: 'uz', mongolia: 'mn',
 };
 

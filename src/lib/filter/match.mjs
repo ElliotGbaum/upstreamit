@@ -672,9 +672,6 @@ export function matchTitle(job, profile, c) {
  * facet counting possible: "how many jobs would I get if I also picked Boston"
  * is the same question as "how many jobs fail on nothing except `metro`", and
  * that is a set operation over this list rather than six near-duplicate queries.
- */
-/**
- * Every criterion, in one table.
  *
  * Each row carries its `test` and, beside it, the question **"did the profile
  * ask this at all?"** — `asked`. Every `test` above opens with a guard that
