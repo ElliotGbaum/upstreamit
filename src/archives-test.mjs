@@ -46,8 +46,19 @@ test('pickCrawls catches up on every crawl published since the bookmark', () => 
   ]);
 });
 
-test('pickCrawls caps catch-up at max, so a long gap cannot become an unbounded run', () => {
-  assert.deepEqual(pickCrawls(COLLINFO, { lastCrawlId: 'CC-MAIN-2026-21', max: 1 }), ['CC-MAIN-2026-34']);
+test('pickCrawls caps catch-up at max, from the oldest unread, so a backlog drains without a skip', () => {
+  assert.deepEqual(pickCrawls(COLLINFO, { lastCrawlId: 'CC-MAIN-2026-21', max: 1 }), ['CC-MAIN-2026-25']);
+});
+
+test('pickCrawls drains a two-crawl backlog to nothing across successive runs', () => {
+  let bookmark = 'CC-MAIN-2026-25';
+  const read = [];
+  for (let run = 0; run < 3; run += 1) {
+    const crawls = pickCrawls(COLLINFO, { lastCrawlId: bookmark, max: 1 });
+    read.push(...crawls);
+    if (crawls.length) bookmark = crawls[crawls.length - 1];
+  }
+  assert.deepEqual(read, ['CC-MAIN-2026-30', 'CC-MAIN-2026-34']);
 });
 
 test('pickCrawls treats a bookmark that has aged out of the listing as no bookmark', () => {

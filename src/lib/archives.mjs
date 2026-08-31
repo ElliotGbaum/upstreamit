@@ -49,19 +49,26 @@ const DEFAULT_MAX_LOOKBACK_DAYS = 90;
 /* -------------------------------------------------------------------------- */
 
 /**
- * Which Common Crawl indexes to read, newest first.
+ * Which Common Crawl indexes to read.
  *
  * `collinfo` is published newest-first, so the crawls we have not seen are the
- * ones ahead of our bookmark. An unrecognised bookmark — a first run, or a crawl
- * old enough to have dropped out of the listing — leaves us without a floor, so
- * we take the newest `max` rather than attempting the entire archive.
+ * ones ahead of our bookmark. With a bookmark, take the *oldest* `max` of them:
+ * the reader below finishes a crawl before advancing the bookmark past it, so
+ * drawing from the old end means a backlog longer than `max` drains over
+ * successive runs instead of the bookmark jumping the queue — taking the newest
+ * first would strand every crawl in between behind it, permanently, since an
+ * incremental source is never re-read.
+ *
+ * An unrecognised bookmark — a first run, or a crawl old enough to have dropped
+ * out of the listing — leaves us without a floor, so there we take the newest
+ * `max` rather than attempting the entire archive.
  */
 export function pickCrawls(collinfo, { lastCrawlId = null, max = DEFAULT_MAX_CRAWLS } = {}) {
   const ids = (Array.isArray(collinfo) ? collinfo : []).map((entry) => entry?.id).filter(Boolean);
   if (ids.length === 0) return [];
   const bookmark = lastCrawlId ? ids.indexOf(lastCrawlId) : -1;
-  const unread = bookmark === -1 ? ids : ids.slice(0, bookmark);
-  return unread.slice(0, max);
+  if (bookmark === -1) return ids.slice(0, max);
+  return ids.slice(0, bookmark).slice(-max);
 }
 
 /** One page of a Common Crawl index query, or the page count when `numPages`. */
