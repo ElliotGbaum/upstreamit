@@ -29,7 +29,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { openDb, getMeta, setMeta } from './lib/db.mjs';
 import { search, corpusMeta, invalidateIndex } from './lib/filter/index.mjs';
-import { newSince, changedSince, goneSince, activity, day } from './lib/filter/diff.mjs';
+import { newSince, changedSince, goneSince, activity, day, reportSince } from './lib/filter/diff.mjs';
 import { listProfiles, loadProfile } from './find.mjs';
 import { logEvent } from './lib/progress.mjs';
 
@@ -167,6 +167,7 @@ function reportOn() {
 async function main() {
   const args = parseArgs(process.argv);
   const startedAt = Date.now();
+  const today = day(startedAt);
 
   // What "new" means: everything since the previous daily run, or since the
   // last sweep on a first run. Read before the pipeline moves it.
@@ -192,7 +193,9 @@ async function main() {
   db = openDb(args.db);
   invalidateIndex();
 
-  const since = args.since ?? previousRun ?? 'last-sweep';
+  // An explicit --since stays inclusive — that is what typing a date means —
+  // while the watermark is exclusive; reportSince explains the difference.
+  const since = args.since ?? reportSince(previousRun, today);
   const fresh = newSince(db, since);
   const edited = changedSince(db, since);
   const gone = goneSince(db, since);
@@ -221,7 +224,6 @@ async function main() {
   }
 
   const meta = corpusMeta(db);
-  const today = day(startedAt);
   // Only a run that actually swept moves the watermark. `--report-only` and an
   // explicit `--since` are ways of *looking* at the diff, and a look should not
   // consume the window — otherwise re-reading this morning's report is enough to

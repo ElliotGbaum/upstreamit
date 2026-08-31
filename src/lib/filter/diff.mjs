@@ -21,6 +21,24 @@
 const DAY_MS = 86_400_000;
 
 /** `YYYY-MM-DD` for a timestamp, in the same UTC form the sweep writes. */
+/**
+ * The day the daily report should compare against.
+ *
+ * The watermark is the day the previous run happened, and that run already
+ * reported its own day, so the comparison starts the day *after* it — handing
+ * `resolveSince` the watermark itself (inclusive, as an explicit `--since`
+ * should be) re-listed all of yesterday every morning, and ~68% of a typical
+ * report was yesterday's list again. The exception is a rerun on the same
+ * day: the watermark is already today, and starting tomorrow would silently
+ * drop the events the rerun's own sweep just wrote, so it reports all of
+ * today again — a duplicate, never a hole. String comparison is safe on
+ * YYYY-MM-DD.
+ */
+export function reportSince(previousRun, today) {
+  if (previousRun == null) return 'last-sweep';
+  return previousRun < today ? day(Date.parse(`${previousRun}T00:00:00Z`) + DAY_MS) : today;
+}
+
 export function day(ts = Date.now()) {
   return new Date(ts).toISOString().slice(0, 10);
 }

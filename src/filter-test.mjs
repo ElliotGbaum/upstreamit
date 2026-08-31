@@ -55,6 +55,7 @@ import {
   matchListed,
 } from './lib/filter/match.mjs';
 import { scoreJob, sortByScore, sortRows, salaryLabel } from './lib/filter/rank.mjs';
+import { reportSince } from './lib/filter/diff.mjs';
 import { ageBandsFor, AGE_BANDS, salaryLadder, SALARY_BANDS, textQuery } from './lib/filter/index.mjs';
 import { companySizeBand } from './lib/schema.mjs';
 import { fold } from './lib/derive/text.mjs';
@@ -1016,6 +1017,16 @@ check('salary label: nothing published', salaryLabel({ salary_known: 0 }), null)
 }
 
 // --------------------------------------------------------------------- done --
+// ------------------------------------------------------- the report window --
+// A run on day D must not re-list day D-1, which the D-1 run already reported;
+// a same-day rerun must not skip to tomorrow and lose today's events; a gap
+// still reports every day inside it because the events are keyed by day.
+check('reportSince: a first run falls back to the last sweep', reportSince(null, '2026-08-24'), 'last-sweep');
+check('reportSince: a next-day run starts after the watermark', reportSince('2026-08-23', '2026-08-24'), '2026-08-24');
+check('reportSince: a same-day rerun reports today again, not tomorrow', reportSince('2026-08-24', '2026-08-24'), '2026-08-24');
+check('reportSince: a skipped weekend is still fully covered', reportSince('2026-08-21', '2026-08-24'), '2026-08-22');
+check('reportSince: the +1 crosses a month boundary', reportSince('2026-08-31', '2026-09-03'), '2026-09-01');
+
 if (failures.length) {
   console.error(`\n${failures.length} failing:\n`);
   for (const f of failures) console.error(`  ✗ ${f}\n`);
