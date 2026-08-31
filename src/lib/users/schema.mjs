@@ -4,9 +4,11 @@
  * Everything here lives in `data/users.db`, **not** in `data/jobs.db`, and the
  * split is load-bearing for three reasons:
  *
- *  1. `data/jobs.db` is committed to this repository. A password hash, a
- *     session token or someone's list of jobs they applied to must never be a
- *     git object. `data/users.db` is gitignored.
+ *  1. The corpus is a thing that ships: `deploy/upload-db.sh` vacuums it into
+ *     a copy, gzips it and swaps the whole file onto the Fly volume. A password
+ *     hash, a session token or someone's list of jobs they applied to must not
+ *     ride along with every copy. Neither database is a git object — both are
+ *     gitignored — but only the corpus travels.
  *  2. The two have opposite lifecycles. The corpus is disposable — delete it,
  *     re-sweep, re-derive, and nothing of value is lost. An account is the
  *     opposite: it is the only thing here a person actually authored.

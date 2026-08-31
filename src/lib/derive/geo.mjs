@@ -10,9 +10,13 @@
  * unlisted city is still filterable — it just doesn't get merged with its
  * neighbours.
  *
- * `metro_aliases` in the database is the authority at query time. This file is
- * the seed that builds it, which means a wrong grouping is fixed by editing one
- * table row and re-deriving, not by shipping code.
+ * This file — not the `metro_aliases` table — is what actually places a city:
+ * `parseFragment` reads `CITY_TO_METRO` at derive time, so a wrong grouping is
+ * fixed by editing this file and re-deriving. The table is written out as a
+ * record of the same mapping plus whatever aliases the runs observed; nothing
+ * reads it back yet. Making derive read the table instead, so a fix becomes a
+ * row edit with no code ship, is the design the table was built for and has
+ * not happened.
  */
 
 /** Sub-national codes that outrank any same-spelled country code. See below. */

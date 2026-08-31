@@ -683,7 +683,7 @@ background job is the operator's call.
 ### Phase 7 — optional accounts
 
 Kept filters, starred jobs, application status, curated lists. Anonymous use unchanged;
-`data/users.db` separate from the committed corpus; Google sign-in built and dormant
+`data/users.db` separate from the shipped corpus; Google sign-in built and dormant
 until configured.
 
 ### Then: Greenhouse and Lever
@@ -1020,9 +1020,9 @@ exactly.
 ### Decisions — not to be re-litigated
 
 **A second database.** `data/users.db`, not a set of tables in `data/jobs.db`. Three
-reasons, in order of how much they would hurt: `data/jobs.db` was committed to this
-repository at the time, so a password hash or someone's applied-to list would have become
-a git object; the corpus is disposable and an account is not; and a real foreign key would
+reasons, in order of how much they would hurt: `data/jobs.db` is copied wholesale to the
+host on every upload, so a password hash or someone's applied-to list would have ridden
+along with every copy; the corpus is disposable and an account is not; and a real foreign key would
 mean a corpus rebuild cascading into user data. The cost is that "my saved jobs, joined to
 the jobs table" happens in JS rather than SQL, over a few dozen rows. That is not a cost.
 

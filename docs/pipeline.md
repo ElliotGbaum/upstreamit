@@ -301,7 +301,7 @@ Corpus-wide, adding Greenhouse and Lever moved every "unknown" share the filter 
 | `jobs` | One row per posting. Raw columns as published, plus `d_*` columns from the derive pass. **Filters read `d_*` only**, which is what makes an alias fix a re-derive instead of a re-sweep. |
 | `job_content` | Descriptions, split out so facet scans never touch the text (296 MB on the Ashby-only corpus). |
 | `job_metros` / `job_skills` | Join tables, so a facet count is an index seek. A job can be in several metros: 76,041 rows across the 61,213 Ashby-only jobs. |
-| `metros` / `metro_aliases` | The canonical registry, built from observed strings. **This is the authority at query time**: a wrong grouping is one row edit plus a re-derive, not a code change. |
+| `metros` / `metro_aliases` | The registry, rebuilt from `job_metros` after every derive. The labels and counts feed the UI's dropdown and facets; the *grouping* authority is `CITY_TO_METRO` in `src/lib/derive/geo.mjs`, read at derive time — `metro_aliases` records the mapping but nothing reads it back yet, so a wrong grouping is a geo.mjs edit plus a re-derive. |
 | `jobs_fts` | FTS5 over title + company + description, joined through `jobs_fts_map`. |
 | `job_events` | One row per job per day it appeared / changed / reappeared / disappeared. |
 | `companies`, `sweeps`, `slug_attempts` | Boards (with `last_etag` and a `live` / `empty` / `dead` / `error` status), run history, probe verdicts. |

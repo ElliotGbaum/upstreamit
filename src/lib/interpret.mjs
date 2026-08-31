@@ -307,11 +307,11 @@ export function aiMeta({ accounts = false, signedIn = false } = {}) {
  * The closed lists the model is allowed to choose from, read off the schema and
  * the corpus rather than restated here.
  *
- * `metros` and `countries` are a *sample* — the fifty busiest and every country
- * with an open job. They are in the prompt as examples of the shape of an
- * answer, not as the allowed set: place names come back as free text and
- * `resolvePlaces` resolves them against the whole registry. Sending 24,576
- * metros would be a 700 KB prompt to answer "NYC".
+ * `metros` is the `METRO_OPTIONS` busiest, served to the tool schema as a
+ * closed enum the model must pick ids from — only free-text `places` reach
+ * `resolvePlaces` and the whole registry. `countries` is the sample: every
+ * country with an open job, there for shape rather than as the allowed set.
+ * Sending all 24,576 metros would be a 700 KB prompt to answer "NYC".
  */
 // Per database, so two corpora in one process cannot read each other's answer,
 // and weak so a closed one does not pin its vocabulary in memory.
