@@ -233,12 +233,13 @@ async function loadCollinfo() {
       return { ok: false, error: `collinfo.json: invalid JSON — ${error.message}` };
     }
   })();
-  return collinfoPromise;
-}
-
-/** Drop the memoized crawl listing. For tests, and for a long-lived process. */
-export function resetArchiveCache() {
-  collinfoPromise = null;
+  const result = await collinfoPromise;
+  // The memo is for the listing, not the weather: a settled failure replayed
+  // to the other six patterns would turn one bad fetch of a small JSON file
+  // into the whole day's archive contribution. Drop it so the next pattern
+  // starts fresh; a success stays cached for the run.
+  if (!result.ok) collinfoPromise = null;
+  return result;
 }
 
 /* -------------------------------------------------------------------------- */
