@@ -36,6 +36,7 @@ import {
   employmentType as workdayEmploymentType,
   companyNameFromUrl,
   realPlace,
+  truncatedAtCeiling,
 } from './lib/adapters/workday.mjs';
 
 let passed = 0;
@@ -711,6 +712,15 @@ const WD_SLUG = 'canadiansolar|wd5|canadiansolar';
 }
 
 // -------------------------------------------------------------------------- //
+
+// A listing that fills the page ceiling has not been seen to the end — whether
+// the tenant's total is honestly huge (CVS Health: 19,206) or Workday clamped
+// it to exactly 2000 server-side. Both must read as truncation; a board whose
+// total merely overstates itself must not, because the path dedup keeps its
+// count under the ceiling.
+check('wd: a full read at the ceiling is truncation', truncatedAtCeiling(100, 2000), true);
+check('wd: a board under the ceiling is not', truncatedAtCeiling(63, 1242), false);
+check('wd: an overstated total deduped below the ceiling is not', truncatedAtCeiling(100, 1988), false);
 
 if (failures.length) {
   console.error(`\n✗ ${failures.length} adapter check(s) failed:\n`);

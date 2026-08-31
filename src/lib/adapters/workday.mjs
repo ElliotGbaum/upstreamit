@@ -143,11 +143,35 @@ const PAGE_SIZE = 20;
 /**
  * Hard ceiling on list pages per board, independent of `total`.
  *
- * 2,000 postings is far past the largest board observed (1,242) and exists only
- * so that a tenant which reports a nonsense `total`, or paginates in a circle,
- * costs 100 requests instead of an unbounded number.
+ * Written when the largest board observed held 1,242 postings, as a guard
+ * against a tenant reporting a nonsense `total` or paginating in a circle.
+ * The Fortune-500 tenants blew straight past it — CVS Health reports 19,206
+ * open postings — and Workday *itself* clamps some boards at 2,000: they
+ * report `total` as exactly 2000 and serve byte-identical pages past that
+ * offset. Either way, a run that fills the ceiling has NOT seen the board;
+ * `truncatedAtCeiling` below is what keeps that from being mistaken for a
+ * complete listing.
  */
 const MAX_PAGES = 100;
+
+/**
+ * Did the listing continue past where we stopped reading?
+ *
+ * True exactly when every page up to the ceiling yielded a distinct posting —
+ * proof the board goes on, whether because its real total exceeds the ceiling
+ * or because Workday clamped `total` to 2000 server-side. A board whose
+ * `total` merely overstates itself cannot trip this: the path dedup drives
+ * the count below the ceiling.
+ *
+ * The caller must treat a truncated read as an errored board, not a smaller
+ * one. Returning the 2,000 postings that did arrive as if they were the board
+ * closes every stored job behind the ceiling — on the 38 capped boards that
+ * fabricated ~6,500 closures and the same number of fake appearances every
+ * night, feeding the daily report a churn that never happened.
+ */
+export function truncatedAtCeiling(pages, postingCount) {
+  return pages === MAX_PAGES && postingCount === MAX_PAGES * PAGE_SIZE;
+}
 
 /**
  * A collected slug is `tenant|dc|site`.
@@ -338,6 +362,19 @@ export async function fetchBoard(slug, opts = {}) {
       bytes += res.bytes ?? 0;
       take(res);
     }
+  }
+
+  // The same reasoning as the partial-list guard above: a listing cut off at
+  // the ceiling is not a smaller board, it is an unknown one. Report an error
+  // and leave the stored jobs untouched rather than closing everything past
+  // page 100.
+  if (truncatedAtCeiling(pages, postings.length)) {
+    return {
+      ok: false,
+      status: 0,
+      error: `board exceeds the ${MAX_PAGES * PAGE_SIZE}-posting page ceiling (reported total ${total})`,
+      dead: false,
+    };
   }
 
   if (!postings.length) {
