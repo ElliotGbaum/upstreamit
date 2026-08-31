@@ -226,6 +226,7 @@ alternativ
 alternativepayments
 altimate
 altis
+altis labs
 altruistiq
 altura
 aluriontalentgroup
@@ -417,6 +418,7 @@ ashbyhq
 ashgro
 asimov
 askdragonfly
+askelephant
 asklio
 aslan
 aso-careers
@@ -1111,6 +1113,7 @@ commit
 common-fund
 commonroom
 commons
+commonsense
 commonware
 commsor
 community phone
@@ -1189,6 +1192,7 @@ coperniq
 copilot
 copilot-money
 coral
+coral care
 coralai
 coram-ai
 cord
@@ -1488,6 +1492,7 @@ dourolabs.xyz
 dovetail
 dovly
 doxy.me
+dragonfruit.ai
 drata
 drcomfort
 dreamthree
@@ -1751,7 +1756,6 @@ fathom
 fathom.video
 fauna-robotics
 faves
-favicon.ico
 favicon.png
 favorited
 fazeshift
@@ -1870,6 +1874,7 @@ flourish-software
 flowcarbon
 flowclub
 flowengineering
+flowgen labs
 flowhealth
 flowhub
 flowtel
@@ -2252,6 +2257,7 @@ haus
 haven-headache
 havocai
 hawk
+hawkcell
 hawkeyeinnovations
 haydenai
 hayla
@@ -2364,6 +2370,7 @@ hooli
 hopae
 hoplynk
 hopper
+horizenlabs
 horizon
 horizon3ai
 hospitalio
@@ -2372,6 +2379,7 @@ hotplate
 hotspexmedia
 hotstuff labs
 houseware
+howly
 hoxhunt
 hoxtonfarms
 hqo
@@ -2937,6 +2945,7 @@ liven
 livinghr
 livtech
 llamaindex
+llms.txt
 lm-studio
 lmarena
 loadshare
@@ -3043,6 +3052,7 @@ mandrel
 maneuver-marketing
 manex
 mangomint
+maniac
 manifest-law
 manifest-os
 manifest.json
@@ -3733,6 +3743,7 @@ pagos
 pahdo
 paires
 paireyewear
+pairtu
 palette-media
 palettelabs
 palisades
@@ -4395,7 +4406,6 @@ robin-ai
 robin-radar
 roboflow
 robot-learning-co
-robots.txt
 rockerbox
 rocketplace
 rocketsciencegg
@@ -4706,7 +4716,6 @@ sitecore
 sitemap
 sitemap-index.xml
 sitemap-index.xml.gz
-sitemap.xml
 sitemap.xml.gz
 sitemap_index.xml
 sitemap_index.xml.gz
@@ -4993,6 +5002,7 @@ studson
 studyfetch
 stuut-ai
 stytch
+subconscious
 subconscious-ai
 sublime-security
 subsets
@@ -5079,6 +5089,7 @@ symmetry
 symops
 synapse labs
 sync.so
+sync.so.md
 synctera
 syndica
 syndicat
@@ -5317,6 +5328,7 @@ tldr.tech
 tldraw
 todyl
 togal-ai
+toggl
 tokenmetrics
 tokenmetrics-careers
 tokenterminal

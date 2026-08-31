@@ -2630,7 +2630,6 @@ fathomcomputing
 fathomhealth
 fathomradiant
 fatllama
-favicon.ico
 fayebsg
 fazemed
 fazzfinancial
@@ -6526,7 +6525,6 @@ roboflow
 robomq
 roboticassistancedevices
 roboticresearch
-robots.txt
 robust-ai
 robustai
 robustintelligence
@@ -7952,6 +7950,7 @@ tryswell
 trytrove
 tsc
 tsmg
+tsugu
 ttec
 ttecdigital
 ttxinc

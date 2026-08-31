@@ -1,14 +1,14 @@
 # Slug sync report
 
-Run: 2026-08-31T16:08:05.717Z
+Run: 2026-08-31T16:28:17.948Z
 
 ## Sources
 
 | Source | ATS | Status | Accepted | Rejected | Upstream commit |
 | --- | --- | --- | --- | --- | --- |
-| hf-latmay | ashby | fetched | 5461 | 64177 | — |
-| hf-latmay | greenhouse | fetched | 14233 | 55405 | — |
-| hf-latmay | lever | fetched | 8530 | 61108 | — |
+| hf-latmay | ashby | fetched | 5458 | 64180 | — |
+| hf-latmay | greenhouse | fetched | 14231 | 55407 | — |
+| hf-latmay | lever | fetched | 8528 | 61110 | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | fetched | 3342 | 0 | `bdc0b44` 2026-08-31 |
@@ -38,17 +38,28 @@ Run: 2026-08-31T16:08:05.717Z
 | openjobsdata | ashby | fetched | 71 | 0 | `66774fc` 2026-08-06 |
 | openjobsdata | greenhouse | fetched | 263 | 0 | `66774fc` 2026-08-06 |
 | openjobsdata | lever | fetched | 11 | 0 | `66774fc` 2026-08-06 |
+| commoncrawl | ashby | fetched | 3547 | 201 | — |
+| commoncrawl | greenhouse | fetched | 2530 | 158 | — |
+| commoncrawl | greenhouse | fetched | 5241 | 295 | — |
+| commoncrawl | greenhouse | fetched | 68 | 4 | — |
+| commoncrawl | greenhouse | fetched | 449 | 52 | — |
+| commoncrawl | lever | fetched | 0 | 140 | — |
+| commoncrawl | lever | fetched | 88 | 14 | — |
+| wayback | ashby | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260811) | — | — | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260811) | — | — | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260811) | — | — | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260811) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5926 | +82 | -0 | 8095 |
+| ashby | 5938 | +15 | -3 | 8110 |
 | bamboohr | 11316 | +0 | -0 | 11316 |
-| greenhouse | 15239 | +12 | -2 | 15241 |
+| greenhouse | 15464 | +227 | -2 | 15468 |
 | icims | 10106 | +0 | -0 | 10106 |
-| lever | 8738 | +0 | -0 | 8738 |
+| lever | 8737 | +1 | -2 | 8739 |
 | paylocity | 10252 | +0 | -0 | 10252 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -56,11 +67,12 @@ Run: 2026-08-31T16:08:05.717Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5461 | 820 |
-| backfill | 4174 | 75 |
-| kalil | 3447 | 31 |
-| openroles | 3342 | 93 |
-| feashliaa | 3161 | 5 |
+| hf-latmay | 5458 | 732 |
+| backfill | 4174 | 32 |
+| commoncrawl | 3547 | 15 |
+| kalil | 3447 | 30 |
+| openroles | 3342 | 9 |
+| feashliaa | 3161 | 4 |
 | jobseek | 926 | 8 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
@@ -68,7 +80,9 @@ Run: 2026-08-31T16:08:05.717Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: adapty-io, adclear, ambrosia-energy, ampeers, atlys, bowatt, cardboard, casperstudios, causaprima, chamelio, cognita-imaging, complir, compresr, cranston, curvionblue, dealops, dext-careers, dlc-inc, fence-finance, fnfm, … (82 total)
+Added: altis labs, askelephant, commonsense, coral care, dragonfruit.ai, flowgen labs, hawkcell, horizenlabs, howly, llms.txt, maniac, pairtu, subconscious, sync.so.md, toggl
+
+Removed: favicon.ico, robots.txt, sitemap.xml
 
 ### bamboohr — contribution by source
 
@@ -80,18 +94,19 @@ Added: adapty-io, adclear, ambrosia-energy, ampeers, atlys, bowatt, cardboard, c
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14233 | 4780 |
-| feashliaa | 8333 | 171 |
-| kalil | 6028 | 448 |
-| openroles | 5170 | 69 |
-| jobseek | 2523 | 29 |
+| hf-latmay | 14231 | 4545 |
+| feashliaa | 8333 | 165 |
+| kalil | 6028 | 390 |
+| commoncrawl | 5578 | 227 |
+| openroles | 5170 | 47 |
+| jobseek | 2523 | 22 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
 
-Added: californiainstituteofartsandtechnology, farmersmutualhailinsurancecompany, iluminere, lettrlabs, monecoadvisors, noxinnovations, patronusaiinc, recycleye, scorability, theloomisagency, via99, ziosk
+Added: 0verwatch, 1945bce8d3924ece9421ba8630f57b0c, abacusfinancegroup, abrightbeginningsmerrillville, absolutesecurityintl, acrolinx, advocateslawcareers, ageoflearninginc, agibankvagasfuturas, aks-internships, all4seasons, allo, alpineinternships-private, aluraluxuryapts, alveole-partnerships, americanpublichealthassociation, ancoris, apexskincareers, apollosyndicate1969, arcadiascience, … (227 total)
 
-Removed: goprocareers, unsupervisedai
+Removed: favicon.ico, robots.txt
 
 ### icims — contribution by source
 
@@ -103,14 +118,19 @@ Removed: goprocareers, unsupervisedai
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8530 | 3783 |
+| hf-latmay | 8528 | 3715 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 133 |
 | openroles | 2124 | 4 |
 | outscal | 314 | 12 |
 | jobseek | 186 | 0 |
+| commoncrawl | 88 | 1 |
 | cryptojobs | 63 | 0 |
 | openjobsdata | 11 | 0 |
+
+Added: tsugu
+
+Removed: favicon.ico, robots.txt
 
 ### paylocity — contribution by source
 
