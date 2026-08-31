@@ -228,16 +228,25 @@ async function main() {
   if (args.fts) {
     const ftsTick = ticker('derive:fts', 'Full-text index', total);
     // Contentless FTS5 tables cannot be UPDATEd row-by-row, so a rebuild is a
-    // drop and repopulate. It is the slow half of this script by a wide margin.
+    // drop and repopulate. It is the slow half of this script by a wide margin
+    // — tens of minutes on the full corpus — so it is built under a scratch
+    // name and swapped in one transaction at the end. Dropping the live table
+    // first meant a kill, an OOM or a mid-pass sleep left every keyword search
+    // silently answering from a truncated index until the next derive, with no
+    // error anywhere: ftsSearch just returns fewer ids.
     db.exec(`
-      DROP TABLE IF EXISTS jobs_fts;
-      DELETE FROM jobs_fts_map;
-      CREATE VIRTUAL TABLE jobs_fts USING fts5(
+      DROP TABLE IF EXISTS jobs_fts_new;
+      DROP TABLE IF EXISTS jobs_fts_map_new;
+      CREATE VIRTUAL TABLE jobs_fts_new USING fts5(
         title, company, body, content = '', tokenize = 'unicode61 remove_diacritics 2'
       );
+      CREATE TABLE jobs_fts_map_new (
+        rowid  INTEGER PRIMARY KEY,
+        job_id TEXT UNIQUE NOT NULL
+      );
     `);
-    const insFts = db.prepare('INSERT INTO jobs_fts (rowid, title, company, body) VALUES (?, ?, ?, ?)');
-    const insMap = db.prepare('INSERT INTO jobs_fts_map (rowid, job_id) VALUES (?, ?)');
+    const insFts = db.prepare('INSERT INTO jobs_fts_new (rowid, title, company, body) VALUES (?, ?, ?, ?)');
+    const insMap = db.prepare('INSERT INTO jobs_fts_map_new (rowid, job_id) VALUES (?, ?)');
     const readFts = db.prepare(`
       SELECT j.rowid AS rid, j.id, j.title, j.company_name, c.description_text AS body
       FROM jobs j LEFT JOIN job_content c ON c.job_id = j.id
@@ -257,7 +266,19 @@ async function main() {
       fcur = rows[rows.length - 1].rid;
       ftsTick.tick(rows.length);
     }
-    db.exec("INSERT INTO jobs_fts (jobs_fts) VALUES ('optimize')");
+    db.exec("INSERT INTO jobs_fts_new (jobs_fts_new) VALUES ('optimize')");
+    // The swap. A rename is metadata-only, so the window where no complete
+    // index exists shrinks from the whole build to one transaction; a crash
+    // before this line leaves the old index answering, and the next run's
+    // DROP IF EXISTS clears the half-built scratch.
+    transact(db, () => {
+      db.exec(`
+        DROP TABLE IF EXISTS jobs_fts;
+        DROP TABLE IF EXISTS jobs_fts_map;
+        ALTER TABLE jobs_fts_new RENAME TO jobs_fts;
+        ALTER TABLE jobs_fts_map_new RENAME TO jobs_fts_map;
+      `);
+    });
     ftsTick.done(`${fmt(ftsRows)} documents`);
   }
 
