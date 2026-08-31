@@ -226,7 +226,12 @@ async function main() {
   // -------------------------------------------------------------------- FTS --
   let ftsRows = 0;
   if (args.fts) {
-    const ftsTick = ticker('derive:fts', 'Full-text index', total);
+    // The pass reads the whole corpus even under --only-new (readFts below has
+    // no WHERE beyond the cursor), so its ticker counts all jobs, not this
+    // run's — the old denominator made the progress page read "700,000 of
+    // 2,625" for the longest stage of the night.
+    const ftsTotal = db.prepare('SELECT COUNT(*) n FROM jobs').get().n;
+    const ftsTick = ticker('derive:fts', 'Full-text index', ftsTotal);
     // Contentless FTS5 tables cannot be UPDATEd row-by-row, so a rebuild is a
     // drop and repopulate. It is the slow half of this script by a wide margin
     // — tens of minutes on the full corpus — so it is built under a scratch
