@@ -20,7 +20,7 @@ import {
   waybackUrl,
 } from './lib/archives.mjs';
 import { normalizeSlug } from './lib/normalize.mjs';
-import { mergeStore } from './lib/slug-store.mjs';
+import { mergeStore, unreadSourceCarry } from './lib/slug-store.mjs';
 
 // collinfo.json as Common Crawl publishes it: newest first.
 const COLLINFO = [
@@ -211,4 +211,46 @@ test('mergeStore never prunes a slug an incremental source still vouches for', (
   });
   assert.deepEqual(merged.pruned, []);
   assert.ok('lupapets' in merged.slugs);
+});
+
+/*
+ * `--sources=wayback --force` is a documented thing to run — it is how you read
+ * deeper history than the bookmark covers. It must not cost the store every slug
+ * the other sources found.
+ */
+
+const REGISTRY = [
+  { id: 'openroles', files: [{ ats: 'ashby' }, { ats: 'greenhouse' }] },
+  { id: 'wayback', files: [{ ats: 'ashby' }] },
+  { id: 'manual', files: [{ ats: 'lever' }] },
+];
+
+test('unreadSourceCarry carries every source the run did not read', () => {
+  const carry = unreadSourceCarry(REGISTRY, [REGISTRY[1]]);
+  assert.deepEqual(carry, [
+    { ats: 'ashby', sourceId: 'openroles' },
+    { ats: 'greenhouse', sourceId: 'openroles' },
+    { ats: 'lever', sourceId: 'manual' },
+  ]);
+});
+
+test('unreadSourceCarry carries nothing when the run read everything', () => {
+  assert.deepEqual(unreadSourceCarry(REGISTRY, REGISTRY), []);
+});
+
+test('a source left out by --sources keeps the slugs it last claimed', () => {
+  const previous = { acme: { sources: ['openroles'], first_seen: 't0', last_seen: 't0' } };
+  const carried = new Set(
+    unreadSourceCarry(REGISTRY, [REGISTRY[1]])
+      .filter((entry) => entry.ats === 'ashby')
+      .map((entry) => entry.sourceId),
+  );
+  const merged = mergeStore({
+    previous,
+    observed: new Map(),
+    carriedSources: carried,
+    incrementalSources: new Set(['wayback']),
+    now: 't1',
+  });
+  assert.deepEqual(merged.slugs.acme.sources, ['openroles']);
 });

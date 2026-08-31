@@ -77,6 +77,29 @@ export function mergeStore({
   return { slugs: Object.fromEntries(slugs), pruned };
 }
 
+/**
+ * Which (ats, source) pairs this run never read, and must therefore carry.
+ *
+ * `--sources` narrows what a run fetches, not what the store is allowed to
+ * believe. Every enabled source the run skipped is returned here so it can be
+ * carried exactly like a source that answered 304, because the two are the same
+ * situation: no new evidence either way.
+ *
+ * @param {Array<object>} enabledSources  every source the registry has enabled
+ * @param {Array<object>} readSources     the subset this run is actually reading
+ */
+export function unreadSourceCarry(enabledSources, readSources) {
+  const read = new Set(readSources.map((source) => source.id));
+  const carry = [];
+  for (const source of enabledSources) {
+    if (read.has(source.id)) continue;
+    for (const file of source.files ?? []) {
+      if (file.ats) carry.push({ ats: file.ats, sourceId: source.id });
+    }
+  }
+  return carry;
+}
+
 /** Compare two stores for the run report: what became active, what fell out. */
 export function diffStore(previous, next, ats) {
   const wasActive = new Set(

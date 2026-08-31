@@ -26,7 +26,7 @@ import { promisify } from 'node:util';
 
 import { describeOrigin, fetchLastCommit, loadFile, parseSlugFile } from './lib/fetch-source.mjs';
 import { normalizeSlug } from './lib/normalize.mjs';
-import { diffStore, mergeStore } from './lib/slug-store.mjs';
+import { diffStore, mergeStore, unreadSourceCarry } from './lib/slug-store.mjs';
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -45,11 +45,12 @@ async function main() {
   const state = await readJson(STATE_PATH, { files: {} });
   const token = await resolveGithubToken();
 
-  const sources = registry.sources.filter((source) => {
-    if (source.enabled === false) return false;
-    if (options.sources && !options.sources.includes(source.id)) return false;
-    return true;
-  });
+  // `enabled: false` is an edit to the registry and means "this source no longer
+  // speaks for anything", so its claims are allowed to lapse. `--sources` is a
+  // CLI convenience meaning "only run these now", which is a different thing
+  // entirely — see the carry-over seeded below.
+  const enabled = registry.sources.filter((source) => source.enabled !== false);
+  const sources = enabled.filter((source) => !options.sources || options.sources.includes(source.id));
 
   if (sources.length === 0) {
     console.error('No sources selected. Check sources.json and --sources.');
@@ -65,6 +66,17 @@ async function main() {
   // Sources whose contribution we could not refresh; their prior claims must be preserved.
   const carriedOver = new Map(); // atsKey -> Set<sourceId>
   const fileResults = [];
+
+  // A source `--sources` left out was not read, and a source that was not read
+  // has said nothing — which is not the same as having stopped claiming its
+  // slugs. Without this, `--sources=wayback` writes a store containing only what
+  // Wayback happened to return, silently retracting the tens of thousands of
+  // slugs every other source stands behind. Same rule as a 304 or a failed
+  // fetch, for the same reason: only a source we actually re-read gets its
+  // claims recomputed.
+  for (const { ats, sourceId } of unreadSourceCarry(enabled, sources)) {
+    addCarryOver(carriedOver, ats, sourceId);
+  }
 
   for (const source of sources) {
     for (const file of source.files) {
