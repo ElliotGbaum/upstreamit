@@ -61,7 +61,7 @@
 import './lib/env.mjs';
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink, mkdir } from 'node:fs/promises';
-import { join, dirname, extname, normalize } from 'node:path';
+import { join, dirname, extname, normalize, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { openDb } from './lib/db.mjs';
 import {
@@ -475,7 +475,7 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
   // of what a good job is. Owned profiles are listed and served to their owner
   // and 404 for everybody else.
   if (path === '/api/profiles' && req.method === 'GET') {
-    return json(res, 200, { profiles: profilesVisibleTo(viewer), dir: PROFILE_DIR, writable: sharedProfileWrites || Boolean(accounts) });
+    return json(res, 200, { profiles: profilesVisibleTo(viewer), writable: sharedProfileWrites || Boolean(accounts) });
   }
   if (path.startsWith('/api/profiles/')) {
     const name = path.slice('/api/profiles/'.length);
@@ -530,7 +530,10 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
       // wrote, and rewriting their file with every default filled in would make
       // it unreadable and impossible to diff.
       await writeFile(file, `${JSON.stringify(body, null, 2)}\n`);
-      return json(res, 200, { saved: file, profiles: profilesVisibleTo(viewer) });
+      // The name, not the file: the app never read the path, and the account
+      // route's equivalent already answers with the bare name. An absolute
+      // path in a JSON body is the server's filesystem layout, published.
+      return json(res, 200, { saved: name.replace(/\.json$/, ''), profiles: profilesVisibleTo(viewer) });
     }
     if (req.method === 'DELETE') {
       try {
@@ -538,7 +541,7 @@ async function api(db, req, res, path, url, { accounts, sharedProfileWrites }) {
       } catch {
         return json(res, 404, { error: 'no such profile' });
       }
-      return json(res, 200, { deleted: file, profiles: profilesVisibleTo(viewer) });
+      return json(res, 200, { deleted: name.replace(/\.json$/, ''), profiles: profilesVisibleTo(viewer) });
     }
   }
 
@@ -591,7 +594,11 @@ async function serveStatic(req, res, path) {
   // Contain the served path inside APP_DIR. This is a local tool, but a
   // traversal bug here would hand the whole disk to anything on the machine.
   const target = normalize(join(APP_DIR, rel));
-  if (!target.startsWith(APP_DIR)) {
+  // The separator matters: a bare prefix test also passes siblings that share
+  // the name's spelling — ../app.bak/secret normalizes to /app/app.bak/secret,
+  // which startsWith('/app/app'). No such sibling exists today; the check
+  // should not depend on that staying true.
+  if (target !== APP_DIR && !target.startsWith(APP_DIR + sep)) {
     res.writeHead(403).end('forbidden');
     return;
   }

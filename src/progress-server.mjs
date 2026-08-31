@@ -13,7 +13,7 @@
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { join, dirname, extname, normalize } from 'node:path';
+import { join, dirname, extname, normalize, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', 'progress');
@@ -38,7 +38,9 @@ const server = createServer(async (req, res) => {
   // Contain the served path inside ROOT — this is a dev server, but a traversal
   // bug here would expose the whole disk to anything on localhost.
   const target = normalize(join(ROOT, rel));
-  if (!target.startsWith(ROOT)) {
+  // Prefix plus separator, so a sibling of ROOT sharing its spelling cannot
+  // slip past — the same rule serveStatic applies in server.mjs.
+  if (target !== ROOT && !target.startsWith(ROOT + sep)) {
     res.writeHead(403).end('forbidden');
     return;
   }
