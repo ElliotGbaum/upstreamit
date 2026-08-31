@@ -16,6 +16,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { loadCommonCrawl, loadWayback } from './archives.mjs';
+import { request } from './http.mjs';
 
 const RAW_BASE = 'https://raw.githubusercontent.com';
 const API_BASE = 'https://api.github.com';
@@ -76,10 +77,18 @@ async function httpLoad(url, validators, extraHeaders) {
   }
 
   try {
-    const response = await fetch(url, { headers, redirect: 'follow' });
+    // Through the shared layer rather than a bare fetch, for the retry and the
+    // timeout: ten of these sources are files in strangers' repos, and a single
+    // transient 5xx used to fail the whole day's refresh. A 404 is still an
+    // answer — a renamed upstream file should fail loudly, not be retried.
+    const response = await request(url, { headers, timeoutMs: 30_000 });
 
-    if (response.status === 304) return { status: 'unchanged' };
+    if (response.status === 304) {
+      await response.arrayBuffer().catch(() => {});
+      return { status: 'unchanged' };
+    }
     if (!response.ok) {
+      await response.arrayBuffer().catch(() => {});
       return { status: 'error', error: `HTTP ${response.status} ${response.statusText} for ${url}` };
     }
 
