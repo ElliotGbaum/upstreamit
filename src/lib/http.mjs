@@ -62,6 +62,9 @@ export async function request(url, opts = {}) {
       clearTimeout(timer);
 
       if (RETRYABLE.has(res.status) && attempt < retries) {
+        // Drain so the socket can be reused — an abandoned body keeps the
+        // connection checked out until GC, and 429s arrive in bursts.
+        await res.arrayBuffer().catch(() => {});
         // Honour Retry-After when the server bothers to send one.
         const retryAfter = Number(res.headers.get('retry-after'));
         const wait = Number.isFinite(retryAfter) && retryAfter > 0
@@ -140,22 +143,6 @@ export async function getJson(url, opts = {}) {
       bytes: text.length,
     };
   }
-}
-
-/** GET raw text. Same result shape, `data` is the string. */
-export async function getText(url, opts = {}) {
-  let res;
-  try {
-    res = await request(url, opts);
-  } catch (err) {
-    return { ok: false, status: 0, data: null, error: String(err?.message ?? err), bytes: 0 };
-  }
-  if (!res.ok) {
-    await res.arrayBuffer().catch(() => {});
-    return { ok: false, status: res.status, data: null, error: `HTTP ${res.status}`, bytes: 0 };
-  }
-  const text = await res.text();
-  return { ok: true, status: res.status, data: text, etag: res.headers.get('etag'), bytes: text.length };
 }
 
 /**
