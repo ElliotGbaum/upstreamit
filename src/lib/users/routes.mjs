@@ -212,8 +212,17 @@ export function createAccounts({ usersDb, jobsDb, limits = {} }) {
       if (await meRoutes(req, res, path, url)) return true;
       json(res, 404, { error: `no route for ${req.method} ${path}` });
     } catch (err) {
-      if (err instanceof UserError) json(res, err.status, { error: err.message });
-      else json(res, 500, { error: err.message });
+      // A status under 500 is an answer — UserError's, or readBody's 400/413
+      // — and its message was written for the sender. Anything else is a bug:
+      // log it (a 500 here used to leave no trace in `fly logs`) and answer
+      // with something fixed, because err.message at this level is the
+      // server's internals, not the caller's mistake.
+      if (Number.isInteger(err?.status) && err.status < 500) {
+        json(res, err.status, { error: err.message });
+      } else {
+        console.error(`${req.method} ${path} →`, err);
+        json(res, 500, { error: 'something went wrong on this side; it has been logged' });
+      }
     }
     return true;
   }

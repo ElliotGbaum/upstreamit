@@ -83,7 +83,7 @@ import { profilesVisibleTo, ownerOf, ownedBy, listProfiles, PROFILE_DIR } from '
 import { json, readBody, CONTENT_TYPES as TYPES } from './lib/wire.mjs';
 import { interpret, aiMeta, CALLS_PER_HOUR } from './lib/interpret.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
-import { isSecureRequest } from './lib/users/auth.mjs';
+import { isSecureRequest, sameOrigin } from './lib/users/auth.mjs';
 import { openUsersDb } from './lib/users/store.mjs';
 import { statusVocabulary } from './lib/users/schema.mjs';
 
@@ -156,12 +156,33 @@ export function createApp(db, { accounts = null, sharedProfileWrites = true } = 
 
     if (redirectFromWww(req, res, url)) return;
 
+    // The same-origin refusal for every /api write, not only the account
+    // module's. The account layer keeps its own copy — it is a public entry
+    // point exercised directly by tests — but /api/interpret (the one route
+    // that spends the Anthropic key) and the shared-profile writes routed by
+    // api() had none, and SameSite=Lax alone is exactly the single layer the
+    // auth module's header says not to trust. Requests without an Origin
+    // (curl, the CLI, the Sheet exporter) pass, as sameOrigin documents.
+    if (path.startsWith('/api/') && req.method !== 'GET' && req.method !== 'HEAD' && !sameOrigin(req)) {
+      return json(res, 403, { error: 'cross-origin write refused' });
+    }
+
     try {
       if (accounts && (await accounts.handle(req, res, path, url))) return;
       if (path.startsWith('/api/')) return await api(db, req, res, path, url, { accounts, sharedProfileWrites });
       return await serveStatic(req, res, path);
     } catch (err) {
-      json(res, 500, { error: err.message });
+      // A status-carrying throw is an answer, not an accident: readBody's 400
+      // and 413 land here from routes whose own try blocks sit below the body
+      // read. Everything else is genuinely unexpected — log it, because a 500
+      // on the deployed machine used to leave no trace in `fly logs` at all,
+      // and say something fixed rather than err.message, which for a
+      // filesystem failure is an absolute server path.
+      if (Number.isInteger(err?.status) && err.status < 500) {
+        return json(res, err.status, { error: err.message });
+      }
+      console.error(`${req.method} ${path} →`, err);
+      json(res, 500, { error: 'something went wrong on this side; it has been logged' });
     }
   };
 }

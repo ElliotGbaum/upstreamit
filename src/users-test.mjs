@@ -68,6 +68,7 @@ import {
   UserError,
 } from './lib/users/store.mjs';
 import { createAccounts } from './lib/users/routes.mjs';
+import { createApp } from './server.mjs';
 import {
   hashPassword,
   verifyPassword,
@@ -465,6 +466,47 @@ try {
     check('delete: leaves other accounts alone', findByEmail(db, 'elliot@example.com')?.id, elliot.id);
     check('delete: and the corpus knows nothing about any of it', getUser(db, doomed.id), null);
   }
+  // ----------------------------------------------- the app-level guards --
+  // Driven through createApp itself, because these are the guards that sit
+  // above every route: the cross-origin write refusal (the account module has
+  // its own copy, but /api/interpret and the shared-profile writes rely on
+  // this one), and the honest 400 for a body that is not
+  // JSON. The static sibling-containment fix has no test: the URL parser
+  // normalizes dot-dot away before the check can see one, which is exactly
+  // why that check is defence-in-depth rather than load-bearing.
+  {
+    const app = createApp(null, { accounts: null, sharedProfileWrites: false });
+    const call = async ({ method = 'GET', url, headers = {}, body = null }) => {
+      const captured = { headers: {} };
+      const res = {
+        setHeader(name, value) { captured.headers[name] = value; },
+        writeHead(status) { captured.status = status; return res; },
+        end(payload) { captured.body = payload == null ? '' : String(payload); },
+      };
+      await app(
+        {
+          method,
+          url,
+          headers: { host: 'localhost:7799', ...headers },
+          socket: { remoteAddress: '127.0.0.1' },
+          async *[Symbol.asyncIterator]() { if (body != null) yield Buffer.from(body); },
+        },
+        res,
+      );
+      return captured;
+    };
+
+    const foreign = await call({ method: 'POST', url: '/api/search', headers: { origin: 'http://evil.example' }, body: '{}' });
+    check('app: a cross-origin write is refused before any route runs', foreign.status, 403);
+
+    const originless = await call({ method: 'POST', url: '/api/no-such-route', body: '{}' });
+    check('app: an origin-less write (curl, the CLI) is not mistaken for CSRF', originless.status, 404);
+
+    const notJson = await call({ method: 'POST', url: '/api/search', body: 'not json' });
+    check('app: a body that is not JSON is the sender\'s 400, not our 500', notJson.status, 400);
+
+  }
+
   // -------------------------------------------- the login scrypt budget --
   // The composite ip|email key stops grinding one account, but varying the
   // email minted a fresh 12-attempt budget per address — one client's total

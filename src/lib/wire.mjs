@@ -50,9 +50,26 @@ export async function readBody(req, limit = 1_000_000) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > limit) throw new Error('request body too large');
+    if (size > limit) throw httpError(413, 'request body too large');
     chunks.push(chunk);
   }
   if (!chunks.length) return {};
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    throw httpError(400, 'request body is not valid JSON');
+  }
+}
+
+/**
+ * A throwable that knows which side made the mistake. The route catch blocks
+ * honour `status` the way they honour UserError's, so an unparseable body is a
+ * 400 to the sender rather than a 500 wearing the JSON parser's internals —
+ * the server reporting a client mistake as its own fault, and leaking its
+ * plumbing while doing it.
+ */
+function httpError(status, message) {
+  const err = new Error(message);
+  err.status = status;
+  return err;
 }
