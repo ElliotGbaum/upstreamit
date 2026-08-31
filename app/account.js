@@ -63,7 +63,7 @@ let bridge = {
  * the twelve lines.
  */
 async function request(path, options) {
-  const res = await fetch(path, options);
+  const res = await fetchWithRetry(path, options);
   if (res.status === 204) return {};
   let body = {};
   try {
@@ -81,6 +81,66 @@ const send = (path, method, payload) =>
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload ?? {}),
   });
+
+/**
+ * The methods where sending a request twice and sending it once mean the same
+ * thing, and so the only ones `fetchWithRetry` will re-send.
+ *
+ * Every write this file makes about a job qualifies, and not by accident:
+ * hiding, un-hiding, starring, un-starring and setting a status are each an
+ * upsert or a delete keyed on (user, job) in store.mjs, so a repeat lands on
+ * the row the first one wrote. The two POSTs are the exceptions and stay out —
+ * `POST /api/me/lists` creates a list, and a lost answer to it must not become
+ * two lists named the same thing.
+ */
+const REPEATABLE = new Set(['GET', 'HEAD', 'PUT', 'DELETE']);
+
+/**
+ * `fetch`, with one retry when the request never reached the server.
+ *
+ * A tab left open holds its connection to the site open with it, and the far
+ * end closes those on a schedule of its own — the proxy trimming an idle one,
+ * or the machine going away for the two minutes a deploy takes. When the
+ * browser then sends on a connection that is already gone, the request fails
+ * before it is anywhere: `fetch` rejects with a TypeError and there is no
+ * response to read. Chrome silently re-sends the methods it considers safe and
+ * leaves the rest, and a `PUT` is one of the rest — which is why pressing × on
+ * a page you came back to after lunch would put "Could not hide that: Failed
+ * to fetch" on screen, revert the mark, and then work on the second press.
+ *
+ * Retried only when there was no response at all. A response carrying an error
+ * *status* is the server having answered — a refusal, or a sign-in that has
+ * expired — and repeating that only refuses twice.
+ *
+ * Safe to re-send because every body here is the string `send` built, not a
+ * stream that reading once consumes.
+ *
+ * Exported for account-test.mjs, which is the only way to state the rule about
+ * POST as a test rather than as a comment.
+ */
+export async function fetchWithRetry(path, options) {
+  try {
+    return await fetch(path, options);
+  } catch (err) {
+    if (!REPEATABLE.has((options?.method ?? 'GET').toUpperCase())) throw unreachable(err);
+    await new Promise((resume) => setTimeout(resume, 250));
+    try {
+      return await fetch(path, options);
+    } catch (again) {
+      throw unreachable(again);
+    }
+  }
+}
+
+/**
+ * What a dropped request says when it has run out of retries.
+ *
+ * "Failed to fetch" is Chrome describing its own plumbing, and it reaches the
+ * reader as the tail of "Could not hide that: …", where it tells them nothing
+ * they can do anything about. The original travels along as `cause` for
+ * anybody reading the console.
+ */
+const unreachable = (err) => new Error('the site did not answer — check your connection and try again', { cause: err });
 
 // ------------------------------------------------------------------- state --
 
