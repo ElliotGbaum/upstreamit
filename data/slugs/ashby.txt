@@ -146,6 +146,7 @@ aiand
 aibidia
 aic
 aida
+aidigest
 aidkit
 aim
 aim4hire
@@ -154,6 +155,7 @@ aios
 aiprise
 air
 airapps
+airbound
 airbyte
 airgarage
 airgoods
@@ -204,6 +206,7 @@ alloyenterprises
 alloyriver
 allspice
 alltakes
+allwyn-corp
 almabase
 almedia
 almetra
@@ -657,6 +660,7 @@ bitfount
 bitnomial
 bitstack
 bitvavo
+bivacor
 bivacor-inc
 bizly
 bjak
@@ -735,6 +739,7 @@ boostly
 bootloop
 botanictonics
 botcrew
+boulder-care
 boulevard
 boultonwatt
 bounce
@@ -873,6 +878,7 @@ carecar
 careers.azx.io
 careerstrengo
 careerswift.ai
+caremessage
 careswift
 careway
 cargado
@@ -1100,6 +1106,7 @@ collective
 collegevine.com
 collider
 colonist
+color-health
 column
 columntax
 comand-ai
@@ -1539,6 +1546,7 @@ easygenerator
 easyllama.com
 ecarxgroup
 echo
+echo.ai
 echomark
 echotwin
 ecityinteractive
@@ -1630,6 +1638,7 @@ endex
 endgame
 endra
 endurance-energy
+eneba
 engflow
 engram
 enode
@@ -1764,11 +1773,13 @@ feathery
 feathr
 featureform
 feedbackfruits
+feegow
 feldera
 felicity
 felix
 fella
 fellow
+fellowai
 fence-finance
 fence-masters-inc
 fencer
@@ -1973,6 +1984,7 @@ frontapp
 frontcareers
 frontier
 frontier-health
+frontierradiology.com
 frontiersecurity
 frontify
 fruitist
@@ -2000,6 +2012,7 @@ further
 furtherai
 fuse
 fuser
+futrue-neuroscience
 future-find
 futureaudioworkshop
 futurefitai
@@ -2016,6 +2029,7 @@ g2
 g2i
 gable
 gadget
+gaia health
 gaiafamily
 gainsight
 galileoai
@@ -2104,6 +2118,7 @@ glinttglobal
 global-x-etfs
 globex
 glomo
+glot
 glow
 glow25
 glyphic
@@ -2454,6 +2469,7 @@ images
 imagineart
 immersivelabs
 immuna
+impact-networking
 imper
 imperiuminvestmentgroups
 impira
@@ -2599,8 +2615,10 @@ jer
 jerry
 jerry.ai
 jetkvm
+jiga
 jigsaw
 jimdo.com
+jito-labs
 jitter
 jitter-video
 jobber
@@ -2978,12 +2996,14 @@ lpadesignstudios
 lslaw
 ltv
 lua
+lucidcomputing
 lucidlink
 lucis
 lucra-sports
 luma-ai
 lumaai
 lumana
+lumanu
 lumbermanufactory
 lumbra
 lumen
@@ -3082,6 +3102,7 @@ masabi
 mast
 mastodon
 mastra
+matchii
 matchnode
 materia
 material
@@ -3105,6 +3126,7 @@ mavericks
 maxhome
 maxima
 maxima-consulting
+maximor
 maximustribe
 maxinsights
 maxio
@@ -3497,6 +3519,7 @@ notion
 noto
 nous
 nova
+nova-talent
 novaintelligence
 novaprime
 novel
@@ -3750,6 +3773,7 @@ palisades
 palladio
 pallon.com
 palmstreet
+palo-it
 paloit
 palup
 panacea
@@ -3927,6 +3951,7 @@ pixelmatters
 place-exchange
 plaid
 plain
+plancraft
 planday
 plane
 planehr
@@ -4037,6 +4062,7 @@ pplwise
 praecipio
 pragma
 pragmaplatform
+pragmatico
 pragmatike
 prairielearn
 pravah
@@ -4186,6 +4212,7 @@ qventus.
 qwilr
 r
 r2
+r37
 rabbet
 rabbithole
 rabot
@@ -4303,6 +4330,7 @@ renderfoundation
 rennscotmfg
 rentana-io
 renterra
+rentman
 renuity
 reonic
 repeatbuilders
@@ -4348,6 +4376,7 @@ rev
 revcomm
 reve
 revel
+revelrobotics
 revelxdstudio
 revenium
 revenuebase-inc
@@ -4417,6 +4446,7 @@ rogo
 rohlik
 rojointegrations
 rokt
+rollout
 rollstack
 rollup
 romeprotocol
@@ -4479,6 +4509,7 @@ safi
 sage-alliance
 sage-alliance-schools
 sagecare
+sagefuture
 sagelabs.ai
 sagetap
 sahara
@@ -4500,6 +4531,7 @@ salonkee
 saltz
 same
 sample-healthcare
+sampura
 samsungnext
 sana-roles
 sanctuary
@@ -4695,6 +4727,7 @@ simon-lever
 simondata
 simple-ai
 simpleclosure
+simplestudy
 simplify
 simply
 simply-wall-st
@@ -5108,6 +5141,7 @@ syrup
 system initiative
 system-initiative
 system2
+syzygy
 t-robotics
 t1-energy
 t1energy
@@ -5185,6 +5219,7 @@ technimove
 technitask
 techpolicyfellowship
 techtorch
+techyrecruiter
 tectonai
 teero
 tekion
@@ -5295,6 +5330,7 @@ threev.ai
 thresh-power
 thrill-labs
 thrive-alliance-group
+thrivo-wealth
 thumbtack
 thundercompute
 thyme-care
@@ -5415,6 +5451,7 @@ trovehq
 troveo
 trovy
 trucksmarter
+true-classic-tees
 truecircle
 truelinkfinancial
 truelogic
@@ -5455,6 +5492,7 @@ twentyfour-industries
 twic
 twin-so
 twine
+twinprime
 two-dots
 twosteptx
 tyba
@@ -5468,6 +5506,7 @@ u.s.a
 uberall
 ubiquity-service
 udisc
+uforce
 uhp-unlockhumanpotential
 ui
 uipath
@@ -5574,6 +5613,7 @@ vcluster
 vclusterlabs
 vea-connect
 vector
+veda
 veev
 veezu
 vega
@@ -5761,6 +5801,7 @@ wherobots
 whetstoneresearch
 whippy
 whisk
+whiskeylibrary
 whitecircle
 whiterabbit
 whoop
@@ -5864,6 +5905,7 @@ xoul
 xpreso
 xyme
 xyz-reality
+yadda
 yazio
 ycombinator
 yeet
