@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-02T12:44:56.551Z
+Run: 2026-09-03T12:48:11.033Z
 
 ## Sources
 
@@ -42,18 +42,18 @@ Run: 2026-09-02T12:44:56.551Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 955 | 10 | — |
-| wayback | greenhouse | fetched | 16 | 0 | — |
-| wayback | greenhouse | fetched | 77 | 1 | — |
-| wayback | lever | fetched | 15 | 1 | — |
+| wayback | ashby | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5980 | +42 | -0 | 8152 |
-| greenhouse | 15469 | +5 | -0 | 15473 |
+| ashby | 5980 | +0 | -0 | 8152 |
+| greenhouse | 15469 | +0 | -0 | 15473 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -75,8 +75,6 @@ Run: 2026-09-02T12:44:56.551Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: aidigest, airbound, allwyn-corp, bivacor, boulder-care, caremessage, color-health, echo.ai, eneba, feegow, fellowai, frontierradiology.com, futrue-neuroscience, gaia health, glot, impact-networking, jiga, jito-labs, lucidcomputing, lumanu, … (42 total)
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -91,8 +89,6 @@ Added: aidigest, airbound, allwyn-corp, bivacor, boulder-care, caremessage, colo
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
 | wayback | 78 | 5 |
-
-Added: acme, hsogroupbv, infinitesima, oagaviationworldwide, scbitdefendersrl
 
 ### lever — contribution by source
 
