@@ -489,6 +489,7 @@ aiaf
 aibot
 aicure
 aidashinc
+aidocmedical
 aiedu
 aifleet
 aifoundry

@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-05T11:49:05.084Z
+Run: 2026-09-06T12:07:04.417Z
 
 ## Sources
 
@@ -42,9 +42,9 @@ Run: 2026-09-05T11:49:05.084Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | ashby | fetched | 6 | 2 | — |
+| wayback | greenhouse | fetched | 1 | 0 | — |
+| wayback | greenhouse | fetched | 4 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -53,7 +53,7 @@ Run: 2026-09-05T11:49:05.084Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 5980 | +0 | -0 | 8152 |
-| greenhouse | 15469 | +0 | -0 | 15473 |
+| greenhouse | 15470 | +1 | -0 | 15474 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -67,7 +67,7 @@ Run: 2026-09-05T11:49:05.084Z
 | kalil | 3447 | 30 |
 | openroles | 3342 | 9 |
 | feashliaa | 3161 | 4 |
-| wayback | 955 | 42 |
+| wayback | 959 | 42 |
 | jobseek | 927 | 7 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
@@ -88,7 +88,9 @@ Run: 2026-09-05T11:49:05.084Z
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
-| wayback | 78 | 5 |
+| wayback | 79 | 6 |
+
+Added: aidocmedical
 
 ### lever — contribution by source
 
