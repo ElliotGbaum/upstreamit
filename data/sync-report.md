@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-06T12:07:04.417Z
+Run: 2026-09-07T14:13:16.696Z
 
 ## Sources
 
@@ -12,8 +12,8 @@ Run: 2026-09-06T12:07:04.417Z
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | greenhouse | fetched | 5149 | 1 | `1c7c501` 2026-09-07 |
+| openroles | lever | fetched | 2122 | 0 | `1c7c501` 2026-09-07 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-09-06T12:07:04.417Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 6 | 2 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
+| wayback | ashby | fetched | 64 | 4 | — |
 | wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 7 | 1 | — |
+| wayback | lever | fetched | 4 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-09-06T12:07:04.417Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 5980 | +0 | -0 | 8152 |
-| greenhouse | 15470 | +1 | -0 | 15474 |
+| greenhouse | 15470 | +0 | -0 | 15474 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -61,13 +61,13 @@ Run: 2026-09-06T12:07:04.417Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 725 |
+| hf-latmay | 5458 | 724 |
 | backfill | 4174 | 29 |
 | commoncrawl | 3547 | 14 |
 | kalil | 3447 | 30 |
 | openroles | 3342 | 9 |
 | feashliaa | 3161 | 4 |
-| wayback | 959 | 42 |
+| wayback | 995 | 42 |
 | jobseek | 927 | 7 |
 | outscal | 235 | 10 |
 | cryptojobs | 150 | 0 |
@@ -79,18 +79,16 @@ Run: 2026-09-06T12:07:04.417Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4544 |
+| hf-latmay | 14231 | 4545 |
 | feashliaa | 8333 | 165 |
 | kalil | 6028 | 388 |
-| commoncrawl | 5578 | 222 |
-| openroles | 5170 | 47 |
+| commoncrawl | 5578 | 221 |
+| openroles | 5149 | 47 |
 | jobseek | 2523 | 22 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
-| wayback | 79 | 6 |
-
-Added: aidocmedical
+| wayback | 81 | 6 |
 
 ### lever — contribution by source
 
@@ -99,12 +97,12 @@ Added: aidocmedical
 | hf-latmay | 8528 | 3712 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
-| openroles | 2124 | 4 |
+| openroles | 2122 | 4 |
 | outscal | 314 | 12 |
 | jobseek | 189 | 0 |
 | commoncrawl | 88 | 1 |
 | cryptojobs | 63 | 0 |
-| wayback | 15 | 0 |
+| wayback | 17 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
