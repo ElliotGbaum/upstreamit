@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-07T14:13:16.696Z
+Run: 2026-09-08T12:50:43.151Z
 
 ## Sources
 
@@ -12,14 +12,14 @@ Run: 2026-09-07T14:13:16.696Z
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | fetched | 5149 | 1 | `1c7c501` 2026-09-07 |
-| openroles | lever | fetched | 2122 | 0 | `1c7c501` 2026-09-07 |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | unchanged | — | — | — |
-| jobseek | greenhouse | unchanged | — | — | — |
-| jobseek | lever | unchanged | — | — | — |
+| jobseek | ashby | fetched | 927 | 7 | `4dc9266` 2026-09-08 |
+| jobseek | greenhouse | fetched | 2525 | 22 | `4dc9266` 2026-09-08 |
+| jobseek | lever | fetched | 191 | 2 | `4dc9266` 2026-09-08 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,9 +42,9 @@ Run: 2026-09-07T14:13:16.696Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 64 | 4 | — |
-| wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | greenhouse | fetched | 7 | 1 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260906 | — | — | — |
+| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | greenhouse | fetched | 3 | 1 | — |
 | wayback | lever | fetched | 4 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -84,22 +84,22 @@ Run: 2026-09-07T14:13:16.696Z
 | kalil | 6028 | 388 |
 | commoncrawl | 5578 | 221 |
 | openroles | 5149 | 47 |
-| jobseek | 2523 | 22 |
+| jobseek | 2525 | 22 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 107 | 0 |
-| wayback | 81 | 6 |
+| wayback | 82 | 6 |
 
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3712 |
+| hf-latmay | 8528 | 3711 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
 | openroles | 2122 | 4 |
 | outscal | 314 | 12 |
-| jobseek | 189 | 0 |
+| jobseek | 191 | 0 |
 | commoncrawl | 88 | 1 |
 | cryptojobs | 63 | 0 |
 | wayback | 17 | 0 |
