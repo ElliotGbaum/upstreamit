@@ -385,6 +385,7 @@ arist
 arizent
 arketa
 arlo
+armadin
 armory
 aro.homes
 arq
@@ -814,6 +815,7 @@ built-robotics
 bulletfarm
 bullpen-talent
 bumble
+bumbleinc
 bunch
 bunkerhillhealth
 bunny
@@ -3599,6 +3601,7 @@ office-hours
 officehours
 offstream
 oh
+ohr
 okteto
 oktoberagency
 old-well-labs
@@ -5614,6 +5617,7 @@ vclusterlabs
 vea-connect
 vector
 veda
+veeda-ai
 veev
 veezu
 vega
