@@ -5031,6 +5031,7 @@ stride build
 stride consulting
 strider-technologies
 strive
+strix
 strongdm
 stronghold
 structify
@@ -5853,6 +5854,7 @@ woebot-health
 woflow
 wokelo-ai
 wolfjaw-careers
+won.ai
 wonderbly.com
 wonderful
 wonderly
