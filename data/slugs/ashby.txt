@@ -972,6 +972,7 @@ charge-robotics
 chariot
 charlie
 charta-health
+chartahealth
 charthop
 chartis
 chatbase
@@ -2895,6 +2896,7 @@ levelpath
 levels
 levelupventures
 leveragedmedia
+levhaolam
 levro
 levyelectric
 lexroom
@@ -4700,6 +4702,7 @@ shook
 shoponpickle
 shortcut
 shortstory
+shuttlebase
 shuttlelabs
 sibill
 sidebar
@@ -5377,6 +5380,7 @@ tokenterminal
 toku
 tolan
 tolken
+tolmo
 toma
 tome
 tomo

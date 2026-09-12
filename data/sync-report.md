@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-11T12:48:00.775Z
+Run: 2026-09-12T12:08:32.309Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-09-11T12:48:00.775Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `73d6d08` 2026-09-11 |
-| jobseek | greenhouse | fetched | 2529 | 22 | `73d6d08` 2026-09-11 |
-| jobseek | lever | fetched | 191 | 2 | `73d6d08` 2026-09-11 |
+| jobseek | ashby | fetched | 927 | 7 | `a69893d` 2026-09-11 |
+| jobseek | greenhouse | fetched | 2529 | 22 | `a69893d` 2026-09-11 |
+| jobseek | lever | fetched | 191 | 2 | `a69893d` 2026-09-11 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 151 | 215 | `30cd8ec` 2026-09-10 |
-| cryptojobs | greenhouse | fetched | 108 | 258 | `30cd8ec` 2026-09-10 |
-| cryptojobs | lever | fetched | 62 | 305 | `30cd8ec` 2026-09-10 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-09-11T12:48:00.775Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 104 | 4 | — |
-| wayback | greenhouse | fetched | 2 | 0 | — |
-| wayback | greenhouse | fetched | 5 | 1 | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | ashby | fetched | 93 | 5 | — |
+| wayback | greenhouse | fetched | 5 | 0 | — |
+| wayback | greenhouse | fetched | 4 | 0 | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260910 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5988 | +2 | -0 | 8160 |
-| greenhouse | 15471 | +1 | -0 | 15475 |
+| ashby | 5992 | +4 | -0 | 8164 |
+| greenhouse | 15471 | +0 | -0 | 15475 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -67,7 +67,7 @@ Run: 2026-09-11T12:48:00.775Z
 | kalil | 3447 | 30 |
 | openroles | 3342 | 9 |
 | feashliaa | 3161 | 4 |
-| wayback | 1083 | 50 |
+| wayback | 1103 | 54 |
 | jobseek | 927 | 7 |
 | outscal | 235 | 10 |
 | cryptojobs | 151 | 0 |
@@ -75,7 +75,7 @@ Run: 2026-09-11T12:48:00.775Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: strix, won.ai
+Added: chartahealth, levhaolam, shuttlebase, tolmo
 
 ### greenhouse — contribution by source
 
@@ -90,9 +90,7 @@ Added: strix, won.ai
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 85 | 6 |
-
-Added: getnetplatforms
+| wayback | 86 | 6 |
 
 ### lever — contribution by source
 
