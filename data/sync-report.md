@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-12T12:08:32.309Z
+Run: 2026-09-13T13:17:27.079Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-09-12T12:08:32.309Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `a69893d` 2026-09-11 |
-| jobseek | greenhouse | fetched | 2529 | 22 | `a69893d` 2026-09-11 |
-| jobseek | lever | fetched | 191 | 2 | `a69893d` 2026-09-11 |
+| jobseek | ashby | fetched | 927 | 7 | `58d9378` 2026-09-13 |
+| jobseek | greenhouse | fetched | 2529 | 22 | `58d9378` 2026-09-13 |
+| jobseek | lever | fetched | 192 | 2 | `58d9378` 2026-09-13 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-09-12T12:08:32.309Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 93 | 5 | — |
-| wayback | greenhouse | fetched | 5 | 0 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260911 | — | — | — |
 | wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260910 | — | — | — |
+| wayback | greenhouse | fetched | 4 | 1 | — |
+| wayback | lever | fetched | 8 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5992 | +4 | -0 | 8164 |
+| ashby | 5992 | +0 | -0 | 8164 |
 | greenhouse | 15471 | +0 | -0 | 15475 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -75,8 +75,6 @@ Run: 2026-09-12T12:08:32.309Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: chartahealth, levhaolam, shuttlebase, tolmo
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -90,7 +88,7 @@ Added: chartahealth, levhaolam, shuttlebase, tolmo
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 86 | 6 |
+| wayback | 87 | 6 |
 
 ### lever — contribution by source
 
@@ -101,10 +99,10 @@ Added: chartahealth, levhaolam, shuttlebase, tolmo
 | kalil | 2400 | 132 |
 | openroles | 2122 | 4 |
 | outscal | 314 | 12 |
-| jobseek | 191 | 0 |
+| jobseek | 192 | 0 |
 | commoncrawl | 88 | 1 |
 | cryptojobs | 62 | 0 |
-| wayback | 20 | 0 |
+| wayback | 24 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
