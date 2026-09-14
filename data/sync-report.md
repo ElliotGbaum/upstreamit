@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-13T13:17:27.079Z
+Run: 2026-09-14T14:59:10.178Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-09-13T13:17:27.079Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | ashby | fetched | 3325 | 0 | `c1e26c0` 2026-09-14 |
+| openroles | greenhouse | fetched | 5129 | 1 | `c1e26c0` 2026-09-14 |
+| openroles | lever | fetched | 2110 | 0 | `c1e26c0` 2026-09-14 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `58d9378` 2026-09-13 |
-| jobseek | greenhouse | fetched | 2529 | 22 | `58d9378` 2026-09-13 |
-| jobseek | lever | fetched | 192 | 2 | `58d9378` 2026-09-13 |
+| jobseek | ashby | fetched | 927 | 7 | `10b554a` 2026-09-14 |
+| jobseek | greenhouse | fetched | 2530 | 22 | `10b554a` 2026-09-14 |
+| jobseek | lever | fetched | 193 | 2 | `10b554a` 2026-09-14 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -43,9 +43,9 @@ Run: 2026-09-13T13:17:27.079Z
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260911 | — | — | — |
-| wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | greenhouse | fetched | 4 | 1 | — |
-| wayback | lever | fetched | 8 | 1 | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-09-13T13:17:27.079Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 5992 | +0 | -0 | 8164 |
-| greenhouse | 15471 | +0 | -0 | 15475 |
+| greenhouse | 15472 | +1 | -0 | 15475 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -61,11 +61,11 @@ Run: 2026-09-13T13:17:27.079Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 724 |
+| hf-latmay | 5458 | 723 |
 | backfill | 4174 | 29 |
 | commoncrawl | 3547 | 12 |
 | kalil | 3447 | 30 |
-| openroles | 3342 | 9 |
+| openroles | 3325 | 9 |
 | feashliaa | 3161 | 4 |
 | wayback | 1103 | 54 |
 | jobseek | 927 | 7 |
@@ -79,27 +79,29 @@ Run: 2026-09-13T13:17:27.079Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4545 |
+| hf-latmay | 14231 | 4548 |
 | feashliaa | 8333 | 165 |
 | kalil | 6028 | 387 |
 | commoncrawl | 5578 | 221 |
-| openroles | 5149 | 47 |
-| jobseek | 2529 | 23 |
+| openroles | 5129 | 48 |
+| jobseek | 2530 | 23 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
 | wayback | 87 | 6 |
 
+Added: goprocareers
+
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3711 |
+| hf-latmay | 8528 | 3712 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
-| openroles | 2122 | 4 |
+| openroles | 2110 | 4 |
 | outscal | 314 | 12 |
-| jobseek | 192 | 0 |
+| jobseek | 193 | 0 |
 | commoncrawl | 88 | 1 |
 | cryptojobs | 62 | 0 |
 | wayback | 24 | 0 |
