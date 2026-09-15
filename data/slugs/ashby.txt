@@ -1041,6 +1041,7 @@ clearco
 clearly-ai
 clearmix
 clearvector
+cleo-2
 clera
 cleric
 clerk
@@ -2401,6 +2402,7 @@ houseware
 howly
 hoxhunt
 hoxtonfarms
+hoyoverse
 hqo
 hrs
 hrt
@@ -3336,6 +3338,7 @@ moss
 motherduck
 motion
 motorway
+mount-thor
 move
 move concierge
 moveindustries
@@ -3642,6 +3645,7 @@ onefootprint
 onehealth
 oneleet
 onepay
+onereach.ai
 oneschema
 onestock
 onhires
@@ -4097,6 +4101,7 @@ primer
 primer.io
 principal
 prior-labs
+prism
 prive
 privy
 privy-operations
@@ -5869,6 +5874,7 @@ wordwa
 wordware.ai
 workerbase
 workhero
+workhuman
 workmatelabs
 workos
 workos-inc

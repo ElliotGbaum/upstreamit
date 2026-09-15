@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-14T14:59:10.178Z
+Run: 2026-09-15T13:29:33.165Z
 
 ## Sources
 
@@ -11,24 +11,24 @@ Run: 2026-09-14T14:59:10.178Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3325 | 0 | `c1e26c0` 2026-09-14 |
-| openroles | greenhouse | fetched | 5129 | 1 | `c1e26c0` 2026-09-14 |
-| openroles | lever | fetched | 2110 | 0 | `c1e26c0` 2026-09-14 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `10b554a` 2026-09-14 |
-| jobseek | greenhouse | fetched | 2530 | 22 | `10b554a` 2026-09-14 |
-| jobseek | lever | fetched | 193 | 2 | `10b554a` 2026-09-14 |
+| jobseek | ashby | fetched | 927 | 7 | `d6bbdb8` 2026-09-15 |
+| jobseek | greenhouse | fetched | 2530 | 22 | `d6bbdb8` 2026-09-15 |
+| jobseek | lever | fetched | 193 | 2 | `d6bbdb8` 2026-09-15 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 152 | 214 | `43337fe` 2026-09-15 |
+| cryptojobs | greenhouse | fetched | 108 | 258 | `43337fe` 2026-09-15 |
+| cryptojobs | lever | fetched | 62 | 305 | `43337fe` 2026-09-15 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-09-14T14:59:10.178Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260911 | — | — | — |
-| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
-| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260912 | — | — | — |
+| wayback | ashby | fetched | 194 | 5 | — |
+| wayback | greenhouse | fetched | 7 | 0 | — |
+| wayback | greenhouse | fetched | 11 | 1 | — |
+| wayback | lever | fetched | 4 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5992 | +0 | -0 | 8164 |
-| greenhouse | 15472 | +1 | -0 | 15475 |
+| ashby | 5998 | +6 | -0 | 8170 |
+| greenhouse | 15473 | +1 | -0 | 15476 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -63,17 +63,19 @@ Run: 2026-09-14T14:59:10.178Z
 | --- | --- | --- |
 | hf-latmay | 5458 | 723 |
 | backfill | 4174 | 29 |
-| commoncrawl | 3547 | 12 |
+| commoncrawl | 3547 | 11 |
 | kalil | 3447 | 30 |
 | openroles | 3325 | 9 |
 | feashliaa | 3161 | 4 |
-| wayback | 1103 | 54 |
+| wayback | 1174 | 59 |
 | jobseek | 927 | 7 |
 | outscal | 235 | 10 |
-| cryptojobs | 151 | 0 |
+| cryptojobs | 152 | 1 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
+
+Added: cleo-2, hoyoverse, mount-thor, onereach.ai, prism, workhuman
 
 ### greenhouse — contribution by source
 
@@ -88,9 +90,9 @@ Run: 2026-09-14T14:59:10.178Z
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 87 | 6 |
+| wayback | 90 | 7 |
 
-Added: goprocareers
+Added: jdsportspt
 
 ### lever — contribution by source
 
