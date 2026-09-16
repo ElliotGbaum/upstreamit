@@ -5,11 +5,21 @@
 # never touch it. Fully non-interactive — `fly sftp put` and `fly ssh console -C`
 # both take commands directly.
 #
+#   0. check there is room for all of that, here and on the volume
 #   1. VACUUM INTO a compact copy    (your working database is never modified)
 #   2. gzip it                        (about a quarter of the size)
 #   3. upload it beside the live database, as /data/jobs.db.staging.gz
 #   4. unpack and verify it there, then rename it to /data/jobs.db.new
 #   5. restart — the entrypoint swaps the verified file in at boot
+#
+# Since 2026-09-15 the daily pipeline runs this itself as its last stage
+# (`src/daily.mjs`, "Publish to the live site"), so it has to be safe to run
+# unattended: it must never leave the live site worse than it found it, and
+# when it cannot succeed it should say so in seconds, not after an hour of
+# upload. The space check is what the second half costs. The corpus outgrew
+# the volume's headroom once already — 16 GB compact needs the live copy, the
+# archive and the unpacked copy on the volume at the same moment — and the
+# only sign was a gunzip that quietly ran out of disk.
 #
 # The staging name is load-bearing. The entrypoint swaps in whatever sits at
 # jobs.db.new, on the filename alone — it deletes the live database first and
@@ -23,7 +33,9 @@
 # upload never reaches it: the new file is checked for size, integrity and
 # job count before the restart, and deleted if any of them is off. That costs
 # room on the volume for both databases plus the archive at once — three
-# copies' worth — which is why the volume is 30 GB and not 6.
+# copies' worth — which is why the volume is 30 GB and not 6, and why step 0
+# measures before step 1 spends anything. `fly volumes extend <id> -s <GB>`
+# grows it online when the corpus outgrows it.
 #
 # If the deployed image predates the swap in entrypoint.sh, the script still
 # uploads and verifies, and leaves the restart to the next deploy: the
@@ -60,9 +72,41 @@ else
   echo "    ok"
 fi
 
+# Room, before any of it is spent. The compact copy is the database minus its
+# free pages; the archive has measured a quarter of that (12.1 GB -> 3.1 GB on
+# 2026-08-27) and is budgeted at a third. Locally both sit in data/ at once.
+# On the volume the live database stays put while the archive lands beside it
+# and unpacks, so the peak there is archive plus compact copy on top of what is
+# already used. Both numbers are estimates with headroom, not measurements of
+# the file this run will produce.
+echo
+echo "==> 0/5  Checking there is room"
+rm -f "$OUT" "$GZ"
+COMPACT_KB=$(sqlite3 "$SRC" "SELECT (page_count - freelist_count) * page_size / 1024 FROM pragma_page_count, pragma_page_size, pragma_freelist_count;")
+GZ_KB=$((COMPACT_KB / 3))
+gb() { awk -v kb="$1" 'BEGIN { printf "%.1f GB", kb / 1048576 }'; }
+LOCAL_NEED_KB=$((COMPACT_KB + GZ_KB))
+LOCAL_AVAIL_KB=$(df -k "$(dirname "$SRC")" | awk 'NR == 2 { print $4 }')
+if [ "$LOCAL_AVAIL_KB" -lt "$LOCAL_NEED_KB" ]; then
+  echo "    Not enough room on this machine: $(gb "$LOCAL_NEED_KB") needed for the compact copy and its archive, $(gb "$LOCAL_AVAIL_KB") free. Free some disk and run this again; the live site is unchanged." >&2
+  exit 1
+fi
+echo "    here:       $(gb "$LOCAL_NEED_KB") needed, $(gb "$LOCAL_AVAIL_KB") free"
+REMOTE_NEED_KB=$LOCAL_NEED_KB
+REMOTE_AVAIL_KB=$(remote df -k /data | awk 'NR == 2 { print $4 }' | tr -dc '0-9')
+if [ -z "$REMOTE_AVAIL_KB" ]; then
+  echo "    Could not read the volume's free space over fly ssh. Is the app up? The live site is unchanged." >&2
+  exit 1
+fi
+if [ "$REMOTE_AVAIL_KB" -lt "$REMOTE_NEED_KB" ]; then
+  VOL=$(fly volumes list --json 2>/dev/null | sed -n 's/.*"id": *"\(vol_[a-z0-9]*\)".*/\1/p' | head -1)
+  echo "    Not enough room on the Fly volume: $(gb "$REMOTE_NEED_KB") needed beside the live database, $(gb "$REMOTE_AVAIL_KB") free. Grow it with 'fly volumes extend ${VOL:-<volume id>} -s <GB>' (see docs/deploy.md) and run this again; the live site is unchanged." >&2
+  exit 1
+fi
+echo "    the volume: $(gb "$REMOTE_NEED_KB") needed, $(gb "$REMOTE_AVAIL_KB") free"
+
 echo
 echo "==> 1/5  Compacting $SRC (reads the whole database; a few minutes)"
-rm -f "$OUT" "$GZ"
 # VACUUM INTO writes a fresh copy and never modifies or write-locks the original,
 # so the database you use every day is untouched.
 sqlite3 "$SRC" "VACUUM INTO '$OUT';"
@@ -123,5 +167,7 @@ else
   echo "    $NEW is verified and waiting on the volume. Push main (or run 'fly deploy');"
   echo "    the deploy boots the new entrypoint, which swaps it in. Then check 'fly logs'."
 fi
-echo
-echo "    Local copy left at $GZ — delete it to reclaim the space."
+# The archive is a few GB on a laptop disk, and the pipeline runs this
+# unattended; on success it has nothing left to be for. A failure above exits
+# before this line and leaves it, so a retry by hand can skip the compaction.
+rm -f "$GZ"
