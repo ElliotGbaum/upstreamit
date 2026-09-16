@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-15T13:29:33.165Z
+Run: 2026-09-16T13:28:03.095Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-09-15T13:29:33.165Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `d6bbdb8` 2026-09-15 |
-| jobseek | greenhouse | fetched | 2530 | 22 | `d6bbdb8` 2026-09-15 |
-| jobseek | lever | fetched | 193 | 2 | `d6bbdb8` 2026-09-15 |
+| jobseek | ashby | fetched | 927 | 7 | `e014b22` 2026-09-15 |
+| jobseek | greenhouse | fetched | 2530 | 22 | `e014b22` 2026-09-15 |
+| jobseek | lever | fetched | 193 | 2 | `e014b22` 2026-09-15 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 152 | 214 | `43337fe` 2026-09-15 |
-| cryptojobs | greenhouse | fetched | 108 | 258 | `43337fe` 2026-09-15 |
-| cryptojobs | lever | fetched | 62 | 305 | `43337fe` 2026-09-15 |
+| cryptojobs | ashby | fetched | 152 | 214 | `1927b23` 2026-09-15 |
+| cryptojobs | greenhouse | fetched | 108 | 258 | `1927b23` 2026-09-15 |
+| cryptojobs | lever | fetched | 62 | 305 | `1927b23` 2026-09-15 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-09-15T13:29:33.165Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 194 | 5 | — |
-| wayback | greenhouse | fetched | 7 | 0 | — |
-| wayback | greenhouse | fetched | 11 | 1 | — |
-| wayback | lever | fetched | 4 | 1 | — |
+| wayback | ashby | fetched | 135 | 5 | — |
+| wayback | greenhouse | fetched | 9 | 0 | — |
+| wayback | greenhouse | fetched | 10 | 1 | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260914 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 5998 | +6 | -0 | 8170 |
-| greenhouse | 15473 | +1 | -0 | 15476 |
+| ashby | 6001 | +3 | -0 | 8173 |
+| greenhouse | 15473 | +0 | -0 | 15476 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -61,13 +61,13 @@ Run: 2026-09-15T13:29:33.165Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 723 |
+| hf-latmay | 5458 | 722 |
 | backfill | 4174 | 29 |
 | commoncrawl | 3547 | 11 |
 | kalil | 3447 | 30 |
 | openroles | 3325 | 9 |
 | feashliaa | 3161 | 4 |
-| wayback | 1174 | 59 |
+| wayback | 1199 | 62 |
 | jobseek | 927 | 7 |
 | outscal | 235 | 10 |
 | cryptojobs | 152 | 1 |
@@ -75,7 +75,7 @@ Run: 2026-09-15T13:29:33.165Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: cleo-2, hoyoverse, mount-thor, onereach.ai, prism, workhuman
+Added: koro, reo-dev, sageox
 
 ### greenhouse — contribution by source
 
@@ -90,9 +90,7 @@ Added: cleo-2, hoyoverse, mount-thor, onereach.ai, prism, workhuman
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 90 | 7 |
-
-Added: jdsportspt
+| wayback | 93 | 7 |
 
 ### lever — contribution by source
 

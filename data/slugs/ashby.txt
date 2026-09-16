@@ -2783,6 +2783,7 @@ kong
 konnected
 kontakt
 konvu
+koro
 kos.ai
 kota
 kovari
@@ -4344,6 +4345,7 @@ rentana-io
 renterra
 rentman
 renuity
+reo-dev
 reonic
 repeatbuilders
 replay
@@ -4523,6 +4525,7 @@ sage-alliance-schools
 sagecare
 sagefuture
 sagelabs.ai
+sageox
 sagetap
 sahara
 sail
