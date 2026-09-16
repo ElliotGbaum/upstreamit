@@ -57,14 +57,29 @@ command -v sqlite3 >/dev/null || { echo "sqlite3 not installed." >&2; exit 1; }
 # `fly ssh console -C` prints connection chatter of its own and does not
 # reliably pass the remote exit status back, so every remote step is checked
 # by what it leaves on disk, never by whether the command "succeeded".
-remote() { fly ssh console -q -C "$*" 2>/dev/null; }
+#
+# Every remote call also has a time limit. On 2026-09-15 a plain `df` over
+# `fly ssh console` sat for a quarter of an hour with nothing wrong at either
+# end. Run by a person that is an annoyance; run by the pipeline it is a
+# stage that never ends, and launchd will not start tomorrow's run while
+# today's is still going. Three hours covers the unpack and the check, which
+# write and read 16 GB through a volume that manages about 7 MB/s; the
+# preflight probes get two minutes. perl is on every Mac and `timeout` is
+# not, and a pending alarm survives exec, so the signal lands on fly itself.
+remote_within() {
+  limit=$1
+  shift
+  perl -e 'alarm shift; exec @ARGV' "$limit" fly ssh console -q -C "$*" </dev/null 2>/dev/null
+}
+remote() { remote_within 10800 "$@"; }
+remote_quick() { remote_within 120 "$@"; }
 
 # The swap is the entrypoint's job, and an image from before it learned to
 # swap boots straight past jobs.db.new. Find out now, and decide at the end
 # whether a restart is enough or whether a deploy has to do it.
 echo
 echo "==> 0/5  Checking whether the deployed entrypoint knows how to swap"
-if [ "$(remote grep -c 'DB.new' /usr/local/bin/entrypoint.sh | tr -dc '0-9')" = "0" ]; then
+if [ "$(remote_quick grep -c 'DB.new' /usr/local/bin/entrypoint.sh | tr -dc '0-9')" = "0" ]; then
   CAN_SWAP=no
   echo "    it does not — the upload will still happen, but the swap will wait for the next deploy"
 else
@@ -93,9 +108,9 @@ if [ "$LOCAL_AVAIL_KB" -lt "$LOCAL_NEED_KB" ]; then
 fi
 echo "    here:       $(gb "$LOCAL_NEED_KB") needed, $(gb "$LOCAL_AVAIL_KB") free"
 REMOTE_NEED_KB=$LOCAL_NEED_KB
-REMOTE_AVAIL_KB=$(remote df -k /data | awk 'NR == 2 { print $4 }' | tr -dc '0-9')
+REMOTE_AVAIL_KB=$(remote_quick df -k /data | awk 'NR == 2 { print $4 }' | tr -dc '0-9')
 if [ -z "$REMOTE_AVAIL_KB" ]; then
-  echo "    Could not read the volume's free space over fly ssh. Is the app up? The live site is unchanged." >&2
+  echo "    Could not read the volume's free space over fly ssh within two minutes. Is the app up? The live site is unchanged." >&2
   exit 1
 fi
 if [ "$REMOTE_AVAIL_KB" -lt "$REMOTE_NEED_KB" ]; then
