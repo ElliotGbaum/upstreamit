@@ -6,9 +6,10 @@
 
 A job search engine that reads companies' own hiring systems instead of a job board's
 index of them. It pulls from the public APIs of four applicant tracking systems (Ashby,
-Greenhouse, Lever and, since late August 2026, Workday), sweeps every live board daily,
-turns the free-text postings into columns a filter can reason about, and ranks them
-against criteria you write once.
+Greenhouse, Lever and, since late August 2026, Workday), sweeps every live board on a
+rolling cycle and publishes each finished sweep to the live site, turns the free-text
+postings into columns a filter can reason about, and ranks them against criteria you
+write once.
 
 **Live: [upstreamit.io](https://upstreamit.io)**
 
@@ -34,7 +35,7 @@ Measured 2026-08-27, the day Workday landed; the live counts are on the site.
 | --- | --- |
 | Open jobs | 967,277, each with its full description, from 16,441 live boards |
 | Companies known | 21,029 (a board with no openings this month is kept; it will hire again) |
-| ATSes | Ashby, Greenhouse, Lever and Workday, swept daily. Workday's first backfill, overnight on 2026-08-26, brought 627,436 jobs from 5,747 boards and made it two thirds of the corpus; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
+| ATSes | Ashby, Greenhouse, Lever and Workday, swept continuously — a full pass of all four takes a laptop several days when it sleeps between them, and the site is refreshed at the end of every pass. Workday's first backfill, overnight on 2026-08-26, brought 627,436 jobs from 5,747 boards and made it two thirds of the corpus; BambooHR, Paylocity and iCIMS slugs are collected but not yet swept |
 | Metros | 54,017, built from the location strings actually observed |
 | A full filter run | a few seconds over the whole corpus, every facet counted, in memory |
 | Tests | 1,126, covering derivation, filter, adapters, the store, accounts, the schedule, the archives and AI interpret. No database, no network, ~2 s |
@@ -63,7 +64,7 @@ two read it:
 2. **Verify** asks each ATS whether a slug is a real board. Live and dead are recorded
    separately, with dates; the sweep marks a live board with no openings as empty.
    About half of collected slugs are dead.
-3. **Sweep** pulls every open posting from every live board, daily. Ashby and Greenhouse
+3. **Sweep** pulls every open posting from every live board, one pass after another. Ashby and Greenhouse
    honour conditional GET; Lever does not, which the Lever adapter documents. Every
    posting is stored with a content hash, and every observation goes into an event log,
    which is what makes "new since yesterday", "edited without announcement" and "gone"
