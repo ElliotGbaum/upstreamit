@@ -11,8 +11,9 @@
  *
  * The launchd artifacts are not compared — they embed this machine's absolute
  * paths and are gitignored, so there is nothing committed to drift from. The
- * wrapper is instead pinned on the three properties a regression would silently
- * drop: the fast-forward-only pull, the skipped sync, and caffeinate.
+ * wrapper is instead pinned on the four properties a regression would silently
+ * drop: the fast-forward-only pull, the skipped sync, caffeinate, and the PATH
+ * that lets the publish stage find `fly` under launchd.
  */
 
 import { readFileSync } from 'node:fs';
@@ -56,6 +57,7 @@ function check(name, actual, expected) {
   check('wrapper: pulls fast-forward only', sh.includes('git pull --ff-only'), true);
   check('wrapper: skips the sync the workflow owns', sh.includes('--skip-sync'), true);
   check('wrapper: holds the machine awake for the run', sh.includes('/usr/bin/caffeinate -i -m -s'), true);
+  check('wrapper: puts Homebrew on PATH so the publish stage finds fly', sh.includes('export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"'), true);
 }
 
 if (failures.length) {

@@ -27,12 +27,14 @@
  *                    while the runner got all of them, 109 slugs' worth — and
  *                    it runs whether the laptop is awake or not. Seconds, not
  *                    the 11+ minutes the full pipeline cost it.
- *   launchd          sweeps, derives and reports, with `--skip-sync`. It is
- *                    the only one of the two that maintains `data/jobs.db`,
- *                    which is the database the deployed site is fed from by
- *                    `deploy/upload-db.sh`, so this half has to be here. It
- *                    fast-forwards the repo first so it sweeps the slugs
- *                    GitHub found this morning rather than last week's.
+ *   launchd          sweeps, derives, reports and publishes, with
+ *                    `--skip-sync`. It is the only one of the two that
+ *                    maintains `data/jobs.db`, which is the database the
+ *                    deployed site is fed from by `deploy/upload-db.sh` — the
+ *                    pipeline's last stage since 2026-09-15 — so this half
+ *                    has to be here. It fast-forwards the repo first so it
+ *                    sweeps the slugs GitHub found this morning rather than
+ *                    last week's.
  *
  * The rule that keeps them from fighting: **exactly one writer per file.**
  * At file granularity, not directory granularity: GitHub owns the slug stores
@@ -140,6 +142,13 @@ export function plist({ hour, minute }) {
  * `--skip-sync` is the other half of the split: syncing here is what used to
  * fight with the workflow.
  *
+ * PATH is set because launchd does not read a shell profile: a job gets
+ * `/usr/bin:/bin:/usr/sbin:/sbin` and nothing else. The pipeline's publish
+ * stage needs `fly` and `sqlite3`, which Homebrew puts in /opt/homebrew/bin
+ * (Apple silicon) or /usr/local/bin (Intel). Without this the first run to
+ * finish a sweep fails at the last step with "flyctl not installed", after
+ * days of work, on a machine where it plainly is.
+ *
  * Both interpolated paths are quoted, and that is not decoration: a checkout
  * path containing spaces (`~/My Projects/upstreamit`, say) turns an unquoted
  * `${ROOT}/src/daily.mjs` into two arguments, `.../My` and
@@ -178,6 +187,7 @@ export function wrapper() {
 # first. See the header of src/schedule.mjs for why the sync is skipped.
 set -u
 cd "${ROOT}" || exit 1
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 echo ""
 echo "=== daily $(date '+%Y-%m-%d %H:%M:%S') ==="
