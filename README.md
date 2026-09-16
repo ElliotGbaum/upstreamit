@@ -10,7 +10,7 @@ Greenhouse, Lever and, since late August 2026, Workday), sweeps every live board
 turns the free-text postings into columns a filter can reason about, and ranks them
 against criteria you write once.
 
-**Live: [upstreamit.io](https://upstreamit.io)** · [How it works, on the site](https://upstreamit.io/methodology)
+**Live: [upstreamit.io](https://upstreamit.io)**
 
 ![The UpstreamIt search page](docs/screenshots/app.png)
 

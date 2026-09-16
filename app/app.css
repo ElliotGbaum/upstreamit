@@ -439,19 +439,7 @@ aside{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
 .loading.on{transform:scaleX(.75)}
 
 footer{max-width:1560px;margin:0 auto;padding:0 20px 40px;color:var(--ink-3);font-size:11.5px}
-/* The one link in the footer. Underlined rather than coloured: at 11.5px in
-   grey, a colour change alone is not a reliable signal that something is
-   clickable, and this is the line where a sceptical reader goes looking. */
-footer a{color:inherit;text-decoration:underline;text-underline-offset:2px}
-footer a:hover{color:var(--ink)}
 
-/* `How this works`, in the header beside the corpus count. A ghost button so it
-   sits below the filter-set controls in the row's hierarchy — it is a way out of
-   the page, not a thing you do to the search — and hidden on narrow screens,
-   where the header already wraps to three lines and the footer link is the one
-   that survives. */
-.bar .how{font-size:12.5px}
-@media (max-width:900px){.bar .how{display:none}}
 kbd{font-family:var(--mono);background:var(--line-soft);border:1px solid var(--line);
     border-radius:5px;padding:1px 5px;font-size:11px}
 

@@ -1568,7 +1568,7 @@ function buildCorpusMeta(db) {
     boards_live: db.prepare("SELECT COUNT(*) n FROM companies WHERE status = 'live'").get().n,
     // How far the enrich pass has got: live boards with a sector, and the
     // open jobs those boards account for. The second is the number the panel
-    // and the methodology page owe a reader — "sector is known for 94% of
+    // owes a reader — "sector is known for 94% of
     // jobs" is a claim about jobs, not boards.
     sectors_read: db.prepare("SELECT COUNT(*) n FROM companies WHERE status = 'live' AND sector IS NOT NULL").get().n,
     // One GROUP BY and a join, not an EXISTS per open job: the same shape

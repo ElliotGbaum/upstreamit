@@ -144,7 +144,7 @@ export const UNKNOWNABLE = [
   // companies the enrich pass has not read, or read and would not commit on.
   // Measured 2026-08-27 after the first run, which read the 671 biggest
   // boards before the API account ran out of credit; every further run
-  // lowers it. The methodology page reads the live figure off /api/meta.
+  // lowers it. The live figure is on /api/meta.
   { key: 'sector', label: 'sector', detail: "the company's postings did not say what it does, or nobody has read them yet", share: 0.470 },
   { key: 'metro', label: 'location', detail: 'no location string we could place', share: 0.127 },
   // The one share here that is a floor rather than a figure, and the comment is
