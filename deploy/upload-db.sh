@@ -5,11 +5,22 @@
 # never touch it. Fully non-interactive — `fly sftp put` and `fly ssh console -C`
 # both take commands directly.
 #
+#   0. check there is room for all of that, here and on the volume
 #   1. VACUUM INTO a compact copy    (your working database is never modified)
 #   2. gzip it                        (about a quarter of the size)
-#   3. upload it beside the live database, as /data/jobs.db.staging.gz
+#   3. upload it in 256 MB parts and join them beside the live database,
+#      as /data/jobs.db.staging.gz
 #   4. unpack and verify it there, then rename it to /data/jobs.db.new
 #   5. restart — the entrypoint swaps the verified file in at boot
+#
+# Since 2026-09-15 the daily pipeline runs this itself as its last stage
+# (`src/daily.mjs`, "Publish to the live site"), so it has to be safe to run
+# unattended: it must never leave the live site worse than it found it, and
+# when it cannot succeed it should say so in seconds, not after an hour of
+# upload. The space check is what the second half costs. The corpus outgrew
+# the volume's headroom once already — 16 GB compact needs the live copy, the
+# archive and the unpacked copy on the volume at the same moment — and the
+# only sign was a gunzip that quietly ran out of disk.
 #
 # The staging name is load-bearing. The entrypoint swaps in whatever sits at
 # jobs.db.new, on the filename alone — it deletes the live database first and
@@ -23,7 +34,9 @@
 # upload never reaches it: the new file is checked for size, integrity and
 # job count before the restart, and deleted if any of them is off. That costs
 # room on the volume for both databases plus the archive at once — three
-# copies' worth — which is why the volume is 30 GB and not 6.
+# copies' worth — which is why the volume is 30 GB and not 6, and why step 0
+# measures before step 1 spends anything. `fly volumes extend <id> -s <GB>`
+# grows it online when the corpus outgrows it.
 #
 # If the deployed image predates the swap in entrypoint.sh, the script still
 # uploads and verifies, and leaves the restart to the next deploy: the
@@ -37,6 +50,8 @@ REMOTE=/data/jobs.db
 NEW=$REMOTE.new
 STAGE=$REMOTE.staging
 VERIFY=/data/verify-db.mjs
+JOIN=/data/join-parts.mjs
+PART_PREFIX=/data/jobs-deploy.db.gz.part-
 
 [ -f "$SRC" ] || { echo "No $SRC here. Run this from the project root." >&2; exit 1; }
 command -v fly >/dev/null || { echo "flyctl not installed. See docs/deploy.md." >&2; exit 1; }
@@ -45,14 +60,34 @@ command -v sqlite3 >/dev/null || { echo "sqlite3 not installed." >&2; exit 1; }
 # `fly ssh console -C` prints connection chatter of its own and does not
 # reliably pass the remote exit status back, so every remote step is checked
 # by what it leaves on disk, never by whether the command "succeeded".
-remote() { fly ssh console -q -C "$*" 2>/dev/null; }
+#
+# Every remote call also has a time limit. On 2026-09-15 a plain `df` over
+# `fly ssh console` sat for a quarter of an hour with nothing wrong at either
+# end. Run by a person that is an annoyance; run by the pipeline it is a
+# stage that never ends, and launchd will not start tomorrow's run while
+# today's is still going. Three hours covers the unpack and the check, which
+# write and read 16 GB through a volume that manages about 7 MB/s; the
+# preflight probes get two minutes. perl is on every Mac and `timeout` is
+# not, and a pending alarm survives exec, so the signal lands on fly itself.
+fly_within() {
+  limit=$1
+  shift
+  perl -e 'alarm shift; exec @ARGV' "$limit" fly "$@" </dev/null 2>/dev/null
+}
+remote_within() {
+  limit=$1
+  shift
+  fly_within "$limit" ssh console -q -C "$*"
+}
+remote() { remote_within 10800 "$@"; }
+remote_quick() { remote_within 120 "$@"; }
 
 # The swap is the entrypoint's job, and an image from before it learned to
 # swap boots straight past jobs.db.new. Find out now, and decide at the end
 # whether a restart is enough or whether a deploy has to do it.
 echo
 echo "==> 0/5  Checking whether the deployed entrypoint knows how to swap"
-if [ "$(remote grep -c 'DB.new' /usr/local/bin/entrypoint.sh | tr -dc '0-9')" = "0" ]; then
+if [ "$(remote_quick grep -c 'DB.new' /usr/local/bin/entrypoint.sh | tr -dc '0-9')" = "0" ]; then
   CAN_SWAP=no
   echo "    it does not — the upload will still happen, but the swap will wait for the next deploy"
 else
@@ -60,9 +95,44 @@ else
   echo "    ok"
 fi
 
+# Room, before any of it is spent. The compact copy is the database minus its
+# free pages; the archive has measured a quarter of that (12.1 GB -> 3.1 GB on
+# 2026-08-27) and is budgeted at a third. Locally both sit in data/ at once.
+# On the volume the live database stays put while the archive lands beside it
+# and unpacks, so the peak there is archive plus compact copy on top of what is
+# already used; the parts land there one at a time and are consumed by the
+# join, so they add one archive, not two. Both numbers are estimates with
+# headroom, not measurements of the file this run will produce.
+echo
+echo "==> 0/5  Checking there is room"
+rm -f "$OUT" "$GZ"
+COMPACT_KB=$(sqlite3 "$SRC" "SELECT (page_count - freelist_count) * page_size / 1024 FROM pragma_page_count, pragma_page_size, pragma_freelist_count;")
+GZ_KB=$((COMPACT_KB / 3))
+gb() { awk -v kb="$1" 'BEGIN { printf "%.1f GB", kb / 1048576 }'; }
+# Twice the archive here: the parts it is split into sit beside it until
+# every one has arrived.
+LOCAL_NEED_KB=$((COMPACT_KB + 2 * GZ_KB))
+LOCAL_AVAIL_KB=$(df -k "$(dirname "$SRC")" | awk 'NR == 2 { print $4 }')
+if [ "$LOCAL_AVAIL_KB" -lt "$LOCAL_NEED_KB" ]; then
+  echo "    Not enough room on this machine: $(gb "$LOCAL_NEED_KB") needed for the compact copy and its archive, $(gb "$LOCAL_AVAIL_KB") free. Free some disk and run this again; the live site is unchanged." >&2
+  exit 1
+fi
+echo "    here:       $(gb "$LOCAL_NEED_KB") needed, $(gb "$LOCAL_AVAIL_KB") free"
+REMOTE_NEED_KB=$LOCAL_NEED_KB
+REMOTE_AVAIL_KB=$(remote_quick df -k /data | awk 'NR == 2 { print $4 }' | tr -dc '0-9')
+if [ -z "$REMOTE_AVAIL_KB" ]; then
+  echo "    Could not read the volume's free space over fly ssh within two minutes. Is the app up? The live site is unchanged." >&2
+  exit 1
+fi
+if [ "$REMOTE_AVAIL_KB" -lt "$REMOTE_NEED_KB" ]; then
+  VOL=$(fly volumes list --json 2>/dev/null | sed -n 's/.*"id": *"\(vol_[a-z0-9]*\)".*/\1/p' | head -1)
+  echo "    Not enough room on the Fly volume: $(gb "$REMOTE_NEED_KB") needed beside the live database, $(gb "$REMOTE_AVAIL_KB") free. Grow it with 'fly volumes extend ${VOL:-<volume id>} -s <GB>' (see docs/deploy.md) and run this again; the live site is unchanged." >&2
+  exit 1
+fi
+echo "    the volume: $(gb "$REMOTE_NEED_KB") needed, $(gb "$REMOTE_AVAIL_KB") free"
+
 echo
 echo "==> 1/5  Compacting $SRC (reads the whole database; a few minutes)"
-rm -f "$OUT" "$GZ"
 # VACUUM INTO writes a fresh copy and never modifies or write-locks the original,
 # so the database you use every day is untouched.
 sqlite3 "$SRC" "VACUUM INTO '$OUT';"
@@ -78,9 +148,42 @@ echo "    $(du -h "$GZ" | cut -f1)  sha256 $LOCAL_SHA"
 
 echo
 echo "==> 3/5  Uploading to the volume (the long one)"
-remote rm -f "$STAGE.gz" "$STAGE" "$NEW.gz" "$NEW" "$VERIFY"
-fly sftp put "$GZ" "$STAGE.gz"
+# In 256 MB parts, each retried until the size on the volume matches the size
+# here. `fly sftp put` drops long transfers now and then — on 2026-09-16 one
+# died at 1.7 GB of a 4.2 GB archive with "connection lost" — and it cannot
+# resume, so a single put means a drop costs the whole hour and, in the
+# pipeline, the whole night. A drop now costs one part. The parts are joined
+# on the machine by deploy/join-parts.mjs, which also clears any part left by
+# an earlier run, and the joined archive is still checked whole by sha256.
+remote rm -f "$STAGE.gz" "$STAGE" "$NEW.gz" "$NEW" "$VERIFY" "$JOIN"
+rm -f "$GZ".part-*
+split -b 268435456 -d -a 3 "$GZ" "$GZ.part-"
+PARTS=$(ls "$(dirname "$GZ")" | grep -c "^$(basename "$GZ").part-")
+echo "    $PARTS parts of 256 MB"
+i=0
+while [ "$i" -lt "$PARTS" ]; do
+  n=$(printf '%03d' "$i")
+  part="$GZ.part-$n"
+  want=$(wc -c < "$part" | tr -d ' ')
+  try=0
+  while :; do
+    have=$(remote_quick stat -c %s "$PART_PREFIX$n" | tr -dc '0-9')
+    [ "$have" = "$want" ] && break
+    try=$((try + 1))
+    if [ "$try" -gt 6 ]; then
+      echo "    Part $n would not arrive intact after $((try - 1)) tries. The live site is unchanged; run this again." >&2
+      exit 1
+    fi
+    fly_within 1800 sftp put "$part" "$PART_PREFIX$n" >/dev/null || true
+  done
+  echo "    part $n ok"
+  i=$((i + 1))
+done
+rm -f "$GZ".part-*
+fly sftp put deploy/join-parts.mjs "$JOIN"
 fly sftp put deploy/verify-db.mjs "$VERIFY"
+JOINED=$(remote node "$JOIN" "$STAGE.gz" "$PART_PREFIX" "$PARTS" | grep '^{' | tail -1)
+echo "    joined: $JOINED"
 REMOTE_SHA=$(remote sha256sum "$STAGE.gz" | cut -d' ' -f1 | tr -dc 'a-f0-9')
 if [ "$REMOTE_SHA" != "$LOCAL_SHA" ]; then
   echo "    Upload did not arrive intact (remote sha256 '$REMOTE_SHA'). The live site is unchanged; run this again." >&2
@@ -123,5 +226,7 @@ else
   echo "    $NEW is verified and waiting on the volume. Push main (or run 'fly deploy');"
   echo "    the deploy boots the new entrypoint, which swaps it in. Then check 'fly logs'."
 fi
-echo
-echo "    Local copy left at $GZ — delete it to reclaim the space."
+# The archive is a few GB on a laptop disk, and the pipeline runs this
+# unattended; on success it has nothing left to be for. A failure above exits
+# before this line and leaves it, so a retry by hand can skip the compaction.
+rm -f "$GZ"

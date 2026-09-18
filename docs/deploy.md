@@ -189,7 +189,11 @@ fly logs
 ./deploy/upload-db.sh
 ```
 
-The script is fully non-interactive and does five things:
+The script is fully non-interactive and does five things, after first checking that
+there is room for them — the compact copy plus its archive on this machine, and the
+same again on the volume beside the live database. When there is not, it says how
+much is missing and stops before spending anything; `fly volumes extend <id> -s <GB>`
+grows the volume online.
 
 1. `VACUUM INTO` a compact copy at `data/jobs-deploy.db`. The working `data/jobs.db`
    is never modified or write-locked.
@@ -252,7 +256,8 @@ fly open
 The site is live at `https://<your-app-name>.fly.dev`. HTTPS is already set up
 (`force_https = true` in `fly.toml`); nothing else is needed for it.
 
-The script leaves `data/jobs-deploy.db.gz` behind; delete it to reclaim the space.
+The script deletes `data/jobs-deploy.db.gz` when it succeeds. A failed run leaves it
+so a retry by hand can skip the compaction.
 
 ## Step 8 — Wire up deploys from GitHub
 
@@ -300,7 +305,12 @@ Things worth knowing about that workflow:
 **Changing code** is now `git push` to `main`. A deploy takes a few minutes and never
 touches the database, the accounts, or the saved profiles.
 
-**Refreshing job data** means re-running the pipeline on the laptop and re-uploading:
+**Refreshing job data** happens on its own: the laptop's daily run (`npm run daily`,
+scheduled by launchd — see [automation.md](./automation.md)) ends with a "Publish to
+the live site" stage that runs `./deploy/upload-db.sh`, so every finished sweep reaches
+the site without anyone typing anything. The stage is held back when no sweep
+succeeded or the derivation failed; `--skip-publish` holds it back on purpose. By hand
+it is still the two commands:
 
 ```
 npm run refresh          # sync slugs, verify boards, sweep all four ATSes, derive
@@ -308,7 +318,9 @@ npm run refresh          # sync slugs, verify boards, sweep all four ATSes, deri
 ```
 
 The site's data is frozen between uploads; the page shows when the corpus was last
-swept and derived (`swept … · derived …` in `app/app.js`) so the age is visible.
+swept and derived (`swept … · derived …` in `app/app.js`) so the age is visible. The
+upload takes about an hour for a 16 GB corpus, and the site answers slowly while the
+volume is being written to.
 
 **Profiles on the volume are not updated by deploys.** The entrypoint seeds
 `/data/profiles` from the image's copy only when the directory does not exist yet;
