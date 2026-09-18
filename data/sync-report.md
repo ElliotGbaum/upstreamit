@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-17T13:23:56.369Z
+Run: 2026-09-18T12:56:36.728Z
 
 ## Sources
 
@@ -35,17 +35,17 @@ Run: 2026-09-17T13:23:56.369Z
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/collinfo.json) | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260915 | — | — | — |
-| wayback | greenhouse | fetched | 5 | 0 | — |
-| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260915 | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260914) | — | — | — |
+| commoncrawl | ashby | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| wayback | ashby | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 4 | 0 | — |
+| wayback | greenhouse | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260915 | — | — | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260914 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -88,7 +88,7 @@ Run: 2026-09-17T13:23:56.369Z
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 93 | 7 |
+| wayback | 94 | 7 |
 
 ### lever — contribution by source
 
