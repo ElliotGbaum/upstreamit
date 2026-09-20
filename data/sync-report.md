@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-19T12:28:05.710Z
+Run: 2026-09-20T13:01:40.677Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-09-19T12:28:05.710Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | unchanged | — | — | — |
-| jobseek | greenhouse | unchanged | — | — | — |
-| jobseek | lever | unchanged | — | — | — |
+| jobseek | ashby | fetched | 927 | 7 | `11879e8` 2026-09-20 |
+| jobseek | greenhouse | fetched | 2533 | 22 | `11879e8` 2026-09-20 |
+| jobseek | lever | fetched | 193 | 2 | `11879e8` 2026-09-20 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -35,16 +35,16 @@ Run: 2026-09-19T12:28:05.710Z
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
+| commoncrawl | ashby | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=jobs.ashbyhq.com%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=boards.greenhouse.io%2F*&output=json&showNumPages=true | — | — | — |
+| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=job-boards.greenhouse.io%2F*&output=json&showNumPages=true | — | — | — |
+| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=boards.eu.greenhouse.io%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=job-boards.eu.greenhouse.io%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=jobs.lever.co%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true) | — | — | — |
 | wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260917 | — | — | — |
-| wayback | greenhouse | fetched | 6 | 0 | — |
-| wayback | greenhouse | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260915 | — | — | — |
+| wayback | greenhouse | fetched | 4 | 0 | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260915 | — | — | — |
 | wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260914) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -81,14 +81,14 @@ Run: 2026-09-19T12:28:05.710Z
 | --- | --- | --- |
 | hf-latmay | 14231 | 4548 |
 | feashliaa | 8333 | 165 |
-| kalil | 6028 | 387 |
+| kalil | 6028 | 386 |
 | commoncrawl | 5578 | 221 |
 | openroles | 5129 | 48 |
-| jobseek | 2530 | 23 |
+| jobseek | 2533 | 23 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 1 |
 | cryptojobs | 108 | 0 |
-| wayback | 96 | 7 |
+| wayback | 97 | 7 |
 
 ### lever — contribution by source
 
