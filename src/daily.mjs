@@ -8,7 +8,8 @@
  *   node src/daily.mjs --profiles=nyc-entry-level
  *   node src/daily.mjs --since=2026-08-18    # override what "new" means
  *
- * sync slugs → verify the new ones → sweep the boards → derive → enrich → diff.
+ * sync slugs → verify the new ones → sweep the boards → derive → enrich →
+ * publish → diff.
  *
  * The output that matters is the last step. A profile that matches 221 jobs is
  * worth reading once; re-reading it every morning is not. What changed overnight
@@ -21,6 +22,13 @@
  * or the report with it, and each script already reports its own progress to
  * `progress/state.json`. A failed stage is recorded and the run continues, so a
  * flaky upstream produces a report with a gap in it rather than no report.
+ *
+ * The last stage is the one that reaches other people. `deploy/upload-db.sh`
+ * puts the database this run just built on the Fly volume and restarts the
+ * site. Until 2026-09-15 that was a step somebody ran by hand, and nobody had
+ * run it since 2026-08-27: the laptop swept for three weeks and the site
+ * served three-week-old jobs the whole time. So the run ships its own result,
+ * and `publishGate` below says when it must not.
  */
 
 import { spawn } from 'node:child_process';
@@ -67,7 +75,7 @@ const DAILY_ATSES = ['ashby', 'greenhouse', 'lever', 'workday'];
 // The `key` is what `--skip-verify` / `--skip-sweep` match on, so the per-ATS
 // stages deliberately share one — skipping a phase skips it for every ATS,
 // which is what someone typing `--skip-sweep` means.
-const STAGES = [
+export const STAGES = [
   { key: 'sync', label: 'Sync slugs', script: 'sync-slugs.mjs', args: [] },
   ...DAILY_ATSES.map((ats) => ({
     key: 'verify',
@@ -94,7 +102,37 @@ const STAGES = [
   // run. With no API key it prints one line and exits clean, so a machine
   // without one still gets its report.
   { key: 'enrich', label: 'Read company sectors', script: 'enrich-companies.mjs', args: ['--only-new'] },
+  // Ship the result. A shell script rather than a node script, because it is
+  // the same `deploy/upload-db.sh` the docs tell a person to run: compact,
+  // compress, upload beside the live file, verify there, restart. The site is
+  // slow for the hour the upload takes and down for the restart; it is stale
+  // for every hour this stage is not run. See `publishGate` for the runs that
+  // must not ship.
+  { key: 'publish', label: 'Publish to the live site', command: ['/bin/sh', 'deploy/upload-db.sh'], args: [] },
 ];
+
+/**
+ * Why this run must not publish, or null when it may.
+ *
+ * `stages` is what ran before the publish stage, in order. Two things stop
+ * the upload:
+ *
+ * - No sweep succeeded. Either every sweep was skipped (`--skip-sweep`, or a
+ *   `--report-only` look) or every one failed. The database is then what the
+ *   site already has, or older, and an hour of upload buys nothing.
+ * - Derivation failed. The sweep stored new postings that never became
+ *   columns — no metro, no seniority, no salary — so they would reach the
+ *   site as rows the filters cannot see. Better to hold them a day.
+ *
+ * A single failed sweep among four does not stop it: the other three are
+ * fresher than what is live, and the fourth is no staler than it was.
+ */
+export function publishGate(stages) {
+  const sweeps = stages.filter((s) => s.key === 'sweep');
+  if (!sweeps.some((s) => s.ok && !s.skipped)) return 'no sweep ran and succeeded — the live site keeps what it has';
+  if (stages.some((s) => s.key === 'derive' && !s.ok)) return 'derivation failed — new jobs would reach the site without their columns';
+  return null;
+}
 
 function parseArgs(argv) {
   const args = { skip: new Set(), profiles: null, since: null, reportOnly: false, limit: 25, db: undefined, quiet: false };
@@ -119,7 +157,10 @@ function parseArgs(argv) {
 function runStage(stage, { quiet }) {
   return new Promise((resolve) => {
     const started = Date.now();
-    const child = spawn(process.execPath, [join(ROOT, 'src', stage.script), ...stage.args], {
+    const [bin, ...argv] = stage.command
+      ? [stage.command[0], ...stage.command.slice(1).map((a) => (a.startsWith('/') ? a : join(ROOT, a)))]
+      : [process.execPath, join(ROOT, 'src', stage.script)];
+    const child = spawn(bin, [...argv, ...stage.args], {
       cwd: ROOT,
       stdio: quiet ? ['ignore', 'pipe', 'pipe'] : 'inherit',
     });
@@ -180,6 +221,13 @@ async function main() {
     for (const stage of STAGES) {
       if (args.skip.has(stage.key)) {
         stages.push({ ...stage, ok: true, skipped: true, ms: 0 });
+        continue;
+      }
+      const held = stage.key === 'publish' ? publishGate(stages) : null;
+      if (held) {
+        console.log(`\n── ${stage.label} ────────────────────────────────────`);
+        console.log(`  · not published: ${held}`);
+        stages.push({ ...stage, ok: true, skipped: true, reason: held, ms: 0 });
         continue;
       }
       console.log(`\n── ${stage.label} ────────────────────────────────────`);
@@ -278,7 +326,11 @@ function buildReport({ startedAt, stages, since, edited, gone, reports, meta, db
   if (stages.length) {
     lines.push('## Pipeline', '', '| Stage | Result | Time |', '| --- | --- | --- |');
     for (const stage of stages) {
-      const verdict = stage.skipped ? 'skipped' : stage.ok ? 'ok' : `**failed** — ${String(stage.error).split('\n').pop()}`;
+      const verdict = stage.skipped
+        ? `skipped${stage.reason ? ` — ${stage.reason}` : ''}`
+        : stage.ok
+          ? 'ok'
+          : `**failed** — ${String(stage.error).split('\n').pop()}`;
       lines.push(`| ${stage.label} | ${verdict} | ${stage.skipped ? '—' : secs(stage.ms)} |`);
     }
     lines.push('');
@@ -372,7 +424,8 @@ function printSummary({ stages, since, edited, gone, reports, startedAt }) {
   const lines = ['', `  Daily run · ${secs(Date.now() - startedAt)}`, ''];
   for (const stage of stages) {
     const mark = stage.skipped ? '·' : stage.ok ? '✓' : '✗';
-    lines.push(`    ${mark} ${stage.label.padEnd(20)} ${stage.skipped ? 'skipped' : secs(stage.ms)}`);
+    const note = stage.skipped ? `skipped${stage.reason ? ` — ${stage.reason}` : ''}` : secs(stage.ms);
+    lines.push(`    ${mark} ${stage.label.padEnd(20)} ${note}`);
   }
   if (stages.length) lines.push('');
   lines.push(`    since ${since.from}:  ${fmt(since.ids.size)} new · ${fmt(edited.ids.size)} edited · ${fmt(gone.rows.length)} closed`);

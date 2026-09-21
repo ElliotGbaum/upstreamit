@@ -68,7 +68,7 @@ So each now does the half it is actually good at, and the rule that keeps them f
 
 | | GitHub Actions (`.github/workflows/daily.yml`) | launchd (`automation/daily-local.sh`) |
 | --- | --- | --- |
-| Owns | `data/slugs/` and `data/sync-report.md` | `data/jobs.db` |
+| Owns | `data/slugs/` and `data/sync-report.md` | `data/jobs.db`, and the copy of it on the Fly volume: since 2026-09-15 the run ends by publishing with `deploy/upload-db.sh` |
 | Runs | `node src/sync-slugs.mjs`, then commits the slug store as `job-finder-bot` and pushes | `git pull --ff-only`, then `node src/daily.mjs --quiet --skip-sync` |
 | When | `15 8 * * *` — 08:15 UTC year-round; GitHub's cron has no timezone field, so it drifts relative to local time across daylight saving | 08:15 local (`--at`) |
 | Needs a database | no — `sync-slugs.mjs` only reads upstream company lists and writes JSON. The one thing carried between runs is `data/sync-state.json`, restored by the `Restore the sync bookmarks` cache step (keyed `sync-state-`, rewritten every run) | yes; this is the only process that maintains it |
@@ -97,4 +97,4 @@ The steps are checkout, Node 24, `npm ci`, **`npm test`**, then `flyctl deploy -
 
 One deploy runs at a time (`concurrency: deploy-fly`, `cancel-in-progress: false`). Two overlapping `fly deploy` runs against a single machine race over which image it ends on, and the loser wins about half the time. Superseded deploys are queued rather than cancelled: a superseded deploy is still a correct intermediate state, and cancelling mid-release is how a machine gets stranded.
 
-The database is not part of a deploy and never has been. It lives on the Fly volume at `/data` and is uploaded by hand with `deploy/upload-db.sh`, which `VACUUM INTO`s a compact copy (the working database is never modified or write-locked), gzips it (~3.3 GB → ~865 MB), uploads it with `fly sftp put`, unpacks it and restarts. A deploy replaces the code around it and leaves the database, the accounts and the saved profiles exactly where they are. The full setup — app name, region, volume, secrets, machine size — is in [deploy.md](./deploy.md).
+The database is not part of a deploy and never has been. It lives on the Fly volume at `/data` and is uploaded by the daily run's last stage (or by hand) with `deploy/upload-db.sh`, which `VACUUM INTO`s a compact copy (the working database is never modified or write-locked), gzips it (~3.3 GB → ~865 MB), uploads it with `fly sftp put`, unpacks it and restarts. A deploy replaces the code around it and leaves the database, the accounts and the saved profiles exactly where they are. The full setup — app name, region, volume, secrets, machine size — is in [deploy.md](./deploy.md).
