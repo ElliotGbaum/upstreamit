@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-21T15:04:21.866Z
+Run: 2026-09-22T13:23:23.445Z
 
 ## Sources
 
@@ -11,49 +11,49 @@ Run: 2026-09-21T15:04:21.866Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3558 | 0 | `0b990c8` 2026-09-21 |
-| openroles | greenhouse | fetched | 5175 | 1 | `0b990c8` 2026-09-21 |
-| openroles | lever | fetched | 2100 | 0 | `0b990c8` 2026-09-21 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `96bee33` 2026-09-21 |
-| jobseek | greenhouse | fetched | 2542 | 22 | `96bee33` 2026-09-21 |
-| jobseek | lever | fetched | 193 | 2 | `96bee33` 2026-09-21 |
+| jobseek | ashby | fetched | 927 | 7 | `002beb9` 2026-09-21 |
+| jobseek | greenhouse | fetched | 2542 | 22 | `002beb9` 2026-09-21 |
+| jobseek | lever | fetched | 193 | 2 | `002beb9` 2026-09-21 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 153 | 215 | `47e0f80` 2026-09-21 |
-| cryptojobs | greenhouse | fetched | 108 | 260 | `47e0f80` 2026-09-21 |
-| cryptojobs | lever | fetched | 63 | 306 | `47e0f80` 2026-09-21 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | fetched | 2842 | 101 | — |
-| commoncrawl | greenhouse | fetched | 1790 | 77 | — |
-| commoncrawl | greenhouse | fetched | 3221 | 31 | — |
-| commoncrawl | greenhouse | fetched | 42 | 3 | — |
-| commoncrawl | greenhouse | fetched | 399 | 32 | — |
-| commoncrawl | lever | skipped — HTTP 400 Bad Request for https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=jobs.lever.co%2F*&output=json&showNumPages=true | — | — | — |
-| commoncrawl | lever | fetched | 64 | 13 | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260917 | — | — | — |
-| wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | greenhouse | fetched | 54 | 2 | — |
-| wayback | lever | fetched | 8 | 1 | — |
+| commoncrawl | ashby | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-39-index?url=jobs.lever.co%2F*&output=json&showNumPages=true | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260917 | — | — | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260920 | — | — | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260920) | — | — | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260920) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6110 | +109 | -0 | 8282 |
-| greenhouse | 15616 | +143 | -0 | 15619 |
+| ashby | 6110 | +0 | -0 | 8282 |
+| greenhouse | 15616 | +0 | -0 | 15619 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -75,8 +75,6 @@ Run: 2026-09-21T15:04:21.866Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: 2ndwave, 91b38662-e5a9-4bc3-ade7-44e29d01d343, adexis, aligned, allwage, american-turbines, andi, anvilcarbon, arceus, archerfaris, arena-magazine, axleinsure, azupay, basecompute, bevaya, blocktech, bolna, bonfireanalytics, ceezer, century.health, … (109 total)
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -91,8 +89,6 @@ Added: 2ndwave, 91b38662-e5a9-4bc3-ade7-44e29d01d343, adexis, aligned, allwage, 
 | openjobsdata | 263 | 1 |
 | wayback | 123 | 8 |
 | cryptojobs | 108 | 0 |
-
-Added: 42northdental, aaboratoriesace, act1federal, agilerobotsse, aiologic, aipn, allego, alpega, altaresourcetechnologiesinc, americanpropertymanagement, amn, appflame, appliedatomicsinc, aquanow, arcocanada, arcodb, aspenviewtech, astropakllc, atosssoftwarese, attotude, … (143 total)
 
 ### lever — contribution by source
 
