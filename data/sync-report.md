@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-24T13:31:14.613Z
+Run: 2026-09-25T13:42:25.589Z
 
 ## Sources
 
@@ -26,9 +26,9 @@ Run: 2026-09-24T13:31:14.613Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 158 | 210 | `941eaaf` 2026-09-25 |
+| cryptojobs | greenhouse | fetched | 107 | 262 | `941eaaf` 2026-09-25 |
+| cryptojobs | lever | fetched | 61 | 309 | `941eaaf` 2026-09-25 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-09-24T13:31:14.613Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 0 | 0 | — |
-| wayback | greenhouse | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260922 | — | — | — |
-| wayback | greenhouse | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260920 | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260922) | — | — | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260923 | — | — | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260922 | — | — | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260920 | — | — | — |
+| wayback | lever | skipped — HTTP 503 Service Temporarily Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260922 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6110 | +0 | -0 | 8282 |
+| ashby | 6111 | +1 | -0 | 8283 |
 | greenhouse | 15616 | +0 | -0 | 15619 |
 | lever | 8737 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -70,10 +70,12 @@ Run: 2026-09-24T13:31:14.613Z
 | wayback | 1199 | 41 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
-| cryptojobs | 153 | 1 |
+| cryptojobs | 158 | 2 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
+
+Added: black-forest-labs
 
 ### greenhouse — contribution by source
 
@@ -88,7 +90,7 @@ Run: 2026-09-24T13:31:14.613Z
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
 | wayback | 124 | 8 |
-| cryptojobs | 108 | 0 |
+| cryptojobs | 107 | 0 |
 
 ### lever — contribution by source
 
@@ -101,7 +103,7 @@ Run: 2026-09-24T13:31:14.613Z
 | outscal | 314 | 12 |
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
-| cryptojobs | 63 | 0 |
+| cryptojobs | 61 | 0 |
 | wayback | 27 | 0 |
 | openjobsdata | 11 | 0 |
 
