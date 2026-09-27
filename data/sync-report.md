@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-26T13:01:55.019Z
+Run: 2026-09-27T13:54:47.073Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-09-26T13:01:55.019Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `232608c` 2026-09-26 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `232608c` 2026-09-26 |
-| jobseek | lever | fetched | 193 | 2 | `232608c` 2026-09-26 |
+| jobseek | ashby | fetched | 927 | 7 | `e99d38e` 2026-09-27 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `e99d38e` 2026-09-27 |
+| jobseek | lever | fetched | 193 | 2 | `e99d38e` 2026-09-27 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 162 | 204 | `b3cf773` 2026-09-25 |
-| cryptojobs | greenhouse | fetched | 103 | 265 | `b3cf773` 2026-09-25 |
-| cryptojobs | lever | fetched | 60 | 308 | `b3cf773` 2026-09-25 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-09-26T13:01:55.019Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260923 | — | — | — |
-| wayback | greenhouse | fetched | 8 | 0 | — |
-| wayback | greenhouse | fetched | 34 | 1 | — |
-| wayback | lever | fetched | 3 | 0 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260923 | — | — | — |
+| wayback | greenhouse | fetched | 7 | 0 | — |
+| wayback | greenhouse | fetched | 8 | 1 | — |
+| wayback | lever | fetched | 2 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -87,7 +87,7 @@ Run: 2026-09-26T13:01:55.019Z
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 139 | 8 |
+| wayback | 143 | 8 |
 | cryptojobs | 103 | 0 |
 
 ### lever — contribution by source
@@ -102,7 +102,7 @@ Run: 2026-09-26T13:01:55.019Z
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
 | cryptojobs | 60 | 0 |
-| wayback | 29 | 0 |
+| wayback | 30 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
