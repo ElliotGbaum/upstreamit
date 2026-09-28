@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-27T13:54:47.073Z
+Run: 2026-09-28T16:43:46.895Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-09-27T13:54:47.073Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | ashby | fetched | 3545 | 0 | `e22678e` 2026-09-28 |
+| openroles | greenhouse | fetched | 5152 | 1 | `e22678e` 2026-09-28 |
+| openroles | lever | fetched | 2089 | 0 | `e22678e` 2026-09-28 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `e99d38e` 2026-09-27 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `e99d38e` 2026-09-27 |
-| jobseek | lever | fetched | 193 | 2 | `e99d38e` 2026-09-27 |
+| jobseek | ashby | fetched | 927 | 7 | `3d88551` 2026-09-28 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `3d88551` 2026-09-28 |
+| jobseek | lever | fetched | 193 | 2 | `3d88551` 2026-09-28 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,32 +42,32 @@ Run: 2026-09-27T13:54:47.073Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260923 | — | — | — |
-| wayback | greenhouse | fetched | 7 | 0 | — |
-| wayback | greenhouse | fetched | 8 | 1 | — |
-| wayback | lever | fetched | 2 | 0 | — |
+| wayback | ashby | fetched | 259 | 6 | — |
+| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | greenhouse | fetched | 6 | 1 | — |
+| wayback | lever | fetched | 4 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6111 | +0 | -0 | 8283 |
-| greenhouse | 15616 | +0 | -0 | 15619 |
-| lever | 8737 | +0 | -0 | 8739 |
+| ashby | 6117 | +6 | -0 | 8289 |
+| greenhouse | 15615 | +0 | -1 | 15619 |
+| lever | 8736 | +0 | -1 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
 ### ashby — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 687 |
-| backfill | 4174 | 19 |
+| hf-latmay | 5458 | 684 |
+| backfill | 4174 | 18 |
 | commoncrawl | 4022 | 30 |
-| openroles | 3558 | 10 |
+| openroles | 3545 | 10 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1199 | 41 |
+| wayback | 1308 | 47 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 162 | 2 |
@@ -75,35 +75,41 @@ Run: 2026-09-27T13:54:47.073Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
+Added: andera, berlitz, firstwork, human intuition, theacademysf, verge-labs
+
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4466 |
+| hf-latmay | 14231 | 4469 |
 | feashliaa | 8333 | 162 |
 | commoncrawl | 6402 | 328 |
 | kalil | 6028 | 366 |
-| openroles | 5175 | 47 |
+| openroles | 5152 | 46 |
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
 | wayback | 143 | 8 |
 | cryptojobs | 103 | 0 |
 
+Removed: goprocareers
+
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3705 |
+| hf-latmay | 8528 | 3706 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
-| openroles | 2100 | 4 |
+| openroles | 2089 | 3 |
 | outscal | 314 | 12 |
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
 | cryptojobs | 60 | 0 |
-| wayback | 30 | 0 |
+| wayback | 31 | 0 |
 | openjobsdata | 11 | 0 |
+
+Removed: homeworld-bio
 
 ### workday — contribution by source
 

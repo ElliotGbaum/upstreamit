@@ -279,6 +279,7 @@ anara
 ancientritual
 ancora
 andela
+andera
 andercore
 andi
 ando
@@ -629,6 +630,7 @@ bento
 bentoml
 beparallel
 bereal
+berlitz
 bernard
 beside
 bespokelabs
@@ -1884,6 +1886,7 @@ firstordereffects
 firstprinciples
 firstround
 firststreet
+firstwork
 fitt
 fitzroyandassociates
 five-ai
@@ -2466,6 +2469,7 @@ hudu
 hum-ai
 humaans
 human
+human intuition
 human-computer-lab
 human.capital
 humanarchive
@@ -5410,6 +5414,7 @@ the-studio
 the-suite
 the-token-company
 the-virga-law-firm
+theacademysf
 theam
 thebighalo
 thebotcompany
@@ -5754,6 +5759,7 @@ vercel
 vercept
 verdance
 verge-genomics
+verge-labs
 verified
 verisoul
 verkada
