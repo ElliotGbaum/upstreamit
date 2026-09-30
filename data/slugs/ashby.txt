@@ -575,6 +575,7 @@ backoffice
 backpack
 badrobotgames
 bags
+bagsfm
 balorgames
 bankjoy
 bantamcommunications
@@ -4127,6 +4128,7 @@ polyester
 polygon-labs
 polymarket
 polymath
+polymr
 polytomic
 polywrap
 pomeloinc
@@ -5672,6 +5674,7 @@ up
 upandup
 upchurch
 upcodes
+updoc
 upflow
 upguard
 uplane

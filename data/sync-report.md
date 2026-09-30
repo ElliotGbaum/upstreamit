@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-29T14:49:54.894Z
+Run: 2026-09-30T14:53:23.749Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-09-29T14:49:54.894Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `c571568` 2026-09-29 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `c571568` 2026-09-29 |
-| jobseek | lever | fetched | 193 | 2 | `c571568` 2026-09-29 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-09-29T14:49:54.894Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 5 | 0 | — |
-| wayback | greenhouse | fetched | 7 | 1 | — |
-| wayback | lever | fetched | 3 | 0 | — |
+| wayback | ashby | fetched | 111 | 5 | — |
+| wayback | greenhouse | fetched | 7 | 0 | — |
+| wayback | greenhouse | fetched | 12 | 1 | — |
+| wayback | lever | fetched | 4 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6117 | +0 | -0 | 8289 |
+| ashby | 6120 | +3 | -0 | 8292 |
 | greenhouse | 15615 | +0 | -0 | 15619 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -67,7 +67,7 @@ Run: 2026-09-29T14:49:54.894Z
 | openroles | 3545 | 10 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1308 | 47 |
+| wayback | 1333 | 50 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 162 | 2 |
@@ -75,11 +75,13 @@ Run: 2026-09-29T14:49:54.894Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
+Added: bagsfm, polymr, updoc
+
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4469 |
+| hf-latmay | 14231 | 4468 |
 | feashliaa | 8333 | 162 |
 | commoncrawl | 6402 | 328 |
 | kalil | 6028 | 366 |
@@ -87,7 +89,7 @@ Run: 2026-09-29T14:49:54.894Z
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 145 | 8 |
+| wayback | 148 | 8 |
 | cryptojobs | 103 | 0 |
 
 ### lever — contribution by source
@@ -102,7 +104,7 @@ Run: 2026-09-29T14:49:54.894Z
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
 | cryptojobs | 60 | 0 |
-| wayback | 31 | 0 |
+| wayback | 32 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
