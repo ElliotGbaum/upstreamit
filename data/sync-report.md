@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-09-30T14:53:23.749Z
+Run: 2026-10-01T15:25:07.504Z
 
 ## Sources
 
@@ -42,17 +42,17 @@ Run: 2026-09-30T14:53:23.749Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 111 | 5 | — |
-| wayback | greenhouse | fetched | 7 | 0 | — |
-| wayback | greenhouse | fetched | 12 | 1 | — |
-| wayback | lever | fetched | 4 | 1 | — |
+| wayback | ashby | fetched | 98 | 5 | — |
+| wayback | greenhouse | fetched | 6 | 0 | — |
+| wayback | greenhouse | fetched | 9 | 1 | — |
+| wayback | lever | fetched | 5 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6120 | +3 | -0 | 8292 |
+| ashby | 6122 | +2 | -0 | 8294 |
 | greenhouse | 15615 | +0 | -0 | 15619 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -67,7 +67,7 @@ Run: 2026-09-30T14:53:23.749Z
 | openroles | 3545 | 10 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1333 | 50 |
+| wayback | 1345 | 52 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 162 | 2 |
@@ -75,7 +75,7 @@ Run: 2026-09-30T14:53:23.749Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: bagsfm, polymr, updoc
+Added: director, openstandard
 
 ### greenhouse — contribution by source
 
@@ -96,7 +96,7 @@ Added: bagsfm, polymr, updoc
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3706 |
+| hf-latmay | 8528 | 3705 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
 | openroles | 2089 | 3 |
@@ -104,7 +104,7 @@ Added: bagsfm, polymr, updoc
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
 | cryptojobs | 60 | 0 |
-| wayback | 32 | 0 |
+| wayback | 33 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
