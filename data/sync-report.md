@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-01T15:25:07.504Z
+Run: 2026-10-02T14:42:29.841Z
 
 ## Sources
 
@@ -42,17 +42,17 @@ Run: 2026-10-01T15:25:07.504Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 98 | 5 | — |
-| wayback | greenhouse | fetched | 6 | 0 | — |
-| wayback | greenhouse | fetched | 9 | 1 | — |
-| wayback | lever | fetched | 5 | 1 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20260930 | — | — | — |
+| wayback | greenhouse | fetched | 2 | 0 | — |
+| wayback | greenhouse | fetched | 2 | 1 | — |
+| wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6122 | +2 | -0 | 8294 |
+| ashby | 6122 | +0 | -0 | 8294 |
 | greenhouse | 15615 | +0 | -0 | 15619 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -75,8 +75,6 @@ Run: 2026-10-01T15:25:07.504Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: director, openstandard
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -89,7 +87,7 @@ Added: director, openstandard
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 148 | 8 |
+| wayback | 149 | 8 |
 | cryptojobs | 103 | 0 |
 
 ### lever — contribution by source
