@@ -15,6 +15,7 @@
 1password
 1sphere
 1st formations
+1uphealth
 1x
 2ndwave
 30mpc
@@ -1454,6 +1455,7 @@ deta space
 detail
 develop-health
 devsavant
+dewarmte
 dex
 dexmate
 dext-careers
@@ -1543,6 +1545,7 @@ doxy.me
 dragonfruit.ai
 drata
 drcomfort
+dreamhq
 dreamthree
 dressly
 drogue
@@ -2264,6 +2267,7 @@ groundnews
 groundtruthlabs
 grow-inc
 grow-therapy
+growfig
 growly
 growtherapy
 growthprotocol
@@ -2506,6 +2510,7 @@ hyperspace
 hyperspell
 hypha
 hyphametrics
+hyphenate
 i-onx
 i3d
 i6
@@ -3740,6 +3745,7 @@ open-ledger
 openage
 openai
 openai-deployment-company
+openai-foundation
 openart
 openblock
 openclaw-foundation-inc
@@ -3978,6 +3984,7 @@ periodic-labs
 perk
 permitflow
 permutive
+perp
 perplexity
 perryweather
 persimmons-ai
@@ -5603,6 +5610,7 @@ trysend
 tryvital
 tuesday-lab
 tuesday-labs
+tunnl
 tuotempo
 turbolaw
 turbopuffer
