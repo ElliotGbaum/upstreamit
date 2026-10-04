@@ -227,6 +227,7 @@ alpha-design-ai-inc
 alphalifesci
 alpic
 alpinex
+alt
 alta-ares
 altera.al
 altercall
@@ -1694,6 +1695,7 @@ ens-labs
 ent-security
 entangl
 enter-ai
+enterprise
 env-int
 envision-horizons
 envoy
@@ -3262,6 +3264,7 @@ mentava
 mentis
 mento
 meow
+meraki-labs
 mercator
 merciv
 mercor
@@ -3352,6 +3355,7 @@ mnemonic
 moab
 mobasi
 mobbin.com
+mobi
 mobilefirst
 mobius ai
 modal
@@ -4059,6 +4063,7 @@ planera
 planet
 planetary-scale
 planhat
+plantedsolar
 planteria
 plantingspace
 plasiv
@@ -4960,6 +4965,7 @@ solvd
 solve.ai
 solveintelligence
 soma-energy
+somana.tech
 somethings
 somite-ai
 somnia

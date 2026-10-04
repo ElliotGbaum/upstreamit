@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-03T13:20:21.657Z
+Run: 2026-10-04T13:55:16.212Z
 
 ## Sources
 
@@ -42,18 +42,18 @@ Run: 2026-10-03T13:20:21.657Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 220 | 5 | — |
-| wayback | greenhouse | fetched | 5 | 0 | — |
-| wayback | greenhouse | fetched | 14 | 1 | — |
-| wayback | lever | fetched | 1 | 0 | — |
+| wayback | ashby | fetched | 230 | 7 | — |
+| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | greenhouse | fetched | 16 | 1 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6130 | +8 | -0 | 8302 |
-| greenhouse | 15616 | +1 | -0 | 15620 |
+| ashby | 6136 | +6 | -0 | 8308 |
+| greenhouse | 15617 | +1 | -0 | 15621 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -61,21 +61,21 @@ Run: 2026-10-03T13:20:21.657Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 683 |
+| hf-latmay | 5458 | 682 |
 | backfill | 4174 | 17 |
 | commoncrawl | 4022 | 29 |
 | openroles | 3545 | 9 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1402 | 60 |
+| wayback | 1462 | 66 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
-| cryptojobs | 162 | 2 |
+| cryptojobs | 162 | 1 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: 1uphealth, dewarmte, dreamhq, growfig, hyphenate, openai-foundation, perp, tunnl
+Added: alt, enterprise, meraki-labs, mobi, plantedsolar, somana.tech
 
 ### greenhouse — contribution by source
 
@@ -89,10 +89,10 @@ Added: 1uphealth, dewarmte, dreamhq, growfig, hyphenate, openai-foundation, perp
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 152 | 9 |
+| wayback | 156 | 10 |
 | cryptojobs | 103 | 0 |
 
-Added: growwreferrals
+Added: coherentsolutionsinc
 
 ### lever — contribution by source
 
