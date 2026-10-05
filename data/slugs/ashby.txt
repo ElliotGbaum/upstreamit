@@ -175,6 +175,7 @@ airwallex
 airweave
 aisle
 aisle3
+aistudio
 aiuc
 aiwyn
 aizen
@@ -1387,6 +1388,7 @@ dcblox
 dclimate
 ddn
 ddx
+deaa6ad2-d184-436b-b69e-17f761da1d94
 dealdriver
 dealmaker
 dealops
@@ -2276,6 +2278,7 @@ growthprotocol
 growthtribe
 growthtroops
 growthx ai
+grubel
 gruntwork
 grvt
 gt-bio
@@ -5395,6 +5398,7 @@ terrafirma-inc
 terramate
 terranova
 terrarium
+terrestrialbio
 tessera-labs
 tesslcareers
 testgorilla
@@ -5421,6 +5425,7 @@ the zebra
 the-cyber-health-company
 the-exploration-company
 the-flex
+the-global-tal
 the-global-talent-co
 the-learning-spectrum
 the-llm-data-company
