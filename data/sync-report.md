@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-05T17:06:30.358Z
+Run: 2026-10-06T15:06:04.014Z
 
 ## Sources
 
@@ -11,9 +11,9 @@ Run: 2026-10-05T17:06:30.358Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3538 | 0 | `8743383` 2026-10-05 |
-| openroles | greenhouse | fetched | 5128 | 1 | `8743383` 2026-10-05 |
-| openroles | lever | fetched | 2086 | 0 | `8743383` 2026-10-05 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-10-05T17:06:30.358Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 195 | 6 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004 | — | — | — |
 | wayback | greenhouse | fetched | 3 | 0 | — |
 | wayback | greenhouse | fetched | 10 | 1 | — |
-| wayback | lever | fetched | 4 | 1 | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6141 | +5 | -0 | 8313 |
-| greenhouse | 15616 | +0 | -1 | 15621 |
+| ashby | 6141 | +0 | -0 | 8313 |
+| greenhouse | 15616 | +0 | -0 | 15621 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -75,8 +75,6 @@ Run: 2026-10-05T17:06:30.358Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: aistudio, deaa6ad2-d184-436b-b69e-17f761da1d94, grubel, terrestrialbio, the-global-tal
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -91,8 +89,6 @@ Added: aistudio, deaa6ad2-d184-436b-b69e-17f761da1d94, grubel, terrestrialbio, t
 | openjobsdata | 263 | 1 |
 | wayback | 159 | 10 |
 | cryptojobs | 103 | 0 |
-
-Removed: downtownmusicholdings
 
 ### lever — contribution by source
 
