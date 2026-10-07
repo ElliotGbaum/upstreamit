@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-06T15:06:04.014Z
+Run: 2026-10-07T15:31:32.149Z
 
 ## Sources
 
@@ -42,10 +42,10 @@ Run: 2026-10-06T15:06:04.014Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004 | — | — | — |
-| wayback | greenhouse | fetched | 3 | 0 | — |
-| wayback | greenhouse | fetched | 10 | 1 | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004 | — | — | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004 | — | — | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261005 | — | — | — |
+| wayback | greenhouse | fetched | 2 | 0 | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261004) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
