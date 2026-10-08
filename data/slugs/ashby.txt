@@ -139,6 +139,7 @@ agentmail
 aghanim
 agi-inc
 agility
+agility.io
 agon
 agora
 agreen
@@ -534,6 +535,7 @@ aven
 aveni
 aventure
 avenue
+averi
 aviaras
 aviator
 avid4
@@ -2625,6 +2627,7 @@ intellistack
 interaction
 interface
 interface-ai
+interfere
 interplay
 interrahealth
 intology
@@ -3808,6 +3811,7 @@ originhq
 orion
 orionsleep
 orita
+ortet
 orum
 oscilar
 osmo
@@ -4440,6 +4444,7 @@ remilia
 remo
 render
 renderfoundation
+renewable-properties-llc
 rennscotmfg
 rentana-io
 renterra
@@ -4703,6 +4708,7 @@ sciencelogic
 scientech-research
 scientist
 sciforium
+scope-labs
 scoreplay
 scorewarrior
 scout
@@ -4773,6 +4779,7 @@ seon
 seqera.io
 sequen-ai
 sequence
+sequencing
 sequent
 sequoia
 sereact
@@ -5357,6 +5364,7 @@ techyrecruiter
 tectonai
 teero
 tekion
+tekton-dynamics
 telepatia
 teleskope
 telli
