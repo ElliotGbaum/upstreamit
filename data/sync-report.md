@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-08T15:32:47.884Z
+Run: 2026-10-09T15:15:15.134Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-08T15:32:47.884Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `072160c` 2026-10-08 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `072160c` 2026-10-08 |
-| jobseek | lever | fetched | 193 | 2 | `072160c` 2026-10-08 |
+| jobseek | ashby | fetched | 927 | 7 | `3885024` 2026-10-09 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `3885024` 2026-10-09 |
+| jobseek | lever | fetched | 193 | 2 | `3885024` 2026-10-09 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-10-08T15:32:47.884Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 326 | 5 | — |
-| wayback | greenhouse | fetched | 2 | 0 | — |
-| wayback | greenhouse | fetched | 7 | 1 | — |
-| wayback | lever | fetched | 8 | 1 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
+| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6149 | +8 | -0 | 8321 |
+| ashby | 6149 | +0 | -0 | 8321 |
 | greenhouse | 15616 | +0 | -0 | 15621 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -74,8 +74,6 @@ Run: 2026-10-08T15:32:47.884Z
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: agility.io, averi, interfere, ortet, renewable-properties-llc, scope-labs, sequencing, tekton-dynamics
 
 ### greenhouse — contribution by source
 
