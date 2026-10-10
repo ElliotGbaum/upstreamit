@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-09T15:15:15.134Z
+Run: 2026-10-10T14:26:33.162Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-09T15:15:15.134Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `3885024` 2026-10-09 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `3885024` 2026-10-09 |
-| jobseek | lever | fetched | 193 | 2 | `3885024` 2026-10-09 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -43,9 +43,9 @@ Run: 2026-10-09T15:15:15.134Z
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
-| wayback | greenhouse | fetched | 3 | 0 | — |
-| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 2 | 0 | — |
+| wayback | greenhouse | fetched | 21 | 1 | — |
+| wayback | lever | fetched | 4 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-09T15:15:15.134Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6149 | +0 | -0 | 8321 |
-| greenhouse | 15616 | +0 | -0 | 15621 |
+| greenhouse | 15617 | +1 | -0 | 15622 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -87,8 +87,10 @@ Run: 2026-10-09T15:15:15.134Z
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 161 | 10 |
+| wayback | 165 | 11 |
 | cryptojobs | 103 | 0 |
+
+Added: kirbygroupengineering
 
 ### lever — contribution by source
 
