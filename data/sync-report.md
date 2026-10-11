@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-10T14:26:33.162Z
+Run: 2026-10-11T14:53:32.837Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-10T14:26:33.162Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | unchanged | — | — | — |
-| jobseek | greenhouse | unchanged | — | — | — |
-| jobseek | lever | unchanged | — | — | — |
+| jobseek | ashby | fetched | 927 | 7 | `c0c6f57` 2026-10-11 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `c0c6f57` 2026-10-11 |
+| jobseek | lever | fetched | 193 | 2 | `c0c6f57` 2026-10-11 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -43,9 +43,9 @@ Run: 2026-10-10T14:26:33.162Z
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
-| wayback | greenhouse | fetched | 2 | 0 | — |
-| wayback | greenhouse | fetched | 21 | 1 | — |
-| wayback | lever | fetched | 4 | 0 | — |
+| wayback | greenhouse | fetched | 5 | 1 | — |
+| wayback | greenhouse | fetched | 33 | 1 | — |
+| wayback | lever | fetched | 8 | 1 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-10T14:26:33.162Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6149 | +0 | -0 | 8321 |
-| greenhouse | 15617 | +1 | -0 | 15622 |
+| greenhouse | 15619 | +2 | -0 | 15624 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -87,10 +87,10 @@ Run: 2026-10-10T14:26:33.162Z
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 165 | 11 |
+| wayback | 176 | 13 |
 | cryptojobs | 103 | 0 |
 
-Added: kirbygroupengineering
+Added: firstdigitaltrustboards, mediaforceltd
 
 ### lever — contribution by source
 
@@ -104,7 +104,7 @@ Added: kirbygroupengineering
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
 | cryptojobs | 60 | 0 |
-| wayback | 34 | 0 |
+| wayback | 35 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
