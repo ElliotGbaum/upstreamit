@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-11T14:53:32.837Z
+Run: 2026-10-12T17:49:49.553Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-10-11T14:53:32.837Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | ashby | fetched | 3521 | 0 | `3f4cb67` 2026-10-12 |
+| openroles | greenhouse | fetched | 5101 | 1 | `3f4cb67` 2026-10-12 |
+| openroles | lever | fetched | 2077 | 0 | `3f4cb67` 2026-10-12 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `c0c6f57` 2026-10-11 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `c0c6f57` 2026-10-11 |
-| jobseek | lever | fetched | 193 | 2 | `c0c6f57` 2026-10-11 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-10-11T14:53:32.837Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
-| wayback | greenhouse | fetched | 5 | 1 | — |
-| wayback | greenhouse | fetched | 33 | 1 | — |
-| wayback | lever | fetched | 8 | 1 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
+| wayback | greenhouse | fetched | 6 | 1 | — |
+| wayback | greenhouse | fetched | 22 | 1 | — |
+| wayback | lever | fetched | 6 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-11T14:53:32.837Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6149 | +0 | -0 | 8321 |
-| greenhouse | 15619 | +2 | -0 | 15624 |
+| greenhouse | 15619 | +0 | -0 | 15624 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -63,8 +63,8 @@ Run: 2026-10-11T14:53:32.837Z
 | --- | --- | --- |
 | hf-latmay | 5458 | 682 |
 | backfill | 4174 | 17 |
-| commoncrawl | 4022 | 29 |
-| openroles | 3538 | 8 |
+| commoncrawl | 4022 | 31 |
+| openroles | 3521 | 8 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
 | wayback | 1553 | 79 |
@@ -79,18 +79,16 @@ Run: 2026-10-11T14:53:32.837Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4470 |
-| feashliaa | 8333 | 162 |
-| commoncrawl | 6402 | 328 |
+| hf-latmay | 14231 | 4471 |
+| feashliaa | 8333 | 163 |
+| commoncrawl | 6402 | 327 |
 | kalil | 6028 | 366 |
-| openroles | 5128 | 45 |
+| openroles | 5101 | 45 |
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 176 | 13 |
+| wayback | 178 | 13 |
 | cryptojobs | 103 | 0 |
-
-Added: firstdigitaltrustboards, mediaforceltd
 
 ### lever — contribution by source
 
@@ -99,7 +97,7 @@ Added: firstdigitaltrustboards, mediaforceltd
 | hf-latmay | 8528 | 3705 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
-| openroles | 2086 | 3 |
+| openroles | 2077 | 3 |
 | outscal | 314 | 12 |
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
