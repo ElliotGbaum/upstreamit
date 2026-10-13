@@ -88,6 +88,7 @@ acorns
 acquird
 acquisition
 across-ai
+act-security
 activeloop
 activesite
 actual
@@ -516,6 +517,7 @@ augustus
 aurelian
 aureliussystems
 auror
+aurora-operations-inc
 aurorasolar
 authenticins
 authorium
@@ -629,6 +631,7 @@ bem
 ben
 bench
 benchling
+benchmark analytics
 benchmarkhealth
 benepass
 benevity
@@ -649,6 +652,7 @@ betterup
 bevaya
 bevel
 beyondmath
+beyondreachlabs
 beyondsports
 bhblasted
 bicara-therapeutics
@@ -681,6 +685,7 @@ bite
 bitewell
 bitfly
 bitfount
+biti
 bitnomial
 bitstack
 bitvavo
@@ -1027,6 +1032,7 @@ chronosphere
 chronospherejobs
 cinde
 cinder
+circle
 circle-health
 circleback
 circuithub
@@ -1208,6 +1214,7 @@ connectly
 connectrn
 conquest
 conscious-talent
+consensys
 console
 constellation
 constellationspace
@@ -1469,6 +1476,7 @@ di-ati
 diagonal
 diagrid
 dialo
+dialogica
 dialogueai
 dicefm
 didask
@@ -1680,6 +1688,7 @@ empower
 empower finance
 empowerfinance
 enclave
+enclosure
 encord
 encore
 endeavor
@@ -1742,6 +1751,7 @@ euclid-power
 euphoric
 europe
 ev.energy
+evaratus
 eventual
 eventualcomputing
 evenup
@@ -1766,6 +1776,7 @@ exa
 exacare
 excelerate
 exegy
+exo
 exofreight
 expa
 expensify
@@ -2823,6 +2834,7 @@ kit
 kittl
 kiwi
 kiwi-com
+klarify
 klarity
 klarity-ai
 kled-ai
@@ -3173,6 +3185,7 @@ mapbox
 maple
 marathon fusion
 marble
+marble.ai
 marblehealth
 marcohire
 marianaminerals
@@ -3307,6 +3320,7 @@ method.security
 methodical-careers
 meticulous
 metriport
+metro-credit-union
 mexdigital
 mgtinsurance
 mia-labs
@@ -3357,6 +3371,7 @@ mistral.ai
 miter
 mithrl
 mitiga-solutions
+mitti
 mnemonic
 moab
 mobasi
@@ -3679,6 +3694,7 @@ obvio
 obvious
 occam
 ocean
+ocean-atomics
 oceanus
 ocp
 ocra
@@ -3761,6 +3777,7 @@ openblock
 openclaw-foundation-inc
 opencomp
 opencoreos
+opendr
 opened
 openevidence
 opengov
@@ -3771,6 +3788,7 @@ openloophealth
 openlooppartners
 openly
 openmind
+opennote
 openobserve-careers
 openphilanthropy
 openrouter
@@ -3903,12 +3921,14 @@ paradox
 parafin
 paraform
 paragon
+parakeet-health
 parallax
 parallel
 parallel-bio
 parallel-biosystems
 parallel-fluidics
 parambil
+parameter
 parasail
 parashift
 parasol
@@ -4143,6 +4163,7 @@ polaroid
 polarsteps
 polene-paris
 poliigon
+polimorphic
 politanalytics
 polly
 polyester
@@ -4171,6 +4192,7 @@ posthog
 potion
 powerlattice
 powerline
+powertown
 powerus
 pplwise
 praecipio
@@ -4179,6 +4201,7 @@ pragmaplatform
 pragmatico
 pragmatike
 prairielearn
+pramaana-labs
 pravah
 praxipal
 praxis
@@ -4286,6 +4309,8 @@ pylon-labs
 pythnetwork
 pytho-ai
 pyyne
+pzeroresearch
+qa wolf
 qa.tech
 qawolf
 qdrant.tech
@@ -4523,6 +4548,7 @@ ribbon-ai
 ricursive intelligence
 ridealso
 ridezoomo
+rifa
 riff
 rightfoot
 righthandtalent
@@ -4785,6 +4811,7 @@ sequoia
 sereact
 seriesai
 serif
+serova
 serpapi
 serval
 served with honor
@@ -5111,6 +5138,7 @@ stayai
 staycation
 stead
 steadily
+steakhouse
 stealth
 stealth-healthtech-startup
 stealth-start-up
@@ -5602,6 +5630,7 @@ troveo
 trovy
 trucksmarter
 true-classic-tees
+true-talent-solutions-partners
 truecircle
 truelinkfinancial
 truelogic
@@ -5826,10 +5855,12 @@ viggle
 viggle.ai
 vigil-markets
 vik
+vikta-energy
 viktor
 village-labs
 villagesql
 vinci4d
+vinylequity
 vio
 violet
 virahealth
@@ -5931,6 +5962,7 @@ wealthsimple
 wearebeyondsports
 weave
 weave-grid
+weave-os
 weaviate
 web3mine.io
 webai

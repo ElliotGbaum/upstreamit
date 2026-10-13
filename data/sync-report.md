@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-12T17:49:49.553Z
+Run: 2026-10-13T15:54:50.470Z
 
 ## Sources
 
@@ -11,9 +11,9 @@ Run: 2026-10-12T17:49:49.553Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3521 | 0 | `3f4cb67` 2026-10-12 |
-| openroles | greenhouse | fetched | 5101 | 1 | `3f4cb67` 2026-10-12 |
-| openroles | lever | fetched | 2077 | 0 | `3f4cb67` 2026-10-12 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-10-12T17:49:49.553Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 164 | 202 | `221d770` 2026-10-13 |
+| cryptojobs | greenhouse | fetched | 99 | 269 | `221d770` 2026-10-13 |
+| cryptojobs | lever | fetched | 60 | 308 | `221d770` 2026-10-13 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-10-12T17:49:49.553Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261007 | — | — | — |
-| wayback | greenhouse | fetched | 6 | 1 | — |
-| wayback | greenhouse | fetched | 22 | 1 | — |
-| wayback | lever | fetched | 6 | 0 | — |
+| wayback | ashby | fetched | 644 | 5 | — |
+| wayback | greenhouse | fetched | 6 | 0 | — |
+| wayback | greenhouse | fetched | 20 | 1 | — |
+| wayback | lever | fetched | 4 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6149 | +0 | -0 | 8321 |
+| ashby | 6181 | +32 | -0 | 8353 |
 | greenhouse | 15619 | +0 | -0 | 15624 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -61,19 +61,21 @@ Run: 2026-10-12T17:49:49.553Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 682 |
+| hf-latmay | 5458 | 681 |
 | backfill | 4174 | 17 |
-| commoncrawl | 4022 | 31 |
+| commoncrawl | 4022 | 30 |
 | openroles | 3521 | 8 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1553 | 79 |
+| wayback | 1788 | 111 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
-| cryptojobs | 162 | 1 |
+| cryptojobs | 164 | 0 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
+
+Added: act-security, aurora-operations-inc, benchmark analytics, beyondreachlabs, biti, circle, consensys, dialogica, enclosure, evaratus, exo, klarify, marble.ai, metro-credit-union, mitti, ocean-atomics, opendr, opennote, parakeet-health, parameter, … (32 total)
 
 ### greenhouse — contribution by source
 
@@ -87,8 +89,8 @@ Run: 2026-10-12T17:49:49.553Z
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 178 | 13 |
-| cryptojobs | 103 | 0 |
+| wayback | 179 | 13 |
+| cryptojobs | 99 | 0 |
 
 ### lever — contribution by source
 
