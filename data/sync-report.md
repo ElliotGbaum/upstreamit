@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-13T15:54:50.470Z
+Run: 2026-10-14T13:39:54.186Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-10-13T15:54:50.470Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | unchanged | — | — | — |
-| jobseek | greenhouse | unchanged | — | — | — |
-| jobseek | lever | unchanged | — | — | — |
+| jobseek | ashby | fetched | 927 | 7 | `d5cd1c7` 2026-10-14 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `d5cd1c7` 2026-10-14 |
+| jobseek | lever | fetched | 193 | 2 | `d5cd1c7` 2026-10-14 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 164 | 202 | `221d770` 2026-10-13 |
-| cryptojobs | greenhouse | fetched | 99 | 269 | `221d770` 2026-10-13 |
-| cryptojobs | lever | fetched | 60 | 308 | `221d770` 2026-10-13 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-10-13T15:54:50.470Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 644 | 5 | — |
-| wayback | greenhouse | fetched | 6 | 0 | — |
-| wayback | greenhouse | fetched | 20 | 1 | — |
-| wayback | lever | fetched | 4 | 0 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012 | — | — | — |
+| wayback | greenhouse | fetched | 4 | 0 | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012) | — | — | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6181 | +32 | -0 | 8353 |
+| ashby | 6181 | +0 | -0 | 8353 |
 | greenhouse | 15619 | +0 | -0 | 15624 |
 | lever | 8736 | +0 | -0 | 8739 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -74,8 +74,6 @@ Run: 2026-10-13T15:54:50.470Z
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: act-security, aurora-operations-inc, benchmark analytics, beyondreachlabs, biti, circle, consensys, dialogica, enclosure, evaratus, exo, klarify, marble.ai, metro-credit-union, mitti, ocean-atomics, opendr, opennote, parakeet-health, parameter, … (32 total)
 
 ### greenhouse — contribution by source
 
