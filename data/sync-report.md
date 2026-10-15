@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-14T13:39:54.186Z
+Run: 2026-10-15T13:22:25.822Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-14T13:39:54.186Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `d5cd1c7` 2026-10-14 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `d5cd1c7` 2026-10-14 |
-| jobseek | lever | fetched | 193 | 2 | `d5cd1c7` 2026-10-14 |
+| jobseek | ashby | fetched | 927 | 7 | `fab5f5c` 2026-10-14 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `fab5f5c` 2026-10-14 |
+| jobseek | lever | fetched | 193 | 2 | `fab5f5c` 2026-10-14 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-10-14T13:39:54.186Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012 | — | — | — |
-| wayback | greenhouse | fetched | 4 | 0 | — |
-| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012) | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261012) | — | — | — |
+| wayback | ashby | fetched | 78 | 3 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 8 | 1 | — |
+| wayback | lever | fetched | 2 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -67,7 +67,7 @@ Run: 2026-10-14T13:39:54.186Z
 | openroles | 3521 | 8 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1788 | 111 |
+| wayback | 1791 | 111 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 164 | 0 |
