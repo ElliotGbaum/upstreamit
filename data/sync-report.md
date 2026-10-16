@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-15T13:22:25.822Z
+Run: 2026-10-16T13:12:47.990Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-10-15T13:22:25.822Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `fab5f5c` 2026-10-14 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `fab5f5c` 2026-10-14 |
-| jobseek | lever | fetched | 193 | 2 | `fab5f5c` 2026-10-14 |
+| jobseek | ashby | fetched | 927 | 7 | `45f6107` 2026-10-15 |
+| jobseek | greenhouse | fetched | 2544 | 22 | `45f6107` 2026-10-15 |
+| jobseek | lever | fetched | 193 | 2 | `45f6107` 2026-10-15 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 170 | 203 | `e7d1ce0` 2026-10-15 |
+| cryptojobs | greenhouse | fetched | 100 | 275 | `e7d1ce0` 2026-10-15 |
+| cryptojobs | lever | fetched | 60 | 315 | `e7d1ce0` 2026-10-15 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-10-15T13:22:25.822Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 78 | 3 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261014 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 8 | 1 | — |
-| wayback | lever | fetched | 2 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -70,7 +70,7 @@ Run: 2026-10-15T13:22:25.822Z
 | wayback | 1791 | 111 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
-| cryptojobs | 164 | 0 |
+| cryptojobs | 170 | 0 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
@@ -88,7 +88,7 @@ Run: 2026-10-15T13:22:25.822Z
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
 | wayback | 179 | 13 |
-| cryptojobs | 99 | 0 |
+| cryptojobs | 100 | 0 |
 
 ### lever — contribution by source
 
