@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-16T13:12:47.990Z
+Run: 2026-10-17T12:08:59.213Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-10-16T13:12:47.990Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `45f6107` 2026-10-15 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `45f6107` 2026-10-15 |
-| jobseek | lever | fetched | 193 | 2 | `45f6107` 2026-10-15 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 170 | 203 | `e7d1ce0` 2026-10-15 |
-| cryptojobs | greenhouse | fetched | 100 | 275 | `e7d1ce0` 2026-10-15 |
-| cryptojobs | lever | fetched | 60 | 315 | `e7d1ce0` 2026-10-15 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
