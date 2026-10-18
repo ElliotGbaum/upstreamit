@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-17T12:08:59.213Z
+Run: 2026-10-18T12:35:25.694Z
 
 ## Sources
 
@@ -42,10 +42,10 @@ Run: 2026-10-17T12:08:59.213Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261014 | — | — | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | ashby | fetched | 5 | 1 | — |
+| wayback | greenhouse | fetched | 1 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 1 | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261016) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
