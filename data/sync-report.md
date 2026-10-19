@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-18T12:35:25.694Z
+Run: 2026-10-19T15:33:14.699Z
 
 ## Sources
 
@@ -12,8 +12,8 @@ Run: 2026-10-18T12:35:25.694Z
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | greenhouse | fetched | 5075 | 1 | `454c724` 2026-10-19 |
+| openroles | lever | fetched | 2076 | 0 | `454c724` 2026-10-19 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-10-18T12:35:25.694Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 5 | 1 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 1 | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261016) | — | — | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261017 | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -80,10 +80,10 @@ Run: 2026-10-18T12:35:25.694Z
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
 | hf-latmay | 14231 | 4471 |
-| feashliaa | 8333 | 163 |
+| feashliaa | 8333 | 164 |
 | commoncrawl | 6402 | 327 |
-| kalil | 6028 | 366 |
-| openroles | 5101 | 45 |
+| kalil | 6028 | 367 |
+| openroles | 5075 | 45 |
 | jobseek | 2544 | 24 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
@@ -97,7 +97,7 @@ Run: 2026-10-18T12:35:25.694Z
 | hf-latmay | 8528 | 3705 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 132 |
-| openroles | 2077 | 3 |
+| openroles | 2076 | 3 |
 | outscal | 314 | 12 |
 | jobseek | 193 | 0 |
 | commoncrawl | 121 | 1 |
