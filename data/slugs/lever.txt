@@ -1342,6 +1342,7 @@ castle
 castleglobal
 catalate
 catalist
+catalystmobility
 catalyze
 catamaranbio
 catbird
@@ -1539,6 +1540,7 @@ clearview
 clearviewai
 cleo
 clerky
+clevelandconstruction
 clevertap
 clicktime
 climate-collaborative
@@ -2239,6 +2241,7 @@ dsfishlabs
 dsi
 dtadvisers
 dten
+dualitas-therapeutics
 duco
 duedil
 duetti
@@ -2928,6 +2931,7 @@ fungible
 funnelleasing
 funraise
 funxyz
+furientis
 fuse
 futo-org
 futuralis
@@ -3006,6 +3010,7 @@ genopets
 genovatech
 gentem
 gentibio
+genuine-health
 genuinehealth
 geocomply-2
 geophy
@@ -5120,6 +5125,7 @@ netflixanimation
 netlight
 netomi
 netvirta
+networkconnex
 neueda
 neumob
 neuralink
@@ -5521,6 +5527,7 @@ ovation
 overbit
 overbond
 overcast
+overhead-garage-door
 overjet
 overmind
 overmoon
@@ -7499,6 +7506,7 @@ taxfyle
 taylorgourmet
 tba
 tbhcare
+tbwachiatday
 tcpsoftware
 tcs-e
 tdaboulder
@@ -8158,6 +8166,7 @@ veeva
 veho
 veic
 veir
+velaura
 velia
 velo3d
 veloceenergy

@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-20T13:32:01.518Z
+Run: 2026-10-21T13:43:41.482Z
 
 ## Sources
 
@@ -26,48 +26,48 @@ Run: 2026-10-20T13:32:01.518Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 171 | 204 | `862e663` 2026-10-20 |
-| cryptojobs | greenhouse | fetched | 100 | 277 | `862e663` 2026-10-20 |
-| cryptojobs | lever | fetched | 61 | 316 | `862e663` 2026-10-20 |
+| cryptojobs | ashby | fetched | 171 | 204 | `48d92a5` 2026-10-20 |
+| cryptojobs | greenhouse | fetched | 100 | 277 | `48d92a5` 2026-10-20 |
+| cryptojobs | lever | fetched | 60 | 317 | `48d92a5` 2026-10-20 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261017 | — | — | — |
+| commoncrawl | ashby | fetched | 1079 | 66 | — |
+| commoncrawl | greenhouse | fetched | 1998 | 91 | — |
+| commoncrawl | greenhouse | fetched | 888 | 33 | — |
+| commoncrawl | greenhouse | fetched | 36 | 2 | — |
+| commoncrawl | greenhouse | fetched | 375 | 36 | — |
+| commoncrawl | lever | fetched | 265 | 74 | — |
+| commoncrawl | lever | skipped — HTTP 502 Bad Gateway for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
+| wayback | ashby | fetched | 91 | 4 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261018) | — | — | — |
+| wayback | greenhouse | fetched | 4 | 1 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6181 | +0 | -0 | 8353 |
-| greenhouse | 15619 | +0 | -0 | 15624 |
-| lever | 8736 | +0 | -0 | 8739 |
+| ashby | 6242 | +61 | -0 | 8414 |
+| greenhouse | 15681 | +62 | -0 | 15686 |
+| lever | 8745 | +9 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
 ### ashby — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 681 |
+| hf-latmay | 5458 | 677 |
 | backfill | 4174 | 17 |
-| commoncrawl | 4022 | 30 |
+| commoncrawl | 4153 | 89 |
 | openroles | 3521 | 8 |
 | kalil | 3447 | 28 |
 | feashliaa | 3161 | 4 |
-| wayback | 1791 | 111 |
+| wayback | 1814 | 99 |
 | jobseek | 927 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 171 | 0 |
@@ -75,35 +75,41 @@ Run: 2026-10-20T13:32:01.518Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
+Added: aboon, agiholdings, aim-solutions, altitude, answerthis, anthrogen, aquila, collinear-ai, compoundcontentstudio, dfd001cc-f1d3-494c-a350-b14cfef0f0e1, doubleblindbio, dynamic-creatures, entendre, eradrive, faculty-fellowship, fieldmaterials, forgd-ai, forgepoint, futrue, helogen, … (61 total)
+
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4471 |
-| feashliaa | 8333 | 164 |
-| commoncrawl | 6402 | 327 |
-| kalil | 6028 | 367 |
-| openroles | 5075 | 45 |
-| jobseek | 2544 | 24 |
+| hf-latmay | 14231 | 4412 |
+| feashliaa | 8333 | 161 |
+| commoncrawl | 6803 | 389 |
+| kalil | 6028 | 362 |
+| openroles | 5075 | 44 |
+| jobseek | 2544 | 22 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 179 | 13 |
+| wayback | 179 | 12 |
 | cryptojobs | 100 | 0 |
+
+Added: 1stavenuepower, 24hourhomecare, 5ca, 908devicesinc, acc, agencyeight, aktivate, alxcryptoholdingsinc, amcc, amorah, annexwealthmanagement, apperturesolutions, archospice, arlingtonvet, assail, atricureinternational, beespersonalization, biodiversityco, blakewillsongroup, blueantstudiosvancouver, … (62 total)
 
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3705 |
+| hf-latmay | 8528 | 3696 |
 | feashliaa | 4368 | 46 |
-| kalil | 2400 | 132 |
+| kalil | 2400 | 129 |
 | openroles | 2076 | 3 |
+| commoncrawl | 378 | 10 |
 | outscal | 314 | 12 |
 | jobseek | 193 | 0 |
-| commoncrawl | 121 | 1 |
-| cryptojobs | 61 | 0 |
+| cryptojobs | 60 | 0 |
 | wayback | 35 | 0 |
 | openjobsdata | 11 | 0 |
+
+Added: catalystmobility, clevelandconstruction, dualitas-therapeutics, furientis, genuine-health, networkconnex, overhead-garage-door, tbwachiatday, velaura
 
 ### workday — contribution by source
 
