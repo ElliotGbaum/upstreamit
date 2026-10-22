@@ -3617,6 +3617,7 @@ crescendohealth
 crescent
 crescolabs
 cresta
+cresteo
 crestline
 creston
 crestwoodcareers
@@ -3746,6 +3747,7 @@ currentcatalog
 currentglobal
 currentopenings
 currents
+currentsmanagement
 curvegames
 curvehealth
 curveroyaltysystems
@@ -3972,6 +3974,7 @@ democracydefendersaction
 democracyforward
 democracypreppublicschools
 democracyworks
+dendreon
 denim
 denniseagleuk
 density
@@ -4012,6 +4015,7 @@ destinationcanada
 destinationcanadafr
 detect
 detect94
+deterrencedefenseinc
 detroitlions
 deutschnewyork
 devboard
@@ -4178,6 +4182,7 @@ doc
 doccla
 docket
 docnetwork
+docs
 doctolib
 doctorcom
 doctorswithoutborders
