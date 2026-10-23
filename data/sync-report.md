@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-22T13:44:27.624Z
+Run: 2026-10-23T13:21:11.746Z
 
 ## Sources
 
@@ -26,9 +26,9 @@ Run: 2026-10-22T13:44:27.624Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 172 | 203 | `029d999` 2026-10-22 |
-| cryptojobs | greenhouse | fetched | 98 | 279 | `029d999` 2026-10-22 |
-| cryptojobs | lever | fetched | 57 | 320 | `029d999` 2026-10-22 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -37,15 +37,15 @@ Run: 2026-10-22T13:44:27.624Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | fetched | 1080 | 33 | — |
+| commoncrawl | greenhouse | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=job-boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
-| wayback | ashby | fetched | 5 | 0 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | greenhouse | fetched | 1 | 1 | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261020 | — | — | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261021 | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-22T13:44:27.624Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6242 | +0 | -0 | 8414 |
-| greenhouse | 15686 | +5 | -0 | 15691 |
+| greenhouse | 15686 | +0 | -0 | 15691 |
 | lever | 8745 | +0 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -89,8 +89,6 @@ Run: 2026-10-22T13:44:27.624Z
 | openjobsdata | 263 | 1 |
 | wayback | 179 | 12 |
 | cryptojobs | 98 | 0 |
-
-Added: cresteo, currentsmanagement, dendreon, deterrencedefenseinc, docs
 
 ### lever — contribution by source
 
