@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-24T12:38:36.628Z
+Run: 2026-10-25T13:09:30.333Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-10-24T12:38:36.628Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 927 | 7 | `ac3a4e4` 2026-10-23 |
-| jobseek | greenhouse | fetched | 2544 | 22 | `ac3a4e4` 2026-10-23 |
-| jobseek | lever | fetched | 193 | 2 | `ac3a4e4` 2026-10-23 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 173 | 203 | `d590ca0` 2026-10-23 |
-| cryptojobs | greenhouse | fetched | 98 | 280 | `d590ca0` 2026-10-23 |
-| cryptojobs | lever | fetched | 57 | 321 | `d590ca0` 2026-10-23 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -44,8 +44,8 @@ Run: 2026-10-24T12:38:36.628Z
 | commoncrawl | lever | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
 | wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261021 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261022) | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261022) | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261022 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
