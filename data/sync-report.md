@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-25T13:09:30.333Z
+Run: 2026-10-26T15:08:31.535Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-10-25T13:09:30.333Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | ashby | fetched | 3495 | 0 | `26672b3` 2026-10-26 |
+| openroles | greenhouse | fetched | 5059 | 1 | `26672b3` 2026-10-26 |
+| openroles | lever | fetched | 2067 | 0 | `26672b3` 2026-10-26 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | unchanged | — | — | — |
-| jobseek | greenhouse | unchanged | — | — | — |
-| jobseek | lever | unchanged | — | — | — |
+| jobseek | ashby | fetched | 928 | 7 | `121c68c` 2026-10-26 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `121c68c` 2026-10-26 |
+| jobseek | lever | fetched | 197 | 2 | `121c68c` 2026-10-26 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-10-25T13:09:30.333Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261021 | — | — | — |
+| wayback | ashby | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261022 | — | — | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-25T13:09:30.333Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6242 | +0 | -0 | 8414 |
-| greenhouse | 15686 | +0 | -0 | 15691 |
+| greenhouse | 15685 | +0 | -1 | 15691 |
 | lever | 8745 | +0 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -63,12 +63,12 @@ Run: 2026-10-25T13:09:30.333Z
 | --- | --- | --- |
 | hf-latmay | 5458 | 677 |
 | backfill | 4174 | 17 |
-| commoncrawl | 4153 | 89 |
-| openroles | 3521 | 8 |
-| kalil | 3447 | 28 |
+| commoncrawl | 4153 | 91 |
+| openroles | 3495 | 8 |
+| kalil | 3447 | 29 |
 | feashliaa | 3161 | 4 |
 | wayback | 1814 | 99 |
-| jobseek | 927 | 6 |
+| jobseek | 928 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 173 | 0 |
 | jobsync | 120 | 0 |
@@ -79,16 +79,18 @@ Run: 2026-10-25T13:09:30.333Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4410 |
-| feashliaa | 8333 | 161 |
+| hf-latmay | 14231 | 4409 |
+| feashliaa | 8333 | 162 |
 | commoncrawl | 6818 | 394 |
 | kalil | 6028 | 361 |
-| openroles | 5075 | 44 |
-| jobseek | 2544 | 22 |
+| openroles | 5059 | 43 |
+| jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
 | wayback | 179 | 12 |
 | cryptojobs | 98 | 0 |
+
+Removed: brscorporate
 
 ### lever — contribution by source
 
@@ -97,10 +99,10 @@ Run: 2026-10-25T13:09:30.333Z
 | hf-latmay | 8528 | 3696 |
 | feashliaa | 4368 | 46 |
 | kalil | 2400 | 129 |
-| openroles | 2076 | 3 |
+| openroles | 2067 | 3 |
 | commoncrawl | 378 | 10 |
 | outscal | 314 | 12 |
-| jobseek | 193 | 0 |
+| jobseek | 197 | 0 |
 | cryptojobs | 57 | 0 |
 | wayback | 35 | 0 |
 | openjobsdata | 11 | 0 |
