@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-26T15:08:31.535Z
+Run: 2026-10-27T14:24:19.204Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-10-26T15:08:31.535Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3495 | 0 | `26672b3` 2026-10-26 |
-| openroles | greenhouse | fetched | 5059 | 1 | `26672b3` 2026-10-26 |
-| openroles | lever | fetched | 2067 | 0 | `26672b3` 2026-10-26 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 928 | 7 | `121c68c` 2026-10-26 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `121c68c` 2026-10-26 |
-| jobseek | lever | fetched | 197 | 2 | `121c68c` 2026-10-26 |
+| jobseek | ashby | fetched | 929 | 7 | `86c4877` 2026-10-27 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `86c4877` 2026-10-27 |
+| jobseek | lever | fetched | 197 | 2 | `86c4877` 2026-10-27 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -37,15 +37,15 @@ Run: 2026-10-26T15:08:31.535Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=job-boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | fetched | 668 | 33 | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
-| wayback | ashby | fetched | 0 | 0 | — |
+| commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025) | — | — | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-10-26T15:08:31.535Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6242 | +0 | -0 | 8414 |
-| greenhouse | 15685 | +0 | -1 | 15691 |
+| greenhouse | 15685 | +0 | -0 | 15691 |
 | lever | 8745 | +0 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -68,7 +68,7 @@ Run: 2026-10-26T15:08:31.535Z
 | kalil | 3447 | 29 |
 | feashliaa | 3161 | 4 |
 | wayback | 1814 | 99 |
-| jobseek | 928 | 6 |
+| jobseek | 929 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 173 | 0 |
 | jobsync | 120 | 0 |
@@ -89,8 +89,6 @@ Run: 2026-10-26T15:08:31.535Z
 | openjobsdata | 263 | 1 |
 | wayback | 179 | 12 |
 | cryptojobs | 98 | 0 |
-
-Removed: brscorporate
 
 ### lever — contribution by source
 
