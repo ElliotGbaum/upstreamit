@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-27T14:24:19.204Z
+Run: 2026-10-28T15:03:38.141Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-27T14:24:19.204Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `86c4877` 2026-10-27 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `86c4877` 2026-10-27 |
-| jobseek | lever | fetched | 197 | 2 | `86c4877` 2026-10-27 |
+| jobseek | ashby | fetched | 929 | 7 | `c8583b8` 2026-10-28 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `c8583b8` 2026-10-28 |
+| jobseek | lever | fetched | 197 | 2 | `c8583b8` 2026-10-28 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -37,15 +37,15 @@ Run: 2026-10-27T14:24:19.204Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | fetched | 668 | 33 | — |
+| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=job-boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true | — | — | — |
+| commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&page=0 | — | — | — |
 | wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025) | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025) | — | — | — |
+| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -81,13 +81,13 @@ Run: 2026-10-27T14:24:19.204Z
 | --- | --- | --- |
 | hf-latmay | 14231 | 4409 |
 | feashliaa | 8333 | 162 |
-| commoncrawl | 6818 | 394 |
+| commoncrawl | 6818 | 393 |
 | kalil | 6028 | 361 |
 | openroles | 5059 | 43 |
 | jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
-| wayback | 179 | 12 |
+| wayback | 180 | 12 |
 | cryptojobs | 98 | 0 |
 
 ### lever — contribution by source
