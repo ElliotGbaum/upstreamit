@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-28T15:03:38.141Z
+Run: 2026-10-29T15:11:33.372Z
 
 ## Sources
 
@@ -17,18 +17,18 @@ Run: 2026-10-28T15:03:38.141Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `c8583b8` 2026-10-28 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `c8583b8` 2026-10-28 |
-| jobseek | lever | fetched | 197 | 2 | `c8583b8` 2026-10-28 |
+| jobseek | ashby | fetched | 929 | 7 | `1a7c8cf` 2026-10-29 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `1a7c8cf` 2026-10-29 |
+| jobseek | lever | fetched | 197 | 2 | `1a7c8cf` 2026-10-29 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 173 | 205 | `aa4fe88` 2026-10-28 |
+| cryptojobs | greenhouse | fetched | 100 | 280 | `aa4fe88` 2026-10-28 |
+| cryptojobs | lever | fetched | 57 | 323 | `aa4fe88` 2026-10-28 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -37,14 +37,14 @@ Run: 2026-10-28T15:03:38.141Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=job-boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | fetched | 225 | 33 | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=jobs.eu.lever.co%2F*&output=json&page=0 | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
+| wayback | ashby | skipped — HTTP 502 Bad Gateway for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 3 | 0 | — |
+| wayback | greenhouse | fetched | 1 | 0 | — |
 | wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -88,7 +88,7 @@ Run: 2026-10-28T15:03:38.141Z
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 1 |
 | wayback | 180 | 12 |
-| cryptojobs | 98 | 0 |
+| cryptojobs | 100 | 0 |
 
 ### lever — contribution by source
 
