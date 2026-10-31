@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-30T15:00:21.556Z
+Run: 2026-10-31T14:29:39.158Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-30T15:00:21.556Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `11b6e98` 2026-10-30 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `11b6e98` 2026-10-30 |
-| jobseek | lever | fetched | 197 | 2 | `11b6e98` 2026-10-30 |
+| jobseek | ashby | fetched | 929 | 7 | `e835aef` 2026-10-31 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `e835aef` 2026-10-31 |
+| jobseek | lever | fetched | 197 | 2 | `e835aef` 2026-10-31 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -37,14 +37,14 @@ Run: 2026-10-30T15:00:21.556Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-43-index?url=job-boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | fetched | 3772 | 134 | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | fetched | 64 | 9 | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261025 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261028) | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -53,7 +53,7 @@ Run: 2026-10-30T15:00:21.556Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6242 | +0 | -0 | 8414 |
-| greenhouse | 15685 | +0 | -0 | 15691 |
+| greenhouse | 15760 | +75 | -0 | 15766 |
 | lever | 8745 | +0 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -79,16 +79,18 @@ Run: 2026-10-30T15:00:21.556Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4409 |
+| hf-latmay | 14231 | 4385 |
 | feashliaa | 8333 | 162 |
-| commoncrawl | 6818 | 393 |
-| kalil | 6028 | 361 |
-| openroles | 5059 | 43 |
+| commoncrawl | 7072 | 468 |
+| kalil | 6028 | 357 |
+| openroles | 5059 | 42 |
 | jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
-| openjobsdata | 263 | 1 |
+| openjobsdata | 263 | 0 |
 | wayback | 180 | 12 |
 | cryptojobs | 100 | 0 |
+
+Added: electraaero, energycx, firstchairoperatingcompany, fix-it24-7, foodminds, fusespecialtyappliancesandplumbing, gentledental, gma-architects, inquismedicalinc, inspirehomeloans, internatlusternational, jfrestaurants, kermagames, knightscompaniesinc, kokualinkedin, lafayettesquaresblc, leap46, lewiscountygeneralhospital, listengagellc, literacytree, … (75 total)
 
 ### lever — contribution by source
 
