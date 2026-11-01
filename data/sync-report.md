@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-10-31T14:29:39.158Z
+Run: 2026-11-01T15:03:21.442Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-10-31T14:29:39.158Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `e835aef` 2026-10-31 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `e835aef` 2026-10-31 |
-| jobseek | lever | fetched | 197 | 2 | `e835aef` 2026-10-31 |
+| jobseek | ashby | fetched | 929 | 7 | `f4de826` 2026-11-01 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `f4de826` 2026-11-01 |
+| jobseek | lever | fetched | 197 | 2 | `f4de826` 2026-11-01 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -37,7 +37,7 @@ Run: 2026-10-31T14:29:39.158Z
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | fetched | 3772 | 134 | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
@@ -53,7 +53,7 @@ Run: 2026-10-31T14:29:39.158Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6242 | +0 | -0 | 8414 |
-| greenhouse | 15760 | +75 | -0 | 15766 |
+| greenhouse | 15760 | +0 | -0 | 15766 |
 | lever | 8745 | +0 | -0 | 8748 |
 | workday | 12889 | +0 | -0 | 12889 |
 
@@ -89,8 +89,6 @@ Run: 2026-10-31T14:29:39.158Z
 | openjobsdata | 263 | 0 |
 | wayback | 180 | 12 |
 | cryptojobs | 100 | 0 |
-
-Added: electraaero, energycx, firstchairoperatingcompany, fix-it24-7, foodminds, fusespecialtyappliancesandplumbing, gentledental, gma-architects, inquismedicalinc, inspirehomeloans, internatlusternational, jfrestaurants, kermagames, knightscompaniesinc, kokualinkedin, lafayettesquaresblc, leap46, lewiscountygeneralhospital, listengagellc, literacytree, … (75 total)
 
 ### lever — contribution by source
 
