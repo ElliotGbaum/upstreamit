@@ -570,6 +570,7 @@ axle-mobility
 axleinsure
 axlora
 ayblehealth
+ayosemi
 ayraxai
 azragames
 aztec-labs
@@ -1699,6 +1700,7 @@ empora
 empower
 empower finance
 empowerfinance
+enactintelligence
 enclave
 enclosure
 encord
@@ -1834,6 +1836,7 @@ fanvue.com
 far.ai
 farel
 farewill
+farfetch
 farmersd40
 farmersd73
 farmlend.co.uk
@@ -2830,6 +2833,7 @@ keycard-labs
 keyrock
 keystone
 khan-tech
+khoslaventures
 kick
 kicksaw
 kiddom
@@ -3358,6 +3362,7 @@ mgtinsurance
 mia-labs
 miaplaza
 miashare
+microagi
 middesk
 midi-health
 midjourney
@@ -4389,6 +4394,7 @@ quintess-ai
 qumulo
 quora
 quorum
+quorumai
 quotewell
 qventus
 qventus.
@@ -4472,6 +4478,7 @@ redmetals
 redpanda-data
 redpine
 reducto
+redwoodresearch
 reedsy
 reevo
 refer
