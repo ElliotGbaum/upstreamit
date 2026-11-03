@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-02T18:15:15.994Z
+Run: 2026-11-03T16:10:27.110Z
 
 ## Sources
 
@@ -11,15 +11,15 @@ Run: 2026-11-02T18:15:15.994Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3477 | 0 | `ecab38a` 2026-11-02 |
-| openroles | greenhouse | fetched | 5038 | 1 | `ecab38a` 2026-11-02 |
-| openroles | lever | fetched | 2062 | 0 | `ecab38a` 2026-11-02 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `42140b8` 2026-11-02 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `42140b8` 2026-11-02 |
-| jobseek | lever | fetched | 198 | 2 | `42140b8` 2026-11-02 |
+| jobseek | ashby | fetched | 929 | 7 | `4e8a893` 2026-11-03 |
+| jobseek | greenhouse | fetched | 2545 | 22 | `4e8a893` 2026-11-03 |
+| jobseek | lever | fetched | 198 | 2 | `4e8a893` 2026-11-03 |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,9 +42,9 @@ Run: 2026-11-02T18:15:15.994Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 98 | 5 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261101 | — | — | — |
 | wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 2 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -52,9 +52,9 @@ Run: 2026-11-02T18:15:15.994Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6249 | +7 | -0 | 8421 |
+| ashby | 6249 | +0 | -0 | 8421 |
 | greenhouse | 15760 | +0 | -0 | 15766 |
-| lever | 8746 | +1 | -0 | 8749 |
+| lever | 8746 | +0 | -0 | 8749 |
 | workday | 12889 | +0 | -0 | 12889 |
 
 ### ashby — contribution by source
@@ -74,8 +74,6 @@ Run: 2026-11-02T18:15:15.994Z
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: ayosemi, enactintelligence, farfetch, khoslaventures, microagi, quorumai, redwoodresearch
 
 ### greenhouse — contribution by source
 
@@ -106,8 +104,6 @@ Added: ayosemi, enactintelligence, farfetch, khoslaventures, microagi, quorumai,
 | cryptojobs | 57 | 0 |
 | wayback | 35 | 0 |
 | openjobsdata | 11 | 0 |
-
-Added: rivieradininggroup
 
 ### workday — contribution by source
 
