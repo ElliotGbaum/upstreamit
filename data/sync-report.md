@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-04T16:13:42.265Z
+Run: 2026-11-05T16:25:25.102Z
 
 ## Sources
 
@@ -17,9 +17,9 @@ Run: 2026-11-04T16:13:42.265Z
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
-| jobseek | ashby | fetched | 929 | 7 | `f7361d4` 2026-11-04 |
-| jobseek | greenhouse | fetched | 2545 | 22 | `f7361d4` 2026-11-04 |
-| jobseek | lever | fetched | 198 | 2 | `f7361d4` 2026-11-04 |
+| jobseek | ashby | unchanged | — | — | — |
+| jobseek | greenhouse | unchanged | — | — | — |
+| jobseek | lever | unchanged | — | — | — |
 | feashliaa | ashby | unchanged | — | — | — |
 | feashliaa | greenhouse | unchanged | — | — | — |
 | feashliaa | lever | unchanged | — | — | — |
@@ -42,9 +42,9 @@ Run: 2026-11-04T16:13:42.265Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261101 | — | — | — |
+| wayback | ashby | skipped — HTTP 502 Bad Gateway for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261101 | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | greenhouse | fetched | 2 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
