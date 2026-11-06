@@ -11,6 +11,7 @@
 11x
 18c78c4427514cebaa7039bbf8a8c249
 1bios
+1five
 1mind
 1password
 1sphere
@@ -89,6 +90,7 @@ acorns
 acquird
 acquisition
 across-ai
+act
 act-security
 activeloop
 activesite
@@ -166,6 +168,7 @@ air
 airapps
 airbound
 airbyte
+aire
 airgarage
 airgoods
 airkit
@@ -195,6 +198,7 @@ alby
 alcazar-energy
 alchemy
 alden
+alector
 alembic
 aleph
 alephalpha
@@ -283,10 +287,13 @@ amplitude
 amplo
 amprobotics
 anagram
+analog
 anam
 anara
 ancientritual
 ancora
+ande
+andel
 andela
 andera
 andercore
@@ -380,6 +387,7 @@ arcada
 arcade
 arcade-ai
 arcadeai
+arcanum
 arceus
 arch
 arch-solutions
@@ -478,6 +486,7 @@ atira
 atlan
 atlas
 atlas-privacy
+atlasfoods
 atlasonc
 atlasresidential
 atlassecurity
@@ -720,9 +729,11 @@ blankashby2
 blankexampleinstance
 blast-io
 blaxel
+blee
 blink
 bliro
 blissway
+blitz
 blitzy
 block
 block-labs
@@ -939,6 +950,7 @@ casa
 casap
 casca
 cascade
+casco
 casdin-capital
 cased
 cashmereai
@@ -956,6 +968,7 @@ catchbio
 category-labs
 catena
 catena-labs
+cathedral
 catio
 causal
 causallabs
@@ -972,6 +985,7 @@ cello
 cellular-intelligence
 census
 centari
+centaur
 center
 centerfield
 centivo
@@ -983,6 +997,7 @@ century.health
 cepton
 cerebras
 ceremonia
+ceres
 certa
 certifid
 certifyos
@@ -1031,6 +1046,7 @@ chief
 chilipiper
 chillchat
 chimerareit
+chinook
 chipstack
 chiru labs
 choco
@@ -1061,6 +1077,7 @@ claim-co
 claim-health
 claimsorted
 clair
+clar
 clarasight
 clarify
 clarion
@@ -1160,6 +1177,7 @@ color-health
 column
 columntax
 comand-ai
+comet
 comfy-org
 comind
 comity
@@ -1475,6 +1493,7 @@ designworkstalent
 deta
 deta space
 detail
+devcom
 develop-health
 devsavant
 dewarmte
@@ -1615,6 +1634,7 @@ eastwoodcleef
 easygenerator
 easyllama.com
 ecarxgroup
+echelon
 echo
 echo.ai
 echomark
@@ -1877,6 +1897,7 @@ ferocia
 ferovinum
 ferryhealth
 fetch-pet-health
+ffg
 fhiaremodeling
 fiberplane
 fidamy
@@ -2154,6 +2175,7 @@ genera
 general-context
 general-counsel-ai
 general-medicine
+generalbattery
 generalintelligencecompany
 generalintuition
 generalintuition-medal
@@ -2557,6 +2579,7 @@ hyphenate
 i-onx
 i3d
 i6
+iac
 iacollaborative
 iambic-therapeutics
 ibbx
@@ -2602,6 +2625,7 @@ inceptive
 inchargeone
 incident
 inclined
+inco
 indent
 index.css
 index.html
@@ -2673,6 +2697,7 @@ intrinsic
 intrinsic-safety
 intrinsictech
 intro
+introl
 introzy
 intus
 inversion-cap
@@ -2695,6 +2720,7 @@ ironwall
 irreducible
 irregular
 isaacoperations
+isara
 isometric
 ispeedtolead
 it labs
@@ -2757,6 +2783,7 @@ jointangelo
 joist-ai
 joko
 joko.com
+jolene
 jolly
 joor
 jordandigitalmarketing
@@ -2785,6 +2812,7 @@ jupiter
 jupus
 juro
 justdice
+justgames
 justplay-gmbh
 justtrack
 justwin
@@ -2803,6 +2831,7 @@ kalibri-labs
 kallikor
 kalos
 kalshi
+kaluza
 kamiwaza
 kandou-ai
 kanmon
@@ -3112,6 +3141,7 @@ logiqal
 logos-space
 loki
 long-lake
+longview
 loom
 loopio
 loora
@@ -3332,6 +3362,7 @@ meridian-ai
 meridianlink
 meridio
 merkle
+mesh
 meshcapade
 meshy
 messa
@@ -3392,6 +3423,7 @@ mintlify
 mintmcp
 miodottore
 miovision
+mirador
 mirage
 mirai-robotics
 miramace
@@ -3529,6 +3561,7 @@ namespacelabs
 nango
 nano-qt
 nanonets
+nansen
 naptha
 nascent
 nash
@@ -3536,6 +3569,7 @@ natcast
 nationgraph
 nativemarkets
 natter
+natural
 nautical-commerce
 nautilus biotechnology
 nava-benefits
@@ -3624,6 +3658,7 @@ nexxa
 nexxen
 niantic
 niantic-spatial
+nickel
 nidus-technologies
 nightfall-ai
 nimbl
@@ -3714,6 +3749,7 @@ nutanix
 nuveaux-trading
 nx1
 nylas
+nylon
 nymbl
 o
 oak
@@ -3905,6 +3941,7 @@ overview
 overviewenergy
 oviva
 owkin
+owl
 owner
 ownit
 ownup
@@ -3929,6 +3966,7 @@ padlet
 pageport
 pagos
 pahdo
+paid
 paires
 paireyewear
 pairtu
@@ -4021,6 +4059,7 @@ payward
 payzen-inc
 pcg
 pch-digital
+peace
 peakmetrics
 pear
 pear-vc
@@ -4170,6 +4209,7 @@ ployai
 plugpagamentos
 plume-network
 plumerai
+plural
 pluralfinance
 pluralis-res
 pluralis-resea
@@ -4367,6 +4407,7 @@ qih-group
 qlub
 qontext
 qorelo
+quadric
 quadrillion-labs
 quadrivia
 qualified
@@ -4456,9 +4497,11 @@ real
 realfast
 realitydefender
 realmalliance
+reap
 rebar
 rebecca-school
 rebel-space-technologies
+rebo
 rebuy
 rec
 recall
@@ -4676,6 +4719,7 @@ routereports
 rowan
 rowspace
 rox-data-corp
+rsg
 rubicon
 rubiconmd
 rubie
@@ -4732,6 +4776,7 @@ salesloft
 salespatriot
 salient
 salient-motion
+sallys
 salma-health
 salmon-group
 salonkee
@@ -4896,6 +4941,7 @@ sharedcontextlab
 sharp performance
 shasqi
 sheerhealth
+shelf
 shepherd
 shift
 shiftavenue
@@ -5070,6 +5116,7 @@ somnia-jobs
 sona
 sonalabs
 sonar-us
+sonder
 sondermind
 songpush
 sonio
@@ -5218,7 +5265,9 @@ stensul
 stepful
 stepwork
 steuerbot
+stevens
 steyngroup
+stic
 stickermule
 stigg
 stillbright
@@ -5229,6 +5278,7 @@ ston.fi
 stony creek homes
 stora
 stork
+story
 stotles.com
 stout
 strada
@@ -5260,6 +5310,7 @@ stryker-digital
 studson
 studyfetch
 stuut-ai
+stylus
 stytch
 subconscious
 subconscious-ai
@@ -5380,6 +5431,7 @@ tabbed
 tabs
 tabulabio
 tabz
+tachyon
 tacit
 tactiq
 tacto
@@ -5433,6 +5485,7 @@ taxwire
 tbc
 tdv
 teachfx
+teak
 teal-health
 tealhq
 teamalembic
@@ -5500,6 +5553,7 @@ terrestrialbio
 tessera-labs
 tesslcareers
 testgorilla
+testing
 teton
 tetrix
 tetsuwan
@@ -5543,6 +5597,7 @@ thecariangroup
 theflex
 themindcompany
 themuralgroup
+theorem
 theori
 theprimary
 thera
@@ -5561,6 +5616,7 @@ thorit
 thought-machine
 thoughtful
 thoughtly
+thoughtworks
 thread-ai
 threataware
 threesigma
@@ -5623,6 +5679,7 @@ tonies
 toogeza
 toogoodtogo
 toolbox
+toolbx
 tools
 tools for humanity
 toolsforhumanity
@@ -5647,6 +5704,7 @@ tradeblock
 tradeify
 trading212
 tradinghub
+trail
 trainline
 trajectory
 transform
@@ -5673,6 +5731,7 @@ trendmd
 trener-robotics
 trestle
 trexo robotics
+triad
 tribalhealthconnections
 tribe-ai
 tribe-xyz
@@ -5681,6 +5740,7 @@ trig
 triggerdev
 triiodide
 trilitech
+trilobio
 triomics
 tripactions
 triumph-arcade
@@ -5707,6 +5767,7 @@ trunk tools
 trunktools
 truss
 trust-wallet
+trustedhealth
 trustlab
 trustly
 truthsystems
@@ -5726,6 +5787,7 @@ tunnl
 tuotempo
 turbolaw
 turbopuffer
+turing
 turion-space
 turn-river
 turnkey
@@ -5882,12 +5944,14 @@ vendelux
 venn
 vent
 ventuals
+ventures
 vercel
 vercept
 verdance
 verge-genomics
 verge-labs
 verified
+verint
 verisoul
 verkada
 verlo
@@ -5925,6 +5989,7 @@ vikta-energy
 viktor
 village-labs
 villagesql
+vinci
 vinci4d
 vinylequity
 vio
@@ -5937,6 +6002,7 @@ virtual-society-foundation
 virtue-ai
 virtuous
 visanahealth
+vise
 visier
 visiodigitalpartner
 vistar
@@ -6079,6 +6145,7 @@ windfall
 windmill
 windranger
 windsurf
+windward
 winlux europe
 winona
 wintech
@@ -6105,6 +6172,7 @@ withpulley
 withwisdom
 witnessai
 wiz
+wizz
 wjb
 woebot-health
 woflow
@@ -6205,6 +6273,7 @@ zania
 zapier
 zauber
 zayzoon
+zeal
 zeal-network
 zealy
 zed
@@ -6246,4 +6315,5 @@ zuru
 zus-health
 zydro
 zyphra
+zz
 zzazz

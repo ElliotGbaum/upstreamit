@@ -1134,6 +1134,7 @@ brightspot
 brighttalk
 brightwheel
 brigit
+brilar
 brilliant
 brillio-2
 brimstone
@@ -1434,6 +1435,7 @@ chatitive
 chatmeter
 chec
 check
+checker
 checkmate
 checkout
 cheerz
@@ -2355,6 +2357,7 @@ eleox
 elevateapp
 elevatelabs
 elfbeauty
+elfie
 eligible
 eliyan
 ellevationeducation
@@ -2656,6 +2659,7 @@ ferratum
 fetchpackage
 fevo
 ffws
+fgi
 fhittingroom
 fi
 fiberplane
@@ -2710,6 +2714,7 @@ firstam
 firstborn
 firstent
 firsthand
+firstmanhattan
 firstpartyhq
 firstround
 firstup
@@ -2786,6 +2791,7 @@ fluence
 flux-mobility
 fluxergy-2
 fluxus
+fly
 flybits
 flyby
 flynixie
@@ -3096,6 +3102,7 @@ glacierfish
 glass-health-inc
 glassnode
 glean
+glenmede
 gliacelltechnologies
 glide
 glidian
@@ -3364,6 +3371,7 @@ haywardtyler
 hazelanalytics
 hcgfunds
 hcvt
+hcz
 hdvi
 hdworks
 headhunters
@@ -4183,6 +4191,7 @@ kpmgnz
 kraken
 kraken123
 kruzeconsulting
+krypton
 kto
 kubecost
 kubra
@@ -6371,6 +6380,7 @@ reliantfunding
 relic
 relicx
 reloadly-2
+rembrand
 remedyanalytics
 remedyentertainment
 remedyproductstudio
@@ -7575,6 +7585,7 @@ tenstorrent
 teramind
 terawattinfrastructure
 terazo
+termgrid
 terminus
 termius
 terms
@@ -7598,6 +7609,7 @@ testfit
 tetra
 tevora
 texas-original
+text
 text100
 textio
 textnow
@@ -7793,6 +7805,7 @@ tonic
 toniclabs
 tonkean
 tonsser
+toole
 tooploox.com
 top_agency
 topanga
@@ -8448,6 +8461,7 @@ weride
 wesalute
 westair
 westernacher
+westland
 westyost
 wethos
 wetransfer

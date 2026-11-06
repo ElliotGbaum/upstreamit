@@ -1,14 +1,14 @@
 # Slug sync report
 
-Run: 2026-11-05T16:25:25.102Z
+Run: 2026-11-06T15:53:10.640Z
 
 ## Sources
 
 | Source | ATS | Status | Accepted | Rejected | Upstream commit |
 | --- | --- | --- | --- | --- | --- |
-| hf-latmay | ashby | unchanged | — | — | — |
-| hf-latmay | greenhouse | unchanged | — | — | — |
-| hf-latmay | lever | unchanged | — | — | — |
+| hf-latmay | ashby | fetched | 5570 | 78369 | — |
+| hf-latmay | greenhouse | fetched | 14325 | 69736 | — |
+| hf-latmay | lever | fetched | 8557 | 75503 | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
@@ -42,9 +42,9 @@ Run: 2026-11-05T16:25:25.102Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 502 Bad Gateway for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261101 | — | — | — |
+| wayback | ashby | fetched | 27 | 3 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -52,22 +52,22 @@ Run: 2026-11-05T16:25:25.102Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6249 | +0 | -0 | 8421 |
-| greenhouse | 15760 | +0 | -0 | 15766 |
-| lever | 8746 | +0 | -0 | 8749 |
+| ashby | 6319 | +70 | -0 | 8491 |
+| greenhouse | 15822 | +62 | -0 | 15828 |
+| lever | 8760 | +14 | -0 | 8763 |
 | workday | 12889 | +0 | -0 | 12889 |
 
 ### ashby — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5458 | 677 |
-| backfill | 4174 | 17 |
-| commoncrawl | 4153 | 92 |
+| hf-latmay | 5570 | 747 |
+| backfill | 4174 | 16 |
+| commoncrawl | 4153 | 88 |
 | openroles | 3477 | 8 |
 | kalil | 3447 | 29 |
 | feashliaa | 3161 | 4 |
-| wayback | 1838 | 106 |
+| wayback | 1841 | 99 |
 | jobseek | 929 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 173 | 0 |
@@ -75,14 +75,16 @@ Run: 2026-11-05T16:25:25.102Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
+Added: 1five, act, aire, alector, analog, ande, andel, arcanum, atlasfoods, blee, blitz, casco, cathedral, centaur, ceres, chinook, clar, comet, devcom, echelon, … (70 total)
+
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14231 | 4385 |
+| hf-latmay | 14325 | 4447 |
 | feashliaa | 8333 | 162 |
-| commoncrawl | 7072 | 468 |
-| kalil | 6028 | 357 |
+| commoncrawl | 7072 | 458 |
+| kalil | 6028 | 341 |
 | openroles | 5038 | 42 |
 | jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
@@ -90,13 +92,15 @@ Run: 2026-11-05T16:25:25.102Z
 | wayback | 180 | 12 |
 | cryptojobs | 100 | 0 |
 
+Added: aeainvestors, aguila, alameda, ame, americansecurities, amls, amps, applebrook, applications, avra, bellinda, bluefox, blueridge, boston, boulevardanimal, cbinternational, clearwater, crm, dpelectric, eater, … (62 total)
+
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8528 | 3693 |
+| hf-latmay | 8557 | 3707 |
 | feashliaa | 4368 | 46 |
-| kalil | 2400 | 129 |
+| kalil | 2400 | 118 |
 | openroles | 2062 | 3 |
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |
@@ -104,6 +108,8 @@ Run: 2026-11-05T16:25:25.102Z
 | cryptojobs | 57 | 0 |
 | wayback | 35 | 0 |
 | openjobsdata | 11 | 0 |
+
+Added: brilar, checker, elfie, fgi, firstmanhattan, fly, glenmede, hcz, krypton, rembrand, termgrid, text, toole, westland
 
 ### workday — contribution by source
 
