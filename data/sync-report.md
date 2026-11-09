@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-08T15:07:18.405Z
+Run: 2026-11-09T18:42:50.396Z
 
 ## Sources
 
@@ -11,9 +11,9 @@ Run: 2026-11-08T15:07:18.405Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
+| openroles | ashby | fetched | 3469 | 0 | `b116122` 2026-11-09 |
+| openroles | greenhouse | fetched | 5017 | 1 | `b116122` 2026-11-09 |
+| openroles | lever | fetched | 2052 | 0 | `b116122` 2026-11-09 |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-11-08T15:07:18.405Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261105 | — | — | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261105 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261106 | — | — | — |
+| wayback | lever | fetched | 3 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -64,7 +64,7 @@ Run: 2026-11-08T15:07:18.405Z
 | hf-latmay | 5570 | 747 |
 | backfill | 4174 | 16 |
 | commoncrawl | 4153 | 88 |
-| openroles | 3477 | 8 |
+| openroles | 3469 | 8 |
 | kalil | 3447 | 29 |
 | feashliaa | 3161 | 4 |
 | wayback | 1841 | 99 |
@@ -83,7 +83,7 @@ Run: 2026-11-08T15:07:18.405Z
 | feashliaa | 8333 | 162 |
 | commoncrawl | 7072 | 458 |
 | kalil | 6028 | 341 |
-| openroles | 5038 | 42 |
+| openroles | 5017 | 42 |
 | jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 0 |
@@ -95,14 +95,14 @@ Run: 2026-11-08T15:07:18.405Z
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
 | hf-latmay | 8557 | 3707 |
-| feashliaa | 4368 | 46 |
+| feashliaa | 4368 | 47 |
 | kalil | 2400 | 118 |
-| openroles | 2062 | 3 |
+| openroles | 2052 | 3 |
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |
 | jobseek | 198 | 1 |
 | cryptojobs | 57 | 0 |
-| wayback | 35 | 0 |
+| wayback | 36 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
