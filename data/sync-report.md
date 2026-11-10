@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-09T18:42:50.396Z
+Run: 2026-11-10T16:23:09.728Z
 
 ## Sources
 
@@ -11,9 +11,9 @@ Run: 2026-11-09T18:42:50.396Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3469 | 0 | `b116122` 2026-11-09 |
-| openroles | greenhouse | fetched | 5017 | 1 | `b116122` 2026-11-09 |
-| openroles | lever | fetched | 2052 | 0 | `b116122` 2026-11-09 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-11-09T18:42:50.396Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 174 | 204 | `4dbdac8` 2026-11-10 |
+| cryptojobs | greenhouse | fetched | 100 | 280 | `4dbdac8` 2026-11-10 |
+| cryptojobs | lever | fetched | 57 | 323 | `4dbdac8` 2026-11-10 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,17 +42,17 @@ Run: 2026-11-09T18:42:50.396Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261105 | — | — | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | ashby | fetched | 24 | 2 | — |
 | wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | lever | fetched | 3 | 0 | — |
+| wayback | greenhouse | fetched | 2 | 1 | — |
+| wayback | lever | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261108 | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6319 | +0 | -0 | 8491 |
+| ashby | 6320 | +1 | -0 | 8492 |
 | greenhouse | 15822 | +0 | -0 | 15828 |
 | lever | 8760 | +0 | -0 | 8763 |
 | workday | 12889 | +0 | -0 | 12889 |
@@ -67,13 +67,15 @@ Run: 2026-11-09T18:42:50.396Z
 | openroles | 3469 | 8 |
 | kalil | 3447 | 29 |
 | feashliaa | 3161 | 4 |
-| wayback | 1841 | 99 |
+| wayback | 1846 | 100 |
 | jobseek | 929 | 6 |
 | outscal | 235 | 9 |
-| cryptojobs | 173 | 0 |
+| cryptojobs | 174 | 0 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
+
+Added: trajectory-labs
 
 ### greenhouse — contribution by source
 
