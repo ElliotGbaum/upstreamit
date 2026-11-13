@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-12T16:46:00.585Z
+Run: 2026-11-13T16:15:23.908Z
 
 ## Sources
 
@@ -14,9 +14,9 @@ Run: 2026-11-12T16:46:00.585Z
 | openroles | ashby | unchanged | — | — | — |
 | openroles | greenhouse | unchanged | — | — | — |
 | openroles | lever | unchanged | — | — | — |
-| kalil | ashby | fetched | 3450 | 1 | `4d7ac63` 2026-11-11 |
-| kalil | greenhouse | fetched | 6006 | 3 | `4d7ac63` 2026-11-11 |
-| kalil | lever | fetched | 2391 | 2 | `4d7ac63` 2026-11-11 |
+| kalil | ashby | fetched | 4237 | 1 | `c18eee1` 2026-11-12 |
+| kalil | greenhouse | fetched | 7494 | 3 | `8f8138d` 2026-11-12 |
+| kalil | lever | fetched | 2461 | 2 | `21cd1a3` 2026-11-13 |
 | jobseek | ashby | unchanged | — | — | — |
 | jobseek | greenhouse | unchanged | — | — | — |
 | jobseek | lever | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-11-12T16:46:00.585Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 177 | 207 | `13d62e6` 2026-11-12 |
-| cryptojobs | greenhouse | fetched | 102 | 284 | `13d62e6` 2026-11-12 |
-| cryptojobs | lever | fetched | 57 | 329 | `13d62e6` 2026-11-12 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-11-12T16:46:00.585Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261109 | — | — | — |
-| wayback | greenhouse | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261110 | — | — | — |
-| wayback | greenhouse | fetched | 4 | 1 | — |
-| wayback | lever | fetched | 2 | 0 | — |
+| wayback | ashby | fetched | 80 | 5 | — |
+| wayback | greenhouse | fetched | 2 | 0 | — |
+| wayback | greenhouse | fetched | 1 | 0 | — |
+| wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6321 | +1 | -0 | 8493 |
-| greenhouse | 15821 | +0 | -1 | 15828 |
+| ashby | 6323 | +2 | -0 | 8495 |
+| greenhouse | 15836 | +15 | -0 | 15843 |
 | lever | 8760 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
@@ -61,13 +61,13 @@ Run: 2026-11-12T16:46:00.585Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5570 | 746 |
+| hf-latmay | 5570 | 680 |
+| kalil | 4237 | 30 |
 | backfill | 4174 | 16 |
-| commoncrawl | 4153 | 88 |
-| openroles | 3469 | 8 |
-| kalil | 3450 | 30 |
+| commoncrawl | 4153 | 34 |
+| openroles | 3469 | 7 |
 | feashliaa | 3161 | 4 |
-| wayback | 1846 | 100 |
+| wayback | 1865 | 102 |
 | jobseek | 929 | 6 |
 | outscal | 235 | 9 |
 | cryptojobs | 177 | 0 |
@@ -75,32 +75,32 @@ Run: 2026-11-12T16:46:00.585Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: fitxr
+Added: earth, kivo-health
 
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14325 | 4450 |
+| hf-latmay | 14325 | 4019 |
 | feashliaa | 8333 | 162 |
-| commoncrawl | 7072 | 458 |
-| kalil | 6006 | 340 |
-| openroles | 5017 | 42 |
+| kalil | 7494 | 355 |
+| commoncrawl | 7072 | 187 |
+| openroles | 5017 | 40 |
 | jobseek | 2545 | 22 |
 | outscal | 642 | 18 |
 | openjobsdata | 263 | 0 |
 | wayback | 182 | 12 |
 | cryptojobs | 102 | 0 |
 
-Removed: smartwarehousing
+Added: bashdotcom, currenciesdirectlimited, eterniteamgmbh, grabarzfinanzserviceholdinggmbhcokg, horizontradingsolutions, monsterenergyapac, networkbio, oasisplumbingheatingcooling, orbitaloperations, phitureinc, platomicsgmbh, rockbund, shemed, stratacritical_logistics, thglabs
 
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8557 | 3709 |
+| hf-latmay | 8557 | 3708 |
 | feashliaa | 4368 | 47 |
-| kalil | 2391 | 118 |
+| kalil | 2461 | 118 |
 | openroles | 2052 | 3 |
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |

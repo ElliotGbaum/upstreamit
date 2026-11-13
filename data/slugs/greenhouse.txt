@@ -1675,6 +1675,7 @@ baselane
 baselayer
 baseoperations
 basepowercompany
+bashdotcom
 basic
 basistechnology
 bassabatherapy
@@ -3758,6 +3759,7 @@ curiholdingsinc
 curofinancialtechnologiescorporation
 curology
 currenciesdirect
+currenciesdirectlimited
 current
 current81
 currentcatalog
@@ -4823,6 +4825,7 @@ etec
 etechgroup
 etelligentgroup
 etereman
+eterniteamgmbh
 ethernovia
 ethic
 ethicinvesting
@@ -6058,6 +6061,7 @@ gpm
 gps
 gr8tech
 grabango
+grabarzfinanzserviceholdinggmbhcokg
 gracehopper2017
 gracent
 gracent-peds
@@ -6682,6 +6686,7 @@ horizon3
 horizonindustrieslimited
 horizons
 horizonsurgicalsystems
+horizontradingsolutions
 hoscareers
 hosco
 hostanalytics
@@ -9105,6 +9110,7 @@ monolithbrandsgroup
 monomipark
 monroetractor
 monsterenergy
+monsterenergyapac
 monstro
 montaihealth
 montecarlo
@@ -9483,6 +9489,7 @@ netradyne
 netsage
 netskope
 network
+networkbio
 networkfirms
 networkguard
 networkoptix
@@ -9841,6 +9848,7 @@ oasis
 oasishealthpartners
 oasislabs
 oasisnetwork
+oasisplumbingheatingcooling
 oasissecurity
 oasysinternationalcorporation89
 oath
@@ -10201,6 +10209,7 @@ orangegrove
 orangesiliconvalley
 orangetwist
 orbisk
+orbitaloperations
 orbitaltherapeutics
 orbitfab
 orca
@@ -10724,6 +10733,7 @@ philomena
 philzcoffeecareers
 phiture
 phiture2
+phitureinc
 phizenix
 phmg
 phmgopportunities
@@ -10850,6 +10860,7 @@ platinumdermpapp
 platinumdermphysicians
 plative
 platodesign
+platomicsgmbh
 playabit
 playbook
 playerstribune
@@ -11900,6 +11911,7 @@ robustai
 rochesterknighthawks
 rockbot
 rockbrook
+rockbund
 rockend
 rocketacademy
 rocketchat
@@ -12455,6 +12467,7 @@ shednycinc
 sheetz
 shein
 shelf
+shemed
 shennonbiotechnologies
 shepherd
 sherbournedentalassociates
@@ -13243,6 +13256,7 @@ straightarrownews
 straitsx
 strandtherapeutics
 stratacareers
+stratacritical_logistics
 strataidentity
 stratainformationgroup
 strategichr
@@ -14022,6 +14036,7 @@ thexcompany
 thexperiential
 thezebra
 thgingenuity
+thglabs
 thiess
 think-cell
 thinkacademyaus
