@@ -250,7 +250,6 @@ altis labs
 altitude
 altruistiq
 altura
-aluriontalentgroup
 alva-energy
 amagistechcareers
 amari
@@ -752,7 +751,6 @@ bloxd
 blp-digital
 blue
 blue onion labs
-blue-ai
 blue-energy
 blueberry
 blueberry-social
@@ -790,7 +788,6 @@ boosters
 boostly
 bootloop
 botanictonics
-botcrew
 boulder-care
 boulevard
 boultonwatt
@@ -949,7 +946,6 @@ cas
 casa
 casap
 casca
-cascade
 casco
 casdin-capital
 cased
@@ -1212,7 +1208,6 @@ compound
 compound jobs
 compound-eye
 compoundcontentstudio
-comprehensive
 compresr
 compscience
 compyl
@@ -1325,7 +1320,6 @@ creditgenie
 credo.ai
 creem
 crete-professionals-alliance
-crewbloom
 cribl
 crisp
 crispgrowth
@@ -1355,7 +1349,6 @@ cuesta-partners
 cultivatechain
 cultureai
 curated
-curie
 current-advisors
 currentsurgical
 curri
@@ -1859,7 +1852,6 @@ farel
 farewill
 farfetch
 farmersd40
-farmersd73
 farmlend.co.uk
 farmraise
 faros-ai
@@ -1944,7 +1936,6 @@ first-resonance
 firstbase
 firstbaseio
 firsthand
-firstmate
 firstordereffects
 firstprinciples
 firstround
@@ -1973,7 +1964,6 @@ fleetcraft
 fleetline
 fleetpulse
 fleetworks
-flentasticjobs
 flex
 flex-living
 flexspace
@@ -2207,7 +2197,6 @@ geordieai
 georgian
 get-ivy
 getground
-getivy
 getpluto
 getscope
 getshogun
@@ -2547,7 +2536,6 @@ human.capital
 humanarchive
 humancentric
 humandelta
-humanist
 humanitec
 humanitru
 humanly
@@ -2786,7 +2774,6 @@ joist-ai
 joko
 joko.com
 jolene
-jolly
 joor
 jordandigitalmarketing
 joro
@@ -3002,7 +2989,6 @@ laurel
 lavendo
 lawdepot
 lawhive
-layer
 layerfi
 layern
 lazer
@@ -3045,7 +3031,6 @@ leona
 leonardo.ai
 leopard
 leopards
-leovegas
 leovegasgroup
 letta
 level
@@ -3070,7 +3055,6 @@ lifelabs learning
 lifen
 lifespan
 lifestance
-lifetime-quality-roofing-storm-restoration
 liftoff
 liftoffrank
 light
@@ -3220,7 +3204,6 @@ magicschool
 magna
 magnadigital
 magnitude.ai
-magoosh
 mahway
 mai
 maihem
@@ -3416,7 +3399,6 @@ mindmaven
 mindpeak
 mindrobotics
 mindvalley
-mine
 mineiros.io
 minerva
 minerva-ai
@@ -3947,7 +3929,6 @@ owkin
 owl
 owner
 ownit
-ownup
 oxeon
 oxio
 oxman
@@ -3980,7 +3961,6 @@ palladio
 pallon.com
 palmstreet
 palo-it
-paloit
 palup
 panacea
 pandektes
@@ -4695,7 +4675,6 @@ rogerhealthcare
 rogo
 rohlik
 rojointegrations
-rokt
 rollout
 rollstack
 rollup
@@ -4914,7 +4893,6 @@ sequent
 sequoia
 sereact
 seriesai
-serif
 serova
 serpapi
 serval
@@ -5001,7 +4979,6 @@ simular
 sine engineering
 singu
 singular
-singulate
 sintra
 sio-logistics
 sirius
@@ -5293,7 +5270,6 @@ strategic-growth-partners
 stratum-ai
 strava
 stream
-stream-ai
 street-diligence
 streetbeat
 streetgroup
@@ -5666,7 +5642,6 @@ togal-ai
 toggl
 tokenmetrics
 tokenmetrics-careers
-tokenterminal
 toku
 tolan
 tolken
@@ -5801,7 +5776,6 @@ tuza
 twelve
 twelve-labs
 twenty
-twentyfour-industries
 twic
 twin-so
 twine
@@ -6160,7 +6134,6 @@ wisdom-ai
 wiseradvisor
 wisp
 wispr-flow
-wissen
 wistia
 with-fulcrum
 withcherry

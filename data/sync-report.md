@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-13T16:15:23.908Z
+Run: 2026-11-14T14:59:43.511Z
 
 ## Sources
 
@@ -14,9 +14,9 @@ Run: 2026-11-13T16:15:23.908Z
 | openroles | ashby | unchanged | — | — | — |
 | openroles | greenhouse | unchanged | — | — | — |
 | openroles | lever | unchanged | — | — | — |
-| kalil | ashby | fetched | 4237 | 1 | `c18eee1` 2026-11-12 |
-| kalil | greenhouse | fetched | 7494 | 3 | `8f8138d` 2026-11-12 |
-| kalil | lever | fetched | 2461 | 2 | `21cd1a3` 2026-11-13 |
+| kalil | ashby | fetched | 4156 | 1 | `dc648b3` 2026-11-13 |
+| kalil | greenhouse | fetched | 7360 | 3 | `dc648b3` 2026-11-13 |
+| kalil | lever | fetched | 2375 | 2 | `dc648b3` 2026-11-13 |
 | jobseek | ashby | unchanged | — | — | — |
 | jobseek | greenhouse | unchanged | — | — | — |
 | jobseek | lever | unchanged | — | — | — |
@@ -42,65 +42,67 @@ Run: 2026-11-13T16:15:23.908Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 80 | 5 | — |
-| wayback | greenhouse | fetched | 2 | 0 | — |
-| wayback | greenhouse | fetched | 1 | 0 | — |
-| wayback | lever | fetched | 1 | 0 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112 | — | — | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112) | — | — | — |
+| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112) | — | — | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6323 | +2 | -0 | 8495 |
-| greenhouse | 15836 | +15 | -0 | 15843 |
-| lever | 8760 | +0 | -0 | 8763 |
+| ashby | 6296 | +0 | -27 | 8495 |
+| greenhouse | 15790 | +2 | -48 | 15845 |
+| lever | 8753 | +0 | -7 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
 ### ashby — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5570 | 680 |
-| kalil | 4237 | 30 |
-| backfill | 4174 | 16 |
-| commoncrawl | 4153 | 34 |
+| hf-latmay | 5570 | 697 |
+| backfill | 4174 | 23 |
+| kalil | 4156 | 3 |
+| commoncrawl | 4153 | 36 |
 | openroles | 3469 | 7 |
 | feashliaa | 3161 | 4 |
 | wayback | 1865 | 102 |
-| jobseek | 929 | 6 |
+| jobseek | 929 | 7 |
 | outscal | 235 | 9 |
 | cryptojobs | 177 | 0 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: earth, kivo-health
+Removed: aluriontalentgroup, blue-ai, botcrew, cascade, comprehensive, crewbloom, curie, farmersd73, firstmate, flentasticjobs, getivy, humanist, jolly, layer, leovegas, lifetime-quality-roofing-storm-restoration, magoosh, mine, ownup, paloit, … (27 total)
 
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14325 | 4019 |
-| feashliaa | 8333 | 162 |
-| kalil | 7494 | 355 |
-| commoncrawl | 7072 | 187 |
+| hf-latmay | 14325 | 4077 |
+| feashliaa | 8333 | 170 |
+| kalil | 7360 | 309 |
+| commoncrawl | 7072 | 175 |
 | openroles | 5017 | 40 |
-| jobseek | 2545 | 22 |
-| outscal | 642 | 18 |
+| jobseek | 2545 | 24 |
+| outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
 | wayback | 182 | 12 |
 | cryptojobs | 102 | 0 |
 
-Added: bashdotcom, currenciesdirectlimited, eterniteamgmbh, grabarzfinanzserviceholdinggmbhcokg, horizontradingsolutions, monsterenergyapac, networkbio, oasisplumbingheatingcooling, orbitaloperations, phitureinc, platomicsgmbh, rockbund, shemed, stratacritical_logistics, thglabs
+Added: longbeachaudi, tamaragroup
+
+Removed: 1912, android, blueprintinternal, cker, clarity, currentopenings, cwe, devboard, edge, edume, entrylevelga, exploratory, galaxiatech, generac, govector, gracent-peds, hireez, incaengineering, inhersight, internshipsandftjobboard, … (48 total)
 
 ### lever — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 8557 | 3708 |
+| hf-latmay | 8557 | 3714 |
 | feashliaa | 4368 | 47 |
-| kalil | 2461 | 118 |
+| kalil | 2375 | 111 |
 | openroles | 2052 | 3 |
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |
@@ -108,6 +110,8 @@ Added: bashdotcom, currenciesdirectlimited, eterniteamgmbh, grabarzfinanzservice
 | cryptojobs | 57 | 0 |
 | wayback | 36 | 0 |
 | openjobsdata | 11 | 0 |
+
+Removed: bizaway, durin, healthmark-group, ucsf, ux-woman, vrify, zinier
 
 ### workday — contribution by source
 

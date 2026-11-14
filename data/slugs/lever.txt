@@ -936,7 +936,6 @@ bitski
 bitwiseindustries
 bitwiseinvestments
 bixal
-bizaway
 bizlibrary
 bizly
 bizzabo.com
@@ -2251,7 +2250,6 @@ duffel
 duffl
 dulcedo
 duolingo
-durin
 dutch
 dutchie
 dvele
@@ -3390,7 +3388,6 @@ healthcare
 healthebay
 healthleap
 healthline
-healthmark-group
 healthmatch
 healthproject
 healthsherpa
@@ -8019,7 +8016,6 @@ uaustin
 uberall
 uberflip
 ubiminds
-ucsf
 udacity
 udemy
 uei
@@ -8131,7 +8127,6 @@ utvate
 uvaro
 uvcyber
 uwnyc
-ux-woman
 uzbekistan
 v0
 v2sa
@@ -8365,7 +8360,6 @@ voys
 vptech
 vrchat
 vrideo
-vrify
 vroom
 vrse
 vrsystems
@@ -8721,7 +8715,6 @@ zimpler
 zinccollective
 zingfit
 zingtree
-zinier
 zinovo
 zip
 zipari
