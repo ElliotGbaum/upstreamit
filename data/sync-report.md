@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-14T14:59:43.511Z
+Run: 2026-11-15T15:37:16.236Z
 
 ## Sources
 
@@ -14,9 +14,9 @@ Run: 2026-11-14T14:59:43.511Z
 | openroles | ashby | unchanged | — | — | — |
 | openroles | greenhouse | unchanged | — | — | — |
 | openroles | lever | unchanged | — | — | — |
-| kalil | ashby | fetched | 4156 | 1 | `dc648b3` 2026-11-13 |
-| kalil | greenhouse | fetched | 7360 | 3 | `dc648b3` 2026-11-13 |
-| kalil | lever | fetched | 2375 | 2 | `dc648b3` 2026-11-13 |
+| kalil | ashby | fetched | 4170 | 1 | `972cc96` 2026-11-14 |
+| kalil | greenhouse | unchanged | — | — | — |
+| kalil | lever | unchanged | — | — | — |
 | jobseek | ashby | unchanged | — | — | — |
 | jobseek | greenhouse | unchanged | — | — | — |
 | jobseek | lever | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-11-14T14:59:43.511Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | unchanged | — | — | — |
-| cryptojobs | greenhouse | unchanged | — | — | — |
-| cryptojobs | lever | unchanged | — | — | — |
+| cryptojobs | ashby | fetched | 179 | 204 | `8f10333` 2026-11-15 |
+| cryptojobs | greenhouse | fetched | 102 | 282 | `8f10333` 2026-11-15 |
+| cryptojobs | lever | fetched | 53 | 331 | `8f10333` 2026-11-15 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,40 +42,40 @@ Run: 2026-11-14T14:59:43.511Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112 | — | — | — |
+| wayback | ashby | fetched | 256 | 5 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=job-boards.eu.greenhouse.io*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112) | — | — | — |
-| wayback | lever | skipped — TypeError: fetch failed (https://web.archive.org/cdx/search/cdx?url=jobs.eu.lever.co*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261112) | — | — | — |
+| wayback | greenhouse | fetched | 9 | 1 | — |
+| wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6296 | +0 | -27 | 8495 |
-| greenhouse | 15790 | +2 | -48 | 15845 |
-| lever | 8753 | +0 | -7 | 8763 |
+| ashby | 6322 | +26 | -0 | 8521 |
+| greenhouse | 15790 | +0 | -0 | 15845 |
+| lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
 ### ashby — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5570 | 697 |
+| hf-latmay | 5570 | 696 |
 | backfill | 4174 | 23 |
-| kalil | 4156 | 3 |
-| commoncrawl | 4153 | 36 |
+| kalil | 4170 | 3 |
+| commoncrawl | 4153 | 35 |
 | openroles | 3469 | 7 |
 | feashliaa | 3161 | 4 |
-| wayback | 1865 | 102 |
+| wayback | 1944 | 124 |
 | jobseek | 929 | 7 |
 | outscal | 235 | 9 |
-| cryptojobs | 177 | 0 |
+| cryptojobs | 179 | 3 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Removed: aluriontalentgroup, blue-ai, botcrew, cascade, comprehensive, crewbloom, curie, farmersd73, firstmate, flentasticjobs, getivy, humanist, jolly, layer, leovegas, lifetime-quality-roofing-storm-restoration, magoosh, mine, ownup, paloit, … (27 total)
+Added: acentecom, affiniti, americansupercritical, chiefai, crux, exclaim, generalcompute, glitch, hopper-inference, itva, maya-htt, metacognitionai, moneybox, ninjatrader, nopan, norm, northstarsecurity, prudentia-sciences, publicit, qonto, … (26 total)
 
 ### greenhouse — contribution by source
 
@@ -89,12 +89,8 @@ Removed: aluriontalentgroup, blue-ai, botcrew, cascade, comprehensive, crewbloom
 | jobseek | 2545 | 24 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
-| wayback | 182 | 12 |
+| wayback | 185 | 12 |
 | cryptojobs | 102 | 0 |
-
-Added: longbeachaudi, tamaragroup
-
-Removed: 1912, android, blueprintinternal, cker, clarity, currentopenings, cwe, devboard, edge, edume, entrylevelga, exploratory, galaxiatech, generac, govector, gracent-peds, hireez, incaengineering, inhersight, internshipsandftjobboard, … (48 total)
 
 ### lever — contribution by source
 
@@ -107,11 +103,9 @@ Removed: 1912, android, blueprintinternal, cker, clarity, currentopenings, cwe, 
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |
 | jobseek | 198 | 1 |
-| cryptojobs | 57 | 0 |
+| cryptojobs | 53 | 0 |
 | wayback | 36 | 0 |
 | openjobsdata | 11 | 0 |
-
-Removed: bizaway, durin, healthmark-group, ucsf, ux-woman, vrify, zinier
 
 ### workday — contribution by source
 

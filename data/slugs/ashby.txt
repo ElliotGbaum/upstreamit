@@ -81,6 +81,7 @@ accord
 accurx
 acd
 ace-1-media
+acentecom
 aceve
 achilleshr
 achira
@@ -128,6 +129,7 @@ aescape
 aesthetic
 aetherflux
 afference
+affiniti
 affinity
 affinity.co
 afresh
@@ -269,6 +271,7 @@ american terawatt
 american-housing
 american-turbines
 americanoperator
+americansupercritical
 ami
 amicus
 amidon
@@ -1039,6 +1042,7 @@ checkout.com
 cheiron
 chestnut
 chief
+chiefai
 chilipiper
 chillchat
 chimerareit
@@ -1336,6 +1340,7 @@ crunchbase
 crunchdao
 crusoe
 cruva
+crux
 cruxclimate
 cryptio
 cside
@@ -1805,6 +1810,7 @@ evvy
 exa
 exacare
 excelerate
+exclaim
 exegy
 exo
 exofreight
@@ -2168,6 +2174,7 @@ general-context
 general-counsel-ai
 general-medicine
 generalbattery
+generalcompute
 generalintelligencecompany
 generalintuition
 generalintuition-medal
@@ -2225,6 +2232,7 @@ glide
 glimp-se
 glimpse
 glinttglobal
+glitch
 global-x-etfs
 globex
 glomo
@@ -2504,6 +2512,7 @@ hooli
 hopae
 hoplynk
 hopper
+hopper-inference
 horizenlabs
 horizon
 horizon3ai
@@ -2719,6 +2728,7 @@ iterable
 iterative
 ithaca
 itsgood
+itva
 ivella
 iverify
 ivo-inc
@@ -3285,6 +3295,7 @@ maximustribe
 maxinsights
 maxio
 maxrewards
+maya-htt
 maybern
 maykers
 mazedesign
@@ -3354,6 +3365,7 @@ meshy
 messa
 message-broadcast
 messagebird
+metacognitionai
 metadao
 metaforms
 metal
@@ -3460,6 +3472,7 @@ monarchmoney
 monday.com
 mondoo
 monei
+moneybox
 moneyhash
 moneyworld
 monitaur
@@ -3648,6 +3661,7 @@ nidus-technologies
 nightfall-ai
 nimbl
 ninjatech.ai
+ninjatrader
 niramedical
 nirvana
 niural
@@ -3668,7 +3682,9 @@ nomic.foundation
 nomos
 nooks
 noon-design
+nopan
 nord-security
+norm
 norm-ai
 normal
 normal computing ai
@@ -3677,6 +3693,7 @@ normalcomputingai
 normlaw
 northflank.com
 northslope-technologies
+northstarsecurity
 northvectordynamics
 northwoodspace
 nory
@@ -4358,11 +4375,13 @@ proxima
 proxima-fusion
 proximaai
 proximal
+prudentia-sciences
 prysm
 pryzm
 psi
 publiccloudgroup
 publicinterestco
+publicit
 pulley
 pulse
 pulselive
@@ -4389,6 +4408,7 @@ qeystroke
 qih-group
 qlub
 qontext
+qonto
 qorelo
 quadric
 quadrillion-labs
@@ -4416,6 +4436,7 @@ quilter
 quindar
 quintess-ai
 qumulo
+quo
 quora
 quorum
 quorumai
@@ -4485,6 +4506,7 @@ rebar
 rebecca-school
 rebel-space-technologies
 rebo
+rebuild
 rebuy
 rec
 recall
@@ -4924,6 +4946,7 @@ shasqi
 sheerhealth
 shelf
 shepherd
+shield
 shift
 shiftavenue
 shiftkey
@@ -5772,6 +5795,7 @@ turn-river
 turnkey
 turnstile
 turquoise-health
+tutor-intelligence
 tuza
 twelve
 twelve-labs
@@ -5923,6 +5947,7 @@ venn
 vent
 ventuals
 ventures
+verahealth
 vercel
 vercept
 verdance
@@ -6076,6 +6101,7 @@ weave-os
 weaviate
 web3mine.io
 webai
+webflow
 webfx
 weekend
 weekend health
