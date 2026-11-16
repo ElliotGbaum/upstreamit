@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-15T15:37:16.236Z
+Run: 2026-11-16T18:26:32.885Z
 
 ## Sources
 
@@ -12,9 +12,9 @@ Run: 2026-11-15T15:37:16.236Z
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | unchanged | — | — | — |
-| openroles | lever | unchanged | — | — | — |
-| kalil | ashby | fetched | 4170 | 1 | `972cc96` 2026-11-14 |
+| openroles | greenhouse | fetched | 4997 | 1 | `8de53f0` 2026-11-16 |
+| openroles | lever | fetched | 2045 | 0 | `8de53f0` 2026-11-16 |
+| kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
 | jobseek | ashby | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-11-15T15:37:16.236Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 179 | 204 | `8f10333` 2026-11-15 |
-| cryptojobs | greenhouse | fetched | 102 | 282 | `8f10333` 2026-11-15 |
-| cryptojobs | lever | fetched | 53 | 331 | `8f10333` 2026-11-15 |
+| cryptojobs | ashby | fetched | 180 | 205 | `bbd5d02` 2026-11-16 |
+| cryptojobs | greenhouse | fetched | 102 | 284 | `bbd5d02` 2026-11-16 |
+| cryptojobs | lever | fetched | 54 | 332 | `bbd5d02` 2026-11-16 |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,18 +42,18 @@ Run: 2026-11-15T15:37:16.236Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 256 | 5 | — |
-| wayback | greenhouse | fetched | 0 | 0 | — |
-| wayback | greenhouse | fetched | 9 | 1 | — |
-| wayback | lever | fetched | 0 | 0 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261114 | — | — | — |
+| wayback | greenhouse | fetched | 7 | 0 | — |
+| wayback | greenhouse | fetched | 14 | 1 | — |
+| wayback | lever | fetched | 1 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6322 | +26 | -0 | 8521 |
-| greenhouse | 15790 | +0 | -0 | 15845 |
+| ashby | 6322 | +0 | -0 | 8521 |
+| greenhouse | 15790 | +1 | -1 | 15846 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
@@ -70,27 +70,29 @@ Run: 2026-11-15T15:37:16.236Z
 | wayback | 1944 | 124 |
 | jobseek | 929 | 7 |
 | outscal | 235 | 9 |
-| cryptojobs | 179 | 3 |
+| cryptojobs | 180 | 3 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: acentecom, affiniti, americansupercritical, chiefai, crux, exclaim, generalcompute, glitch, hopper-inference, itva, maya-htt, metacognitionai, moneybox, ninjatrader, nopan, norm, northstarsecurity, prudentia-sciences, publicit, qonto, … (26 total)
 
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14325 | 4077 |
+| hf-latmay | 14325 | 4081 |
 | feashliaa | 8333 | 170 |
 | kalil | 7360 | 309 |
 | commoncrawl | 7072 | 175 |
-| openroles | 5017 | 40 |
+| openroles | 4997 | 39 |
 | jobseek | 2545 | 24 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
-| wayback | 185 | 12 |
+| wayback | 191 | 13 |
 | cryptojobs | 102 | 0 |
+
+Added: skdse
+
+Removed: arkoselabsmalaysia
 
 ### lever — contribution by source
 
@@ -99,11 +101,11 @@ Added: acentecom, affiniti, americansupercritical, chiefai, crux, exclaim, gener
 | hf-latmay | 8557 | 3714 |
 | feashliaa | 4368 | 47 |
 | kalil | 2375 | 111 |
-| openroles | 2052 | 3 |
+| openroles | 2045 | 3 |
 | commoncrawl | 380 | 10 |
 | outscal | 314 | 12 |
 | jobseek | 198 | 1 |
-| cryptojobs | 53 | 0 |
+| cryptojobs | 54 | 0 |
 | wayback | 36 | 0 |
 | openjobsdata | 11 | 0 |
 
