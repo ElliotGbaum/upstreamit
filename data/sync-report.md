@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-16T18:26:32.885Z
+Run: 2026-11-17T17:35:27.875Z
 
 ## Sources
 
@@ -12,8 +12,8 @@ Run: 2026-11-16T18:26:32.885Z
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
 | openroles | ashby | unchanged | — | — | — |
-| openroles | greenhouse | fetched | 4997 | 1 | `8de53f0` 2026-11-16 |
-| openroles | lever | fetched | 2045 | 0 | `8de53f0` 2026-11-16 |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -26,9 +26,9 @@ Run: 2026-11-16T18:26:32.885Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 180 | 205 | `bbd5d02` 2026-11-16 |
-| cryptojobs | greenhouse | fetched | 102 | 284 | `bbd5d02` 2026-11-16 |
-| cryptojobs | lever | fetched | 54 | 332 | `bbd5d02` 2026-11-16 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
@@ -42,10 +42,10 @@ Run: 2026-11-16T18:26:32.885Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261114 | — | — | — |
-| wayback | greenhouse | fetched | 7 | 0 | — |
-| wayback | greenhouse | fetched | 14 | 1 | — |
-| wayback | lever | fetched | 1 | 0 | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261114 | — | — | — |
+| wayback | greenhouse | fetched | 6 | 0 | — |
+| wayback | greenhouse | fetched | 15 | 1 | — |
+| wayback | lever | fetched | 3 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
 ## Store
@@ -53,7 +53,7 @@ Run: 2026-11-16T18:26:32.885Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6322 | +0 | -0 | 8521 |
-| greenhouse | 15790 | +1 | -1 | 15846 |
+| greenhouse | 15790 | +0 | -0 | 15846 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
@@ -87,12 +87,8 @@ Run: 2026-11-16T18:26:32.885Z
 | jobseek | 2545 | 24 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
-| wayback | 191 | 13 |
+| wayback | 193 | 13 |
 | cryptojobs | 102 | 0 |
-
-Added: skdse
-
-Removed: arkoselabsmalaysia
 
 ### lever — contribution by source
 
@@ -106,7 +102,7 @@ Removed: arkoselabsmalaysia
 | outscal | 314 | 12 |
 | jobseek | 198 | 1 |
 | cryptojobs | 54 | 0 |
-| wayback | 36 | 0 |
+| wayback | 37 | 0 |
 | openjobsdata | 11 | 0 |
 
 ### workday — contribution by source
