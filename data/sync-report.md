@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-17T17:35:27.875Z
+Run: 2026-11-18T17:11:57.524Z
 
 ## Sources
 
@@ -43,8 +43,8 @@ Run: 2026-11-17T17:35:27.875Z
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261114 | — | — | — |
-| wayback | greenhouse | fetched | 6 | 0 | — |
-| wayback | greenhouse | fetched | 15 | 1 | — |
+| wayback | greenhouse | fetched | 7 | 0 | — |
+| wayback | greenhouse | fetched | 29 | 1 | — |
 | wayback | lever | fetched | 3 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -87,7 +87,7 @@ Run: 2026-11-17T17:35:27.875Z
 | jobseek | 2545 | 24 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
-| wayback | 193 | 13 |
+| wayback | 199 | 13 |
 | cryptojobs | 102 | 0 |
 
 ### lever — contribution by source
