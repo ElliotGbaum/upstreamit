@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-20T16:55:29.090Z
+Run: 2026-11-21T16:06:23.221Z
 
 ## Sources
 
@@ -42,9 +42,9 @@ Run: 2026-11-20T16:55:29.090Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261114 | — | — | — |
-| wayback | greenhouse | fetched | 5 | 0 | — |
-| wayback | greenhouse | fetched | 4 | 0 | — |
+| wayback | ashby | fetched | 558 | 7 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
+| wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
 | manual | ashby | fetched | 0 | 0 | — |
 
@@ -52,7 +52,7 @@ Run: 2026-11-20T16:55:29.090Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6322 | +0 | -0 | 8521 |
+| ashby | 6352 | +30 | -0 | 8551 |
 | greenhouse | 15790 | +0 | -0 | 15846 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
@@ -61,19 +61,21 @@ Run: 2026-11-20T16:55:29.090Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 5570 | 696 |
+| hf-latmay | 5570 | 694 |
 | backfill | 4174 | 23 |
 | kalil | 4170 | 3 |
 | commoncrawl | 4153 | 35 |
-| openroles | 3469 | 7 |
+| openroles | 3469 | 6 |
 | feashliaa | 3161 | 4 |
-| wayback | 1944 | 124 |
+| wayback | 2122 | 154 |
 | jobseek | 929 | 7 |
-| outscal | 235 | 9 |
-| cryptojobs | 180 | 3 |
+| outscal | 235 | 8 |
+| cryptojobs | 180 | 2 |
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
+
+Added: alecto, appfolio, asymptotelabs, atlasfin, b54bef45-0299-45af-9d8d-645334e90d56, beaconholdings, bja, bulwark-dynamics, carbon-robotics, careers.mural, cint, compost-crew-a-benefit-corporation, corridor-advisors, cotarobotics, diode, ease-health, fractile, giga-energy, growe-talents, hightouch-inc, … (30 total)
 
 ### greenhouse — contribution by source
 

@@ -200,6 +200,7 @@ alby
 alcazar-energy
 alchemy
 alden
+alecto
 alector
 alembic
 aleph
@@ -354,6 +355,7 @@ apollo-graphql
 apollo-information-systems
 apollogenerators
 app-ads.txt
+appfolio
 applause
 apple-roofing
 applied
@@ -478,6 +480,7 @@ astrocade
 astronomer
 asula
 asymmetric.re
+asymptotelabs
 atalanta
 ataraxis-ai
 atg
@@ -488,6 +491,7 @@ atira
 atlan
 atlas
 atlas-privacy
+atlasfin
 atlasfoods
 atlasonc
 atlasresidential
@@ -589,6 +593,7 @@ azuki
 azupay
 b garage
 b2spin
+b54bef45-0299-45af-9d8d-645334e90d56
 baba
 babbel
 babylonchain
@@ -629,6 +634,7 @@ bayesianhealth
 beach-bum
 beacon
 beaconai
+beaconholdings
 beacons
 beaconsoftware
 beaker
@@ -711,6 +717,7 @@ bitvavo
 bivacor
 bivacor-inc
 bizly
+bja
 bjak
 bjakcareer
 black-forest-labs
@@ -865,6 +872,7 @@ buildwithfern
 built-robotics
 bulletfarm
 bullpen-talent
+bulwark-dynamics
 bumble
 bumbleinc
 bunch
@@ -919,6 +927,7 @@ capsule
 captions
 capy
 cara-ai
+carbon-robotics
 carbonhealth
 carbonre
 carbonx
@@ -929,6 +938,7 @@ cardino.de
 cardless
 carecar
 careers.azx.io
+careers.mural
 careerstrengo
 careerswift.ai
 caremessage
@@ -1056,6 +1066,7 @@ chronosphere
 chronospherejobs
 cinde
 cinder
+cint
 circle
 circle-health
 circleback
@@ -1208,6 +1219,7 @@ complete
 complir
 composio
 composite
+compost-crew-a-benefit-corporation
 compound
 compound jobs
 compound-eye
@@ -1283,6 +1295,7 @@ corgi
 coris
 correlated-labs
 corridor
+corridor-advisors
 cortea
 cortex
 corti
@@ -1293,6 +1306,7 @@ cosmic-robotics
 cosmos
 costanoavc
 cosuno
+cotarobotics
 council-capital
 counsel
 counsel-health
@@ -1521,6 +1535,7 @@ dimension
 dimensional
 dimred
 ding
+diode
 dipper
 directive
 director
@@ -1628,6 +1643,7 @@ earnedwealth
 earnity
 earth
 earthforce
+ease-health
 ease-in-out
 eastwoodcleef
 easygenerator
@@ -2073,6 +2089,7 @@ fourtwothree
 foxelligroup
 foxglove
 fr
+fractile
 fractional
 fractional-ai
 fragment
@@ -2210,6 +2227,7 @@ getshogun
 getting-attention
 ghost
 giddy
+giga-energy
 gigaml
 gigaton
 gigi
@@ -2327,6 +2345,7 @@ groundnews
 groundtruthlabs
 grow-inc
 grow-therapy
+growe-talents
 growfig
 growly
 growtherapy
@@ -2465,6 +2484,7 @@ highlightai
 highlightta
 hightop-health
 hightouch
+hightouch-inc
 hiive
 hike-medical
 hilberts
@@ -2667,6 +2687,7 @@ inscribeai
 inshur
 insidesherpa
 insight-browser
+insight-partners
 insighthealth
 insightpartners
 insitro
@@ -3134,6 +3155,7 @@ locals.org
 localstack
 loft
 loft-labs
+logicgate
 logiqal
 logos-space
 loki
@@ -3503,6 +3525,7 @@ morse-micro
 mosaic
 mosey
 moss
+mossrobotics
 motherduck
 motion
 motorway
@@ -3670,6 +3693,7 @@ nivoda
 noctovo
 noda-ai
 nodle
+noeri
 noetic
 noetica
 noialabs
@@ -3938,6 +3962,7 @@ outtake
 outverse
 overflow
 overjet
+overstory
 overtone
 overview
 overviewenergy
@@ -4671,6 +4696,7 @@ rivermont-schools
 riveron
 rivertechnologies
 rivet
+rivia
 rivianvw.tech
 riza
 rize
@@ -4738,6 +4764,7 @@ runlayer
 runna
 runpod
 runsybil-jobs
+runta
 runway
 runway-ml
 rutter
@@ -4964,6 +4991,7 @@ sidebar
 sidekick
 sideramp
 sideshift
+siegemedia
 siena
 siepe
 sierra
@@ -5031,6 +5059,7 @@ skelar
 skelar-platform
 sketch
 sketchbox
+sketchpro
 skilljar
 skillz
 skimmer
@@ -5435,6 +5464,7 @@ tabulabio
 tabz
 tachyon
 tacit
+tactiliarobotics
 tactiq
 tacto
 taekus
