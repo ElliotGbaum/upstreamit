@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-21T16:06:23.221Z
+Run: 2026-11-22T16:13:20.445Z
 
 ## Sources
 
@@ -42,7 +42,7 @@ Run: 2026-11-21T16:06:23.221Z
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 558 | 7 | — |
+| wayback | ashby | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
@@ -52,7 +52,7 @@ Run: 2026-11-21T16:06:23.221Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6352 | +30 | -0 | 8551 |
+| ashby | 6352 | +0 | -0 | 8551 |
 | greenhouse | 15790 | +0 | -0 | 15846 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
@@ -74,8 +74,6 @@ Run: 2026-11-21T16:06:23.221Z
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: alecto, appfolio, asymptotelabs, atlasfin, b54bef45-0299-45af-9d8d-645334e90d56, beaconholdings, bja, bulwark-dynamics, carbon-robotics, careers.mural, cint, compost-crew-a-benefit-corporation, corridor-advisors, cotarobotics, diode, ease-health, fractile, giga-energy, growe-talents, hightouch-inc, … (30 total)
 
 ### greenhouse — contribution by source
 
