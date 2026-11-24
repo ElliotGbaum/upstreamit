@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-23T20:07:09.154Z
+Run: 2026-11-24T19:28:39.718Z
 
 ## Sources
 
@@ -11,9 +11,9 @@ Run: 2026-11-23T20:07:09.154Z
 | hf-latmay | lever | unchanged | — | — | — |
 | backfill | ashby | fetched | 4174 | 1 | — |
 | workday-repair | workday | fetched | 1402 | 0 | — |
-| openroles | ashby | fetched | 3434 | 0 | `587e1a4` 2026-11-23 |
-| openroles | greenhouse | fetched | 4976 | 1 | `587e1a4` 2026-11-23 |
-| openroles | lever | fetched | 2006 | 0 | `587e1a4` 2026-11-23 |
+| openroles | ashby | unchanged | — | — | — |
+| openroles | greenhouse | unchanged | — | — | — |
+| openroles | lever | unchanged | — | — | — |
 | kalil | ashby | unchanged | — | — | — |
 | kalil | greenhouse | unchanged | — | — | — |
 | kalil | lever | unchanged | — | — | — |
@@ -26,22 +26,22 @@ Run: 2026-11-23T20:07:09.154Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 184 | 200 | `3b992a6` 2026-11-23 |
-| cryptojobs | greenhouse | fetched | 99 | 286 | `3b992a6` 2026-11-23 |
-| cryptojobs | lever | fetched | 52 | 333 | `3b992a6` 2026-11-23 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | greenhouse | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
-| commoncrawl | lever | unchanged | — | — | — |
+| commoncrawl | ashby | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=jobs.ashbyhq.com%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=boards.greenhouse.io%2F*&output=json&showNumPages=true | — | — | — |
+| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=job-boards.greenhouse.io%2F*&output=json&page=0) | — | — | — |
+| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=boards.eu.greenhouse.io%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | greenhouse | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=job-boards.eu.greenhouse.io%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=jobs.lever.co%2F*&output=json&showNumPages=true) | — | — | — |
+| commoncrawl | lever | skipped — TypeError: fetch failed (https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=jobs.eu.lever.co%2F*&output=json&showNumPages=true) | — | — | — |
 | wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261121 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
@@ -52,7 +52,7 @@ Run: 2026-11-23T20:07:09.154Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6353 | +1 | -0 | 8552 |
+| ashby | 6353 | +0 | -0 | 8552 |
 | greenhouse | 15790 | +0 | -0 | 15846 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
@@ -74,8 +74,6 @@ Run: 2026-11-23T20:07:09.154Z
 | jobsync | 120 | 0 |
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
-
-Added: truelayer
 
 ### greenhouse — contribution by source
 
