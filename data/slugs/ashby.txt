@@ -57,6 +57,7 @@ aacigroup
 aaron-school
 aaru
 abacum
+abaka.ai
 abby-care
 abe
 able
@@ -293,6 +294,7 @@ anagram
 analog
 anam
 anara
+anatomy-financial
 ancientritual
 ancora
 ande
@@ -315,6 +317,7 @@ annaautismcare
 anomalo
 anomaly
 anon
+anori
 anrok
 ansel
 ansiblehealth
@@ -332,6 +335,7 @@ antimetal
 antioch
 antithesis
 anuvaya
+anvil-robotics
 anvilcarbon
 anyone-ai
 anyscale
@@ -478,6 +482,7 @@ astralisfoundation
 astro-mechanica
 astrocade
 astronomer
+astroscale-us
 asula
 asymmetric.re
 asymptotelabs
@@ -554,6 +559,7 @@ avala
 avalanchefusion
 avantos
 avaprotocol
+avartha
 avelios-medical
 aven
 aveni
@@ -575,6 +581,7 @@ axelera
 axilon
 axiom
 axiom-co
+axiom-trade
 axiombio
 axiommath
 axion
@@ -762,6 +769,7 @@ blp-digital
 blue
 blue onion labs
 blue-energy
+blue-raincoat-music
 blueberry
 blueberry-social
 blueberrypediatrics
@@ -772,6 +780,7 @@ bluerocksecurity
 bluesky
 bluesky data
 blumen
+blvdrecruiting
 boam
 boatsetter
 bob
@@ -802,6 +811,7 @@ boulder-care
 boulevard
 boultonwatt
 bounce
+bounti
 bowatt
 boxley
 bracket-bot
@@ -946,6 +956,7 @@ careswift
 careway
 cargado
 cargo-one
+cari
 carian
 caribou
 carnot-ai
@@ -1179,6 +1190,7 @@ coinflow
 coinhako
 cointracker
 coldstartventures
+colibri-group
 collective
 collegevine.com
 collider
@@ -1208,12 +1220,14 @@ communitypho...
 communityphone
 commure
 commure-athelas
+como
 compa
 company
 company-ai
 companycam
 compass-reg
 compass-surgical-partners
+compiled-health
 complement
 complete
 complir
@@ -1275,6 +1289,7 @@ convergence-ai
 conversion
 convex-dev
 convey
+conveydev
 convictional
 conway
 cooper-ai
@@ -1338,6 +1353,7 @@ creditgenie
 credo.ai
 creem
 crete-professionals-alliance
+crewcarbon
 cribl
 crisp
 crispgrowth
@@ -1432,6 +1448,7 @@ day9
 daydream
 daydream-ai
 daydreamlive
+dayhoff-labs
 dayjob-ai
 dcblox
 dclimate
@@ -1650,6 +1667,7 @@ easygenerator
 easyllama.com
 ecarxgroup
 echelon
+echeloncareers
 echo
 echo.ai
 echomark
@@ -1712,6 +1730,7 @@ ellis
 ello
 eloquentai
 elorian-ai-inc
+elveo
 elyos
 ema
 emanate
@@ -1936,6 +1955,7 @@ finch
 finch-legal
 findanomaly
 findarbor
+fingerpaint
 finmid.com
 finni-health
 finnihealth
@@ -6124,6 +6144,7 @@ waystation
 wayve
 we3
 wealth-com
+wealthbox
 wealthsimple
 wearebeyondsports
 weave
@@ -6200,6 +6221,7 @@ withdaydream
 withdefault
 withflex
 within-ai
+within.ai
 withothers
 withpace
 withpulley
@@ -6238,6 +6260,7 @@ world-foundation
 world-golf-tour
 worldlabs
 worldly
+worldmechanics
 worlds
 wormholelabs
 woven
