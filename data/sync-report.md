@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-25T18:37:25.554Z
+Run: 2026-11-26T18:22:59.672Z
 
 ## Sources
 
@@ -26,23 +26,23 @@ Run: 2026-11-25T18:37:25.554Z
 | feashliaa | workday | unchanged | — | — | — |
 | jobsync | ashby | unchanged | — | — | — |
 | tjwenger | ashby | unchanged | — | — | — |
-| cryptojobs | ashby | fetched | 183 | 202 | `8c58030` 2026-11-25 |
-| cryptojobs | greenhouse | fetched | 97 | 289 | `8c58030` 2026-11-25 |
-| cryptojobs | lever | fetched | 50 | 336 | `8c58030` 2026-11-25 |
+| cryptojobs | ashby | unchanged | — | — | — |
+| cryptojobs | greenhouse | unchanged | — | — | — |
+| cryptojobs | lever | unchanged | — | — | — |
 | outscal | ashby | unchanged | — | — | — |
 | outscal | greenhouse | unchanged | — | — | — |
 | outscal | lever | unchanged | — | — | — |
 | openjobsdata | ashby | unchanged | — | — | — |
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
-| commoncrawl | ashby | fetched | 430 | 0 | — |
-| commoncrawl | greenhouse | fetched | 94 | 2 | — |
-| commoncrawl | greenhouse | fetched | 3598 | 140 | — |
-| commoncrawl | greenhouse | fetched | 42 | 4 | — |
-| commoncrawl | greenhouse | fetched | 378 | 50 | — |
-| commoncrawl | lever | fetched | 0 | 29 | — |
-| commoncrawl | lever | fetched | 63 | 14 | — |
-| wayback | ashby | fetched | 0 | 0 | — |
+| commoncrawl | ashby | unchanged | — | — | — |
+| commoncrawl | greenhouse | skipped — HTTP 504 Gateway Time-out for https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | greenhouse | unchanged | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| commoncrawl | lever | unchanged | — | — | — |
+| wayback | ashby | skipped — HTTP 504 Gateway Time-out for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261124 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
@@ -52,8 +52,8 @@ Run: 2026-11-25T18:37:25.554Z
 
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
-| ashby | 6376 | +23 | -0 | 8575 |
-| greenhouse | 15915 | +125 | -0 | 15971 |
+| ashby | 6376 | +0 | -0 | 8575 |
+| greenhouse | 15915 | +0 | -0 | 15971 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
@@ -75,8 +75,6 @@ Run: 2026-11-25T18:37:25.554Z
 | tjwenger | 75 | 0 |
 | openjobsdata | 71 | 0 |
 
-Added: abaka.ai, anatomy-financial, anori, anvil-robotics, astroscale-us, avartha, axiom-trade, blue-raincoat-music, blvdrecruiting, bounti, cari, colibri-group, como, compiled-health, conveydev, crewcarbon, dayhoff-labs, echeloncareers, elveo, fingerpaint, … (23 total)
-
 ### greenhouse — contribution by source
 
 | Source | Slugs | Unique to this source |
@@ -91,8 +89,6 @@ Added: abaka.ai, anatomy-financial, anori, anvil-robotics, astroscale-us, avarth
 | openjobsdata | 263 | 0 |
 | wayback | 201 | 13 |
 | cryptojobs | 97 | 0 |
-
-Added: 2023fellowscolorstack, adams-engineers, aequitasecokgaa, aestheticphysicianspc, ai_opt_out_request, aifss2026, akronpreparatoryschool, alta, altevarcm, am-mech, amediumcorporation, biermanautismcenters, bondopcollc, broadwayacademywillow, brothersphe, browserbaseinc, bwessmanagementgmbh, cagemiles, caladan, calhouncounty, … (125 total)
 
 ### lever — contribution by source
 
