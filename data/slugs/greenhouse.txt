@@ -1062,6 +1062,7 @@ appnext
 appnovation
 appodeal
 appomni
+apprenti
 apprentice
 appscore
 appsflyer
@@ -1248,6 +1249,7 @@ arzeda
 as
 asana
 asanarebel
+ascd
 ascellahealth
 ascend
 ascend21
@@ -1357,6 +1359,7 @@ atlasair
 atlasnavigatorsllc
 atlasone
 atlassand
+atlassian
 atlassp
 atlasxhm
 atmoslabs
@@ -1410,6 +1413,7 @@ attuneinsurance
 attunely
 atwellgroup
 atwellinternships
+atxacquisitions
 auchevalnashville
 auctane
 auctanepoland
@@ -5175,6 +5179,7 @@ filecoinfoundation
 filescom
 filo
 filson
+finalsite
 finalstrikegames
 finance
 financialtechnologypartners
@@ -8226,6 +8231,7 @@ lionpoint
 lionpointearlycareers
 lions
 lionsbot
+lionsgate
 lionsheadprecisionmetals
 lionsntigers
 lionstudios
@@ -8483,6 +8489,7 @@ macadamian
 macedonia
 macgregorpartners
 mach49
+machindustries
 machinifyinc
 mackaysposito
 mackweldon
@@ -8496,6 +8503,7 @@ maderenovation
 madhive
 madisonenergyinfrastructure
 madisonlogicinc
+madisonreed
 madisonreedcolorbar
 madproductions
 maesa
@@ -9101,6 +9109,7 @@ mojangab
 mojio
 mojito
 mojo
+mojorank
 molecula
 molecularassemblies
 molecule
@@ -9208,6 +9217,7 @@ mothflame
 motifdigital
 motifneurotech
 motimatic
+motion2aikorea
 motional
 motionventures
 motive
@@ -9454,6 +9464,7 @@ nazare
 nc
 ncamerica
 nci
+ncinoearlytalent
 ncinoinc
 nconsulteng
 ncs
@@ -13582,6 +13593,7 @@ syng
 synop
 syntellis
 syntetica
+synthbeeinc
 synthesia
 synthesis
 synthesishealth

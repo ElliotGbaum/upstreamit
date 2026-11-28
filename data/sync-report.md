@@ -1,6 +1,6 @@
 # Slug sync report
 
-Run: 2026-11-27T18:08:38.794Z
+Run: 2026-11-28T16:49:29.097Z
 
 ## Sources
 
@@ -36,13 +36,13 @@ Run: 2026-11-27T18:08:38.794Z
 | openjobsdata | greenhouse | unchanged | — | — | — |
 | openjobsdata | lever | unchanged | — | — | — |
 | commoncrawl | ashby | unchanged | — | — | — |
-| commoncrawl | greenhouse | skipped — HTTP 503 Service Temporarily Unavailable for https://index.commoncrawl.org/CC-MAIN-2026-47-index?url=boards.greenhouse.io%2F*&output=json&page=0 | — | — | — |
+| commoncrawl | greenhouse | fetched | 1872 | 87 | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | greenhouse | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
 | commoncrawl | lever | unchanged | — | — | — |
-| wayback | ashby | fetched | 0 | 0 | — |
+| wayback | ashby | skipped — HTTP 503 Service Unavailable for https://web.archive.org/cdx/search/cdx?url=jobs.ashbyhq.com*&output=json&fl=original&collapse=urlkey&limit=200000&from=20261126 | — | — | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | greenhouse | fetched | 0 | 0 | — |
 | wayback | lever | fetched | 0 | 0 | — |
@@ -53,7 +53,7 @@ Run: 2026-11-27T18:08:38.794Z
 | ATS | Active slugs | Added | Removed | Tracked total |
 | --- | --- | --- | --- | --- |
 | ashby | 6376 | +0 | -0 | 8575 |
-| greenhouse | 15915 | +0 | -0 | 15971 |
+| greenhouse | 15927 | +12 | -0 | 15983 |
 | lever | 8753 | +0 | -0 | 8763 |
 | workday | 11944 | +0 | -0 | 12912 |
 
@@ -79,16 +79,18 @@ Run: 2026-11-27T18:08:38.794Z
 
 | Source | Slugs | Unique to this source |
 | --- | --- | --- |
-| hf-latmay | 14325 | 4048 |
-| feashliaa | 8333 | 168 |
-| commoncrawl | 7607 | 299 |
-| kalil | 7360 | 301 |
+| hf-latmay | 14325 | 4041 |
+| feashliaa | 8333 | 167 |
+| commoncrawl | 7651 | 311 |
+| kalil | 7360 | 299 |
 | openroles | 4976 | 38 |
 | jobseek | 2545 | 23 |
 | outscal | 642 | 20 |
 | openjobsdata | 263 | 0 |
 | wayback | 201 | 13 |
 | cryptojobs | 97 | 0 |
+
+Added: apprenti, ascd, atlassian, atxacquisitions, finalsite, lionsgate, machindustries, madisonreed, mojorank, motion2aikorea, ncinoearlytalent, synthbeeinc
 
 ### lever — contribution by source
 
